@@ -29,44 +29,21 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-
 #include "stm32f1xx_nucleo.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+#include "stdio.h"
 
-/* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
+#define DEBUG_INIT(X) 					X
 
-/* USER CODE END ET */
-
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
-
-/* USER CODE END EC */
-
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
-
-/* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
-
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 #define B1_Pin 							GPIO_PIN_13
 #define B1_GPIO_Port 					GPIOC
 #define B1_EXTI_IRQn 					EXTI15_10_IRQn
-#define USART_TX_Pin 					GPIO_PIN_2
-#define USART_TX_GPIO_Port 				GPIOA
-#define USART_RX_Pin 					GPIO_PIN_3
-#define USART_RX_GPIO_Port 				GPIOA
 #define LD2_Pin 						GPIO_PIN_5
 #define LD2_GPIO_Port 					GPIOA
 #define TMS_Pin 						GPIO_PIN_13
@@ -96,9 +73,59 @@ void Error_Handler(void);
 #define TIMx_IRQn                      TIM3_IRQn
 #define TIMx_IRQHandler                TIM3_IRQHandler
 
-/* USER CODE BEGIN Private defines */
 
-/* USER CODE END Private defines */
+
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
+/* User can use this section to tailor USARTx/UARTx instance used and associated
+   resources */
+/* Definition for USARTx clock resources */
+#define USART1_CLK_ENABLE()              __HAL_RCC_USART1_CLK_ENABLE();
+#define DMA1_CLK_ENABLE()                __HAL_RCC_DMA1_CLK_ENABLE()
+#define USART1_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define USART1_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+
+#define USART1_FORCE_RESET()             __HAL_RCC_USART1_FORCE_RESET()
+#define USART1_RELEASE_RESET()           __HAL_RCC_USART1_RELEASE_RESET()
+
+/* Definition for USARTx Pins */
+#define USART1_TX_PIN                    GPIO_PIN_9
+#define USART1_TX_GPIO_PORT              GPIOA
+#define USART1_RX_PIN                    GPIO_PIN_10
+#define USART1_RX_GPIO_PORT              GPIOA
+
+
+
+
+/* Exported macro ------------------------------------------------------------*/
+#define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
+/* Size of Trasmission buffer */
+#define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
+/* Size of Reception buffer */
+#define RXBUFFERSIZE                      100
+
+
+
+#define USART2_TX_PIN 					GPIO_PIN_2
+#define USART2_TX_GPIO_PORT 				GPIOA
+#define USART2_RX_PIN 					GPIO_PIN_3
+#define USART2_RX_GPIO_PORT 				GPIOA
+
+#define USART2_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE();
+#define DMA2_CLK_ENABLE()                __HAL_RCC_DMA2_CLK_ENABLE()
+#define USART2_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define USART2_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+
+#define USART2_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
+#define USART2_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
+
+
+
+#define		SAMPLE_STEPS							4
+#define 	NUMBER_OF_SAMPLES_PER_AVERAGE			1 << SAMPLE_STEPS
+#define 	NUMBER_OF_SAMPLES_PER_SECOND			100
+#define 	NUMBER_OF_ADC_CHANNELS					14
+
 
 #ifdef __cplusplus
 }

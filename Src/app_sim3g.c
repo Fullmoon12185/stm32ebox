@@ -4,5 +4,92 @@
  *  Created on: Nov 22, 2019
  *      Author: VAIO
  */
+#include "main.h"
+#include "app_uart.h"
+#include "app_sim3g.h"
+
+
+#define DEBUG_SIM3G(x)    		x
+#define DATA_TO_SEND_LENGTH		20
+
+const uint8_t OK[] = "OK";
+const uint8_t CONNECT_OK[] = "CONNECT OK";
+const uint8_t ERROR_1[] = "ERROR";
+const uint8_t GREATER_THAN_SYMBOL[] = ">";
+const uint8_t NETWORK_OPENED[] = "Network opened";
+
+
+const uint8_t AT[] = "AT\r\n";
+//Define PDP context
+const uint8_t AT_CGSOCKCONT[] = "AT+CGSOCKCONT,1,\"100.100.100.100\",\"cmet\"\r\n";
+//Set authentication parameters
+const uint8_t AT_CGSOCKAUTH[] = "AT+CGSOCKAUTH=1,1,\"teST\",\"1234\"\r\n";
+//Set the number of active PDP context
+const uint8_t AT_CGSOCKSETPN[] = "AT+CGSOCKSETPN=1\r\n";
+//PDP context activation
+const uint8_t AT_NETOPEN[] = "AT+NETOPEN=,,1\r\n";
+//PDP context deactivatioin
+const uint8_t AT_NETCLOSE[] = "AT+NETCLOSE\r\n";
+//Option of receiving data's length
+const uint8_t AT_CIPHEAD[] = "AT+CIPHEAD=1\r\n";
+//Option of receiving data's length
+const uint8_t AT_CIPSRIP[] = "AT+CIPSRIP=1\r\n";
+//when we use tcp/ip we need to adjust number of retransmission according to network status or
+//you want to know your data is received by remote end
+const uint8_t AT_CIPCCFG [] = "AT+CIPCCFG=3,500,1,1\r\n";
+//Establish a connection
+const uint8_t AT_CIPOPEN[] = "AT+CIPOEN=0,\"TCP\",100.100.100.100\",100\r\n";
+//Send data
+const uint8_t LENGTH_POSITION = 13;
+uint8_t AT_CIPSEND[16] = "AT+CIPSEND=0,4\r\n";
+
+uint8_t DataToSend[DATA_TO_SEND_LENGTH];
+
+enum SIM3G_STATE sim3gState = SIM3G_STATUS;
+
+
+
+void ATcommandSending(uint8_t * buffer){
+	if(isUART1TransmissionReady() == SET){
+		UART1_Transmit(buffer);
+	}
+}
+
+void SIM3G_OPERATION(void){
+
+	switch(sim3gState){
+		case SIM3G_STATUS:
+			break;
+		case POWER_ON_SIM3G:
+			break;
+		case POWER_OFF_SIM3G:
+			break;
+		case DEFINE_PDP_CONTEXT:
+			break;
+		case SET_AUTHENTICATION_PARAMETER:
+			break;
+		case SET_PDP_CONTEXT_NUMBER:
+			break;
+		case PDP_CONTEXT_ACTIVATION:
+			break;
+		case PDP_CONTEXT_DEACTIVATION:
+			break;
+		case RECEIVE_DATA_LENGTH_OPTION:
+			break;
+		case RECEIVE_DATA_ADDRESS_OPTION:
+			break;
+		case ADJUST_NUMBER_OF_RETRANSMISSION:
+			break;
+		case ESTABLISH_CONNECTION:
+			break;
+		case SEND_DATA:
+			break;
+		case DISCONNECT_CONNECTION:
+			break;
+	}
+
+}
+
+
 
 

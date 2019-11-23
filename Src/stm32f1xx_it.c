@@ -23,6 +23,8 @@
 #include "stm32f1xx_it.h"
 
 extern TIM_HandleTypeDef    TimHandle;
+extern UART_HandleTypeDef Uart1Handle;
+extern DMA_HandleTypeDef Hdma_adc1Handle;
 /******************************************************************************/
 /*           Cortex-M3 Processor Interruption and Exception Handlers          */ 
 /******************************************************************************/
@@ -162,6 +164,21 @@ void EXTI15_10_IRQHandler(void)
   */
 void TIMx_IRQHandler(void)
 {
-  HAL_TIM_IRQHandler(&TimHandle);
+	HAL_TIM_IRQHandler(&TimHandle);
+}
+
+
+void USART1_IRQHandler(void)
+{
+	HAL_UART_IRQHandler(&Uart1Handle);
+}
+
+
+/**
+  * @brief This function handles DMA1 channel1 global interrupt.
+  */
+void DMA1_Channel1_IRQHandler(void)
+{
+	HAL_DMA_IRQHandler(&Hdma_adc1Handle);
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

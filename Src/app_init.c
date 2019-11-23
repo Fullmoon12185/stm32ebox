@@ -32,19 +32,35 @@ void System_Initialization(void)
         case SYSTEM_CLOCK_INIT:
         	SystemClock_Config();
             break;
+        case UART_INIT:
+        	UART2_Init();
+        	UART1_Init();
+        	DEBUG_INIT(printf("UART_INIT - Done \r\n"));
+        	break;
         case GPIO_INIT:
         	MX_GPIO_Init();
-            break;
-        case UART_INIT:
-        	MX_USART2_UART_Init();
+        	ADC_DMA_Init();
+        	DEBUG_INIT(printf("GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
         case FLASH_INIT:
+        	DEBUG_INIT(printf("FLASH_INIT - Done \r\n"));
         	break;
         case TIMER_INIT:
         	Timer_Init();
+        	DEBUG_INIT(printf("TIMER_INIT - Done \r\n"));
             break;
+        case ADC_INIT:
+        	ADC1_Init();
+        	DEBUG_INIT(printf("ADC_INIT - Done \r\n"));
+        	break;
         case WATCH_DOG_INIT:
+
+        	DEBUG_INIT(printf("WATCH_DOG_INIT - Done \r\n"));
             break;
+        case START_DMA_ADC:
+        	StartGettingADCValues();
+        	DEBUG_INIT(printf("START_DMA_ADC - Done \r\n"));
+        	break;
         default:
             initState = HAL_INIT;
             break;

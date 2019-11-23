@@ -21,16 +21,33 @@
 #include <app_init.h>
 #include "main.h"
 #include "app_fsm.h"
+#include "app_uart.h"
+#include "app_adc.h"
+#include "app_scheduler.h"
 
 
+extern uint32_t arrayOfADCValues[NUMBER_OF_ADC_CHANNELS*NUMBER_OF_SAMPLES_PER_AVERAGE];
+extern uint32_t arrayOfAverageADCValues[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
+
+uint32_t temp;
+void test1(void){
+	HAL_GPIO_TogglePin(LED4_GPIO_PORT, LED4_PIN);
+}
+
+void test2(void){
+	HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+}
 int main(void)
-{
-	System_Initialization();
+{	System_Initialization();
+	UART1_Receive();
+	SCH_Add_Task(test1, 0, 100);
+	SCH_Add_Task(test2, 0, 1000);
 	while (1){
 		/* Insert delay 100 ms */
 
-		HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
-		HAL_Delay(10);
+//		temp = GetADCValue(0);
+		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
+		HAL_Delay(1000);
 	}
 	return 0;
 }
@@ -44,7 +61,10 @@ int main(void)
   */
 void Error_Handler(void)
 {
-
+	while(1){
+		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
+		HAL_Delay(100);
+	}
 }
 
 #ifdef  USE_FULL_ASSERT

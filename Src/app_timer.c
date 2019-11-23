@@ -5,6 +5,8 @@
  *      Author: VAIO
  */
 #include "main.h"
+#include "app_scheduler.h"
+
 TIM_HandleTypeDef    TimHandle;
 
 /* Prescaler declaration */
@@ -74,6 +76,6 @@ void Timer_Init(void){
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	HAL_GPIO_TogglePin(LED3_GPIO_PORT, LED3_PIN);
-	HAL_GPIO_TogglePin(LED4_GPIO_PORT, LED4_PIN);
+	SCH_Update();
+	SCH_Dispatch_Tasks();
 }

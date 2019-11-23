@@ -2992,6 +2992,7 @@ static HAL_StatusTypeDef UART_EndTransmit_IT(UART_HandleTypeDef *huart)
 static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
 {
   uint16_t *tmp;
+  uint8_t ch;
 
   /* Check that a Rx process is ongoing */
   if (huart->RxState == HAL_UART_STATE_BUSY_RX)
@@ -3012,17 +3013,18 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
     }
     else
     {
+    	ch = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
       if (huart->Init.Parity == UART_PARITY_NONE)
       {
-        *huart->pRxBuffPtr++ = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
+        *huart->pRxBuffPtr++ = (uint8_t)(ch & (uint8_t)0x00FF);
       }
       else
       {
-        *huart->pRxBuffPtr++ = (uint8_t)(huart->Instance->DR & (uint8_t)0x007F);
+        *huart->pRxBuffPtr++ = (uint8_t)(ch & (uint8_t)0x007F);
       }
     }
 
-    if (--huart->RxXferCount == 0U)
+    if (--huart->RxXferCount == 0U || ch == '\n')
     {
       /* Disable the UART Data Register not empty Interrupt */
       __HAL_UART_DISABLE_IT(huart, UART_IT_RXNE);
