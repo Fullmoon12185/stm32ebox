@@ -30,6 +30,8 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
+#include "stm32f1xx_nucleo.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -58,21 +60,42 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
-#define B1_EXTI_IRQn EXTI15_10_IRQn
-#define USART_TX_Pin GPIO_PIN_2
-#define USART_TX_GPIO_Port GPIOA
-#define USART_RX_Pin GPIO_PIN_3
-#define USART_RX_GPIO_Port GPIOA
-#define LD2_Pin GPIO_PIN_5
-#define LD2_GPIO_Port GPIOA
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
+#define B1_Pin 							GPIO_PIN_13
+#define B1_GPIO_Port 					GPIOC
+#define B1_EXTI_IRQn 					EXTI15_10_IRQn
+#define USART_TX_Pin 					GPIO_PIN_2
+#define USART_TX_GPIO_Port 				GPIOA
+#define USART_RX_Pin 					GPIO_PIN_3
+#define USART_RX_GPIO_Port 				GPIOA
+#define LD2_Pin 						GPIO_PIN_5
+#define LD2_GPIO_Port 					GPIOA
+#define TMS_Pin 						GPIO_PIN_13
+#define TMS_GPIO_Port 					GPIOA
+#define TCK_Pin 						GPIO_PIN_14
+#define TCK_GPIO_Port					GPIOA
+#define SWO_Pin 						GPIO_PIN_3
+#define SWO_GPIO_Port 					GPIOB
+
+
+
+#define LED1_PIN                         GPIO_PIN_5
+#define LED1_GPIO_PORT                   GPIOA
+#define LED2_PIN                         GPIO_PIN_9
+#define LED2_GPIO_PORT                   GPIOC
+#define LED3_PIN                         GPIO_PIN_8
+#define LED3_GPIO_PORT                   GPIOC
+#define LED4_PIN                         GPIO_PIN_5
+#define LED4_GPIO_PORT                   GPIOC
+
+
+#define TIMx                           TIM3
+#define TIMx_CLK_ENABLE()              __HAL_RCC_TIM3_CLK_ENABLE()
+
+
+/* Definition for TIMx's NVIC */
+#define TIMx_IRQn                      TIM3_IRQn
+#define TIMx_IRQHandler                TIM3_IRQHandler
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
