@@ -1,8 +1,4 @@
-/.settings
-Debug
-.cproject
-.mxproject
-.project
+/Debug
 *.d
 *.o
 *.su

@@ -77,5 +77,4 @@ void Timer_Init(void){
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	SCH_Update();
-	SCH_Dispatch_Tasks();
 }

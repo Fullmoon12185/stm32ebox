@@ -45,9 +45,10 @@ int main(void)
 	while (1){
 		/* Insert delay 100 ms */
 
+		SCH_Dispatch_Tasks();
 //		temp = GetADCValue(0);
-		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
-		HAL_Delay(1000);
+//		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
+//		HAL_Delay(1000);
 	}
 	return 0;
 }

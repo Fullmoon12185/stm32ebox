@@ -14,7 +14,7 @@
 #include "app_timer.h"
 #include "app_uart.h"
 #include "app_system_clock_config.h"
-
+#include "app_sim3g.h"
 #include "app_init.h"
 
 
@@ -60,6 +60,10 @@ void System_Initialization(void)
         case START_DMA_ADC:
         	StartGettingADCValues();
         	DEBUG_INIT(printf("START_DMA_ADC - Done \r\n"));
+        	break;
+        case SIM_3G_INIT:
+        	Sim3g_Init();
+        	DEBUG_INIT(printf("SIM_3G_INIT - Done \r\n"));
         	break;
         default:
             initState = HAL_INIT;

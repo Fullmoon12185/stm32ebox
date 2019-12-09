@@ -18,6 +18,7 @@ enum InitState {
 	ADC_INIT,
     WATCH_DOG_INIT,
 	START_DMA_ADC,
+	SIM_3G_INIT,
     MAX_INIT_STATE
 };
 
