@@ -50,21 +50,21 @@ uint8_t DataToSend[DATA_TO_SEND_LENGTH];
 enum SIM3G_STATE sim3gState = SIM3G_STATUS;
 
 
-void Sim3gInit(void){
+void Sim3g_Init(void){
 
 }
 
-void Sim3gEnable(void){
+void Sim3g_Enable(void){
 
 }
 
-void Sim3gWakeUp(void){
+void Sim3g_WakeUp(void){
 
 }
-void PowerSignalLow(void){
+void Power_Signal_Low(void){
 
 }
-void PowerSignalHigh(void){
+void Power_Signal_High(void){
 
 }
 
@@ -83,15 +83,15 @@ void SIM3G_OPERATION(void){
 		case WAIT_FOR_SIM3G_STATUS_RESPONSE:
 			break;
 		case POWER_ON_SIM3G:
-			SCH_Add_Task(PowerSignalLow, 0, 0);
-			SCH_Add_Task(PowerSignalHigh, TIMER_TO_POWER_ON_SIM3G, 0);
+			SCH_Add_Task(Power_Signal_Low, 0, 0);
+			SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_ON_SIM3G, 0);
 			sim3gState = WAIT_FOR_SIM3G_POWER_ON;
 			break;
 		case WAIT_FOR_SIM3G_POWER_ON:
 			break;
 		case POWER_OFF_SIM3G:
-			SCH_Add_Task(PowerSignalLow, 0, 0);
-			SCH_Add_Task(PowerSignalHigh, TIMER_TO_POWER_OFF_SIM3G, 0);
+			SCH_Add_Task(Power_Signal_Low, 0, 0);
+			SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
 			sim3gState = WAIT_FOR_SIM3G_POWER_OFF;
 			break;
 		case WAIT_FOR_SIM3G_POWER_OFF:

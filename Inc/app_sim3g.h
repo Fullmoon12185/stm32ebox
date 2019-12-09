@@ -36,7 +36,7 @@ enum SIM3G_STATE{
 	WAIT_FOR_DISCONNECT_CONNECTION_RESPONSE
 };
 
-void Sim3gInit(void);
+void Sim3g_Init(void);
 #endif /* APP_SIM3G_H_ */
 
 
