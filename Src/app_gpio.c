@@ -86,7 +86,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
 }
 
-
 void Relay_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -154,5 +153,4 @@ void Sim5320_GPIO_Init(void){
 	GPIO_InitStruct.Pin = PA8_3G_REG_EN;
 	HAL_GPIO_Init(PA8_3G_REG_EN_PORT, &GPIO_InitStruct);
 }
-
 
