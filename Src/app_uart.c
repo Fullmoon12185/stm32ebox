@@ -23,11 +23,11 @@ void Clear_UART1_Receive_Buffer(void);
 UART_HandleTypeDef Uart1Handle;
 UART_HandleTypeDef Uart2Handle;
 /* Buffer used for transmission */
-uint8_t  aTxBuffer[] = " ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT**** \r\n";
+uint8_t  aUART_TxBuffer[] = " ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT**** \r\n";
 
 
 /* Buffer used for reception */
-uint8_t aRxBuffer[RXBUFFERSIZE];
+uint8_t aUART_RxBuffer[RXBUFFERSIZE];
 
 __IO ITStatus UartTransmitReady = SET;
 __IO ITStatus UartReceiveReady = RESET;
@@ -52,7 +52,7 @@ void UART1_Init(void){
 	if(HAL_UART_Init(&Uart1Handle) != HAL_OK){
 		Error_Handler();
 	}
-	UART1_Transmit(aTxBuffer);
+	UART1_Transmit(aUART_TxBuffer);
 }
 /**
   * @brief USART2 Initialization Function
@@ -120,54 +120,64 @@ void UART1_Transmit(uint8_t * buffer){
 void Clear_UART1_Receive_Buffer(void){
 	uint8_t i;
 	for(i = 0; i < RXBUFFERSIZE; i++){
-		aRxBuffer[i] = 0;
+		aUART_RxBuffer[i] = 0;
 	}
 }
 void UART1_Receive(void){
+	UartReceiveReady = RESET;
 	Clear_UART1_Receive_Buffer();
-	HAL_UART_Receive_IT(&Uart1Handle, (uint8_t *)aRxBuffer, RXBUFFERSIZE);
+	HAL_UART_Receive_IT(&Uart1Handle, (uint8_t *)aUART_RxBuffer, RXBUFFERSIZE);
 }
 
+ITStatus isUART1ReceiveReady(){
+	return UartReceiveReady;
+}
 ITStatus isUART1TransmissionReady(void){
 	return UartTransmitReady;
 }
 
-FlagStatus isReceivedData(uint8_t * str){
+
+FlagStatus isReivedData1(const char * str){
+	return strcmp((char *)aUART_RxBuffer, str) == 0;
+}
+
+FlagStatus isReceivedData(const uint8_t * str){
 	uint8_t i = 0;
 	uint8_t str_len = GetStringLength((uint8_t*)str);
 
 	while(i < str_len){
-		if(aRxBuffer[i] != str[i]){
+		if(aUART_RxBuffer[i] != str[i]){
 			return RESET;
 		}
 		i++;
 	}
 	return SET;
 }
+
 FlagStatus isOK(void){
-	if(aRxBuffer[0] == 'O' && aRxBuffer[1] == 'K'){
+	if(aUART_RxBuffer[0] == 'O' && aUART_RxBuffer[1] == 'K'){
 		return SET;
 	}
 	return RESET;
 }
 
 FlagStatus isERROR(void){
-	if(aRxBuffer[0] == 'E' && aRxBuffer[1] == 'R' && aRxBuffer[2] == 'R' && aRxBuffer[3] == 'O' && aRxBuffer[4] == 'R'){
+	if(aUART_RxBuffer[0] == 'E' && aUART_RxBuffer[1] == 'R' && aUART_RxBuffer[2] == 'R' && aUART_RxBuffer[3] == 'O' && aUART_RxBuffer[4] == 'R'){
 		return SET;
 	}
 	return RESET;
 }
 
 FlagStatus isConnect_OK(void){
-	if(aRxBuffer[0] == 'C' && aRxBuffer[1] == 'o' && aRxBuffer[2] == 'n' && aRxBuffer[3] == 'n' && aRxBuffer[4] == 'e'
-			&& aRxBuffer[5] == 'c' && aRxBuffer[6] == 't' && aRxBuffer[7] == ' ' && aRxBuffer[8] == 'o' && aRxBuffer[9] == 'k'){
+	if(aUART_RxBuffer[0] == 'C' && aUART_RxBuffer[1] == 'o' && aUART_RxBuffer[2] == 'n' && aUART_RxBuffer[3] == 'n' && aUART_RxBuffer[4] == 'e'
+			&& aUART_RxBuffer[5] == 'c' && aUART_RxBuffer[6] == 't' && aUART_RxBuffer[7] == ' ' && aUART_RxBuffer[8] == 'o' && aUART_RxBuffer[9] == 'k'){
 		return SET;
 	}
 	return RESET;
 }
 
 FlagStatus isGreaterThanSymbol(void){
-	if(aRxBuffer[0] == '>'){
+	if(aUART_RxBuffer[0] == '>'){
 		return SET;
 	}
 	return RESET;

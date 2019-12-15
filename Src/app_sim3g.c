@@ -50,6 +50,12 @@ uint8_t DataToSend[DATA_TO_SEND_LENGTH];
 enum SIM3G_STATE sim3gState = SIM3G_STATUS;
 
 
+static void setUpReceiveResponse(void);
+static void ATcommandSending(uint8_t * buffer);
+
+
+
+
 void Sim3g_Init(void){
 
 }
@@ -68,19 +74,33 @@ void Power_Signal_High(void){
 
 }
 
+static void setUpReceiveResponse(void){
+	UART1_Receive();
+}
 static void ATcommandSending(uint8_t * buffer){
 	if(isUART1TransmissionReady() == SET){
 		UART1_Transmit(buffer);
 	}
+	setUpReceiveResponse();
 }
+
+
 
 void SIM3G_OPERATION(void){
 
 	switch(sim3gState){
 		case SIM3G_STATUS:
 			ATcommandSending((uint8_t *)AT);
+			sim3gState = WAIT_FOR_SIM3G_STATUS_RESPONSE;
 			break;
 		case WAIT_FOR_SIM3G_STATUS_RESPONSE:
+			if(isUART1ReceiveReady()){
+				if(isReceivedData((uint8_t *)OK)){
+
+				} else if(isReceivedData((uint8_t *)ERROR_1)){
+
+				}
+			}
 			break;
 		case POWER_ON_SIM3G:
 			SCH_Add_Task(Power_Signal_Low, 0, 0);
@@ -96,6 +116,9 @@ void SIM3G_OPERATION(void){
 			break;
 		case WAIT_FOR_SIM3G_POWER_OFF:
 			break;
+
+
+
 
 		case DEFINE_PDP_CONTEXT:
 			break;

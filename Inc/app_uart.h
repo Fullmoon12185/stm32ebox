@@ -14,8 +14,10 @@ void UART1_Init(void);
 void UART1_Transmit(uint8_t* buffer);
 
 void UART1_Receive(void);
+
+ITStatus isUART1ReceiveReady();
 ITStatus isUART1TransmissionReady(void);
-FlagStatus isReceivedData(uint8_t * str);
+FlagStatus isReceivedData(const uint8_t * str);
 FlagStatus isOK(void);
 FlagStatus isERROR(void);
 FlagStatus isGreaterThanSymbol(void);

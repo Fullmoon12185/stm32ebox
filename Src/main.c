@@ -38,8 +38,8 @@ void test2(void){
 	HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
 }
 int main(void)
-{	System_Initialization();
-	UART1_Receive();
+{
+	System_Initialization();
 	SCH_Add_Task(test1, 0, 100);
 	SCH_Add_Task(test2, 0, 1000);
 	while (1){
