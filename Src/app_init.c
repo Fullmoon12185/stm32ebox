@@ -15,6 +15,8 @@
 #include "app_uart.h"
 #include "app_system_clock_config.h"
 #include "app_sim3g.h"
+#include "app_spi.h"
+#include "app_i2c.h"
 #include "app_init.h"
 
 
@@ -49,6 +51,16 @@ void System_Initialization(void)
         	Timer_Init();
         	DEBUG_INIT(printf("TIMER_INIT - Done \r\n"));
             break;
+        case SPI_INIT:
+        	SPI1_Init();
+        	SPI2_Init();
+        	DEBUG_INIT(printf("SPI_INIT - Done \r\n"));
+        	break;
+        case SPI_25LCXXX_INIT:
+        	MC25LC512_Initilize();
+        	break;
+        case I2C_INIT:
+        	break;
         case ADC_INIT:
         	ADC1_Init();
         	DEBUG_INIT(printf("ADC_INIT - Done \r\n"));

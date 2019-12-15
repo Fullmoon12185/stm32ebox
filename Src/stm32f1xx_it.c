@@ -162,7 +162,7 @@ void EXTI15_10_IRQHandler(void)
   * @param  None
   * @retval None
   */
-void TIMx_IRQHandler(void)
+void TIM3_IRQHandler(void)
 {
 	HAL_TIM_IRQHandler(&TimHandle);
 }

@@ -32,6 +32,7 @@ extern "C" {
 #include "stm32f1xx_nucleo.h"
 
 #include "stdio.h"
+#include "string.h"
 
 
 #define DEBUG_INIT(X) 					X
@@ -64,7 +65,60 @@ void Error_Handler(void);
 #define LED4_PIN                         GPIO_PIN_5
 #define LED4_GPIO_PORT                   GPIOC
 
+//Relay control pins and ports
+#define PA11_OUT0						GPIO_PIN_11
+#define PA11_OUT0_PORT					GPIOA
+#define PA12_OUT1						GPIO_PIN_12
+#define PA12_OUT1_PORT					GPIOA
+#define PA13_OUT2						GPIO_PIN_13
+#define PA13_OUT2_PORT					GPIOA
+#define PA14_OUT3						GPIO_PIN_14
+#define PA14_OUT3_PORT					GPIOA
+#define PA15_OUT4						GPIO_PIN_15
+#define PA15_OUT4_PORT					GPIOA
 
+#define PC10_OUT5						GPIO_PIN_10
+#define PC10_OUT5_PORT					GPIOC
+#define PC11_OUT6						GPIO_PIN_11
+#define PC11_OUT6_PORT					GPIOC
+#define PC12_OUT7						GPIO_PIN_12
+#define PC12_OUT7_PORT					GPIOC
+
+#define PB3_OUT8						GPIO_PIN_3
+#define PB3_OUT8_PORT					GPIOB
+
+#define PB4_OUT9						GPIO_PIN_4
+#define PB4_OUT9_PORT					GPIOB
+
+
+
+//LED output control signals
+#define LED7_SDI						GPIO_PIN_2
+#define LED7_SDI_PORT					GPIOC
+#define LED7_SCK						GPIO_PIN_3
+#define LED7_SCK_PORT					GPIOC
+#define LED7_LE							GPIO_PIN_4
+#define LED7_LE_PORT					GPIOC
+#define LED7_OE							GPIO_PIN_5
+#define LED7_OE_PORT					GPIOC
+
+//BUZZER
+#define PB5_BUZZER						GPIO_PIN_5
+#define PB5_BUZZER_PORT					GPIOB
+
+
+//3G control signals pins ports
+#define PC7_3G_WAKEUP					GPIO_PIN_7
+#define PC7_3G_WAKEUP_PORT				GPIOC
+#define PC8_3G_PWRON					GPIO_PIN_8
+#define PC8_3G_PWRON_PORT				GPIOC
+#define PC9_3G_PERST					GPIO_PIN_9
+#define PC9_3G_PERST_PORT				GPIOC
+#define PA8_3G_REG_EN					GPIO_PIN_8
+#define PA8_3G_REG_EN_PORT				GPIOA
+
+
+//timer
 #define TIMx                           TIM3
 #define TIMx_CLK_ENABLE()              __HAL_RCC_TIM3_CLK_ENABLE()
 
@@ -126,6 +180,26 @@ void Error_Handler(void);
 #define 	NUMBER_OF_SAMPLES_PER_SECOND			100
 #define 	NUMBER_OF_ADC_CHANNELS					14
 
+
+
+
+//SPI2
+#define MASTER_BOARD
+#define SPI2_CLK_ENABLE()                __HAL_RCC_SPI2_CLK_ENABLE()
+#define SPI2_SCK_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOB_CLK_ENABLE()
+#define SPI2_MISO_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
+#define SPI2_MOSI_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
+
+/* Definition for SPIx Pins */
+#define SPI2_NSS_PIN                     GPIO_PIN_12
+#define SPI2_NSS_GPIO_PORT               GPIOB
+
+#define SPI2_SCK_PIN                     GPIO_PIN_13
+#define SPI2_SCK_GPIO_PORT               GPIOB
+#define SPI2_MISO_PIN                    GPIO_PIN_14
+#define SPI2_MISO_GPIO_PORT              GPIOB
+#define SPI2_MOSI_PIN                    GPIO_PIN_15
+#define SPI2_MOSI_GPIO_PORT              GPIOB
 
 #ifdef __cplusplus
 }
