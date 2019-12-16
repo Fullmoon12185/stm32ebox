@@ -7,9 +7,12 @@
 #include "main.h"
 
 void LED_Init(void);
-void Relay_Init(void);
+void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
 void Sim5320_GPIO_Init(void);
+
+
+
 /**
   * @brief GPIO Initialization Function
   * @param None
@@ -46,7 +49,7 @@ void MX_GPIO_Init(void)
 	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 	LED_Init();
-	Relay_Init();
+	GPIO_Relay_Init();
 	Buzzer_Init();
 	Sim5320_GPIO_Init();
 }
@@ -86,44 +89,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
 }
 
-void Relay_Init(void){
+void GPIO_Relay_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull  = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 
-	GPIO_InitStruct.Pin = PA11_OUT0;
-	HAL_GPIO_Init(PA11_OUT0_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_0;
+	HAL_GPIO_Init(RELAY_PORT_0, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin = PA12_OUT1;
-	HAL_GPIO_Init(PA12_OUT1_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = PA13_OUT2;
-	HAL_GPIO_Init(PA13_OUT2_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = PA14_OUT3;
-	HAL_GPIO_Init(PA14_OUT3_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = PA15_OUT4;
-	HAL_GPIO_Init(PA15_OUT4_PORT, &GPIO_InitStruct);
-
-
-	GPIO_InitStruct.Pin = PC10_OUT5;
-	HAL_GPIO_Init(PC10_OUT5_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = PC11_OUT6;
-	HAL_GPIO_Init(PC11_OUT6_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = PC12_OUT7;
-	HAL_GPIO_Init(PC12_OUT7_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = PB3_OUT8;
-	HAL_GPIO_Init(PB3_OUT8_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = PB4_OUT9;
-	HAL_GPIO_Init(PB4_OUT9_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_1;
+	HAL_GPIO_Init(RELAY_PORT_1, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_2;
+	HAL_GPIO_Init(RELAY_PORT_2, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_3;
+	HAL_GPIO_Init(RELAY_PORT_3, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_4;
+	HAL_GPIO_Init(RELAY_PORT_4, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_5;
+	HAL_GPIO_Init(RELAY_PORT_5, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_6;
+	HAL_GPIO_Init(RELAY_PORT_6, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_7;
+	HAL_GPIO_Init(RELAY_PORT_7, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_8;
+	HAL_GPIO_Init(RELAY_PORT_8, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_9;
+	HAL_GPIO_Init(RELAY_PORT_9, &GPIO_InitStruct);
 }
+
+
 
 void Buzzer_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -132,8 +128,8 @@ void Buzzer_Init(void){
 	GPIO_InitStruct.Pull  = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 
-	GPIO_InitStruct.Pin = PB5_BUZZER;
-	HAL_GPIO_Init(PB5_BUZZER_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = BUZZER_PIN;
+	HAL_GPIO_Init(BUZZER_PORT, &GPIO_InitStruct);
 }
 
 void Sim5320_GPIO_Init(void){
@@ -143,14 +139,17 @@ void Sim5320_GPIO_Init(void){
 	GPIO_InitStruct.Pull  = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
 
-	GPIO_InitStruct.Pin = PC7_3G_WAKEUP;
-	HAL_GPIO_Init(PC7_3G_WAKEUP_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = SIM5320_3G_WAKEUP;
+	HAL_GPIO_Init(SIM5320_3G_WAKEUP_PORT, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin = PC8_3G_PWRON;
-	HAL_GPIO_Init(PC8_3G_PWRON_PORT, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = PC9_3G_PERST;
-	HAL_GPIO_Init(PC9_3G_PERST_PORT, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = PA8_3G_REG_EN;
-	HAL_GPIO_Init(PA8_3G_REG_EN_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = SIM5320_3G_PWRON;
+	HAL_GPIO_Init(SIM5320_3G_PWRON_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = SIM5320_3G_PERST;
+	HAL_GPIO_Init(SIM5320_3G_PERST_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
+	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
 }
+
+
+
 

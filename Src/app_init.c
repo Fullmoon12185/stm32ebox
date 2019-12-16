@@ -7,7 +7,7 @@
 #include "main.h"
 #include "app_adc.h"
 #include "app_accel.h"
-#include "app_flash.h"
+#include "app_flash_database.h"
 #include "app_gpio.h"
 #include "app_sim3g.h"
 #include "app_temperature.h"
@@ -62,6 +62,8 @@ void System_Initialization(void)
         	DEBUG_INIT(printf("SPI_25LCXXX_INIT - Done \r\n"));
         	break;
         case I2C_INIT:
+        	I2C_Init();
+        	DEBUG_INIT(printf("I2C_Init - Done \r\n"));
         	break;
         case ADC_INIT:
         	ADC1_Init();

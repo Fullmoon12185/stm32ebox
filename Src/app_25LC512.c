@@ -36,16 +36,16 @@ void MC25LC512_CS(uint8_t CS_Status)
 }
 void MC25LC512_WriteEnableOrDisable(uint8_t EnableOrDisable)
 {
-	uint8_t SendOneByte=0;
+	uint8_t SendOneByte = 0;
 	MC25LC512_CS(EEPROM_CS_PIN_RESET);// Reset The spi Chip //Reset means Enable
 
 	if(EnableOrDisable==EEPROM_Enable)
 	{
-			SendOneByte=MC25LCxxx_SPI_WREN;
+			SendOneByte = MC25LCxxx_SPI_WREN;
 	}
 	else
 	{
-			SendOneByte=MC25LCxxx_SPI_WRDI;
+			SendOneByte = MC25LCxxx_SPI_WRDI;
 	}
 	HAL_SPI_Transmit(&Spi2Handle , &SendOneByte, 1, 200) ;
 	MC25LC512_CS(EEPROM_CS_PIN_SET);// Set The spi Chip //Set means Disable
@@ -55,7 +55,7 @@ uint8_t MC25LC512_ReleaseDeepPowerDownMode(void)
 
 	uint8_t SendOneByte;
 	uint8_t RecieveByteOfReleaseDeepPowerMode = 0;
-	SendOneByte=MC25LCxxx_SPI_RDID;
+	SendOneByte = MC25LCxxx_SPI_RDID;
 
 	MC25LC512_CS(EEPROM_CS_PIN_RESET);// Reset The spi Chip //Reset means Enable
 
@@ -86,11 +86,11 @@ void MC25LC512_Write_Bytes(uint16_t AddresOfData, uint8_t *WriteArrayOfEEProm, u
 	uint8_t SendOneByte;
 	MC25LC512_CS(EEPROM_CS_PIN_RESET);// Reset The spi Chip //Reset means Enable
 	HAL_Delay(1);
-	SendOneByte=MC25LCxxx_SPI_WRITE;
+	SendOneByte = MC25LCxxx_SPI_WRITE;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);
-	SendOneByte= AddresOfData>>8;
+	SendOneByte = AddresOfData>>8;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//High byte of address
-	SendOneByte= AddresOfData & 0x00FF;
+	SendOneByte = AddresOfData & 0x00FF;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//Low byte of address
 	//
 	HAL_SPI_Transmit(&Spi2Handle, WriteArrayOfEEProm, SizeOfArray, SizeOfArray*50) ;
@@ -110,7 +110,7 @@ void MC25LC512_Write_HalfWords(uint16_t AddresOfData, uint16_t *WriteArrayOfEEPr
 	HAL_Delay(1);
 	SendOneByte=MC25LCxxx_SPI_WRITE;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);
-	SendOneByte= AddresOfData>>8;
+	SendOneByte= AddresOfData >> 8;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//High byte of address
 	SendOneByte= AddresOfData & 0x00FF;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//Low byte of address
@@ -133,9 +133,9 @@ void MC25LC512_Write_Words(uint16_t AddresOfData, uint32_t *WriteArrayOfEEProm, 
 	uint8_t tmpArrayForSend[4];
 	MC25LC512_CS(EEPROM_CS_PIN_RESET);// Reset The spi Chip //Reset means Enable
 	HAL_Delay(1);
-	SendOneByte=MC25LCxxx_SPI_WRITE;
+	SendOneByte = MC25LCxxx_SPI_WRITE;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);
-	SendOneByte= AddresOfData>>8;
+	SendOneByte= AddresOfData >> 8;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//High byte of address
 	SendOneByte= AddresOfData & 0x00FF;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//Low byte of address
@@ -172,10 +172,10 @@ uint8_t MC25LC512_Read_Bytes(uint16_t AddresOfData, uint8_t *DataArrayOfEEProm, 
 	//	uint8_t RecieveByteFromEEProm[1];
 	MC25LC512_CS(EEPROM_CS_PIN_RESET);// Reset The spi Chip //Reset means Enable
 	HAL_Delay(1);
-	SendOneByte=MC25LCxxx_SPI_READ;//Config the Device
+	SendOneByte = MC25LCxxx_SPI_READ;//Config the Device
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);
 
-	SendOneByte= AddresOfData>>8;
+	SendOneByte= AddresOfData >> 8;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//High byte of address
 	SendOneByte= AddresOfData & 0x00FF;
 	HAL_SPI_Transmit(&Spi2Handle, &SendOneByte, 1, 200);//Low byte of address

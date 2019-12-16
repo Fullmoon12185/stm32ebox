@@ -35,6 +35,12 @@ extern "C" {
 #include "string.h"
 
 
+typedef enum
+{
+  ABNORMAL = 0,
+  NORMAL = !ABNORMAL
+} WorkingStatus;
+
 #define DEBUG_INIT(X) 					X
 
 
@@ -65,30 +71,6 @@ void Error_Handler(void);
 #define LED4_PIN                         GPIO_PIN_5
 #define LED4_GPIO_PORT                   GPIOC
 
-//Relay control pins and ports
-#define PA11_OUT0						GPIO_PIN_11
-#define PA11_OUT0_PORT					GPIOA
-#define PA12_OUT1						GPIO_PIN_12
-#define PA12_OUT1_PORT					GPIOA
-#define PA13_OUT2						GPIO_PIN_13
-#define PA13_OUT2_PORT					GPIOA
-#define PA14_OUT3						GPIO_PIN_14
-#define PA14_OUT3_PORT					GPIOA
-#define PA15_OUT4						GPIO_PIN_15
-#define PA15_OUT4_PORT					GPIOA
-
-#define PC10_OUT5						GPIO_PIN_10
-#define PC10_OUT5_PORT					GPIOC
-#define PC11_OUT6						GPIO_PIN_11
-#define PC11_OUT6_PORT					GPIOC
-#define PC12_OUT7						GPIO_PIN_12
-#define PC12_OUT7_PORT					GPIOC
-
-#define PB3_OUT8						GPIO_PIN_3
-#define PB3_OUT8_PORT					GPIOB
-
-#define PB4_OUT9						GPIO_PIN_4
-#define PB4_OUT9_PORT					GPIOB
 
 
 
@@ -103,8 +85,10 @@ void Error_Handler(void);
 #define LED7_OE_PORT					GPIOC
 
 //BUZZER
-#define PB5_BUZZER						GPIO_PIN_5
+#define PB5_BUZZER_PIN					GPIO_PIN_5
 #define PB5_BUZZER_PORT					GPIOB
+#define BUZZER_PIN						PB5_BUZZER_PIN
+#define BUZZER_PORT						PB5_BUZZER_PORT
 
 
 //3G control signals pins ports
@@ -117,6 +101,14 @@ void Error_Handler(void);
 #define PA8_3G_REG_EN					GPIO_PIN_8
 #define PA8_3G_REG_EN_PORT				GPIOA
 
+#define SIM5320_3G_WAKEUP					PC7_3G_WAKEUP
+#define SIM5320_3G_WAKEUP_PORT				PC7_3G_WAKEUP_PORT
+#define SIM5320_3G_PWRON					PC8_3G_PWRON
+#define SIM5320_3G_PWRON_PORT				PC8_3G_PWRON_PORT
+#define SIM5320_3G_PERST					PC9_3G_PERST
+#define SIM5320_3G_PERST_PORT				PC9_3G_PERST_PORT
+#define SIM5320_3G_REG_EN					PA8_3G_REG_EN
+#define SIM5320_3G_REG_EN_PORT				PA8_3G_REG_EN_PORT
 
 //timer
 #define TIMx                           TIM3
@@ -200,6 +192,115 @@ void Error_Handler(void);
 #define SPI2_MISO_GPIO_PORT              GPIOB
 #define SPI2_MOSI_PIN                    GPIO_PIN_15
 #define SPI2_MOSI_GPIO_PORT              GPIOB
+
+
+
+
+//I2C
+#define I2C1_CLK_ENABLE()               __HAL_RCC_I2C1_CLK_ENABLE()
+#define I2C1_SDA_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
+#define I2C1_SCL_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
+
+#define I2C1_FORCE_RESET()              __HAL_RCC_I2C1_FORCE_RESET()
+#define I2C1_RELEASE_RESET()            __HAL_RCC_I2C1_RELEASE_RESET()
+
+/* Definition for I2Cx Pins */
+#define I2C1_SCL_PIN                    GPIO_PIN_6
+#define I2C1_SCL_GPIO_PORT              GPIOB
+#define I2C1_SDA_PIN                    GPIO_PIN_7
+#define I2C1_SDA_GPIO_PORT              GPIOB
+
+
+
+
+//pcf8574 inputs
+#define I2C_BUFFERSIZE 		1
+#define I2C_ADDRESS_GPIO0	0
+#define I2C_ADDRESS_GPIO1	4
+#define I2C_ADDRESS_GPIO2	6
+
+#define SAC10				0
+#define SAC20				1
+#define SAC11				2
+#define SAC21				3
+#define SAC12				4
+#define SAC22				5
+#define SAC13				6
+#define SAC23				7
+#define SAC14				8
+#define SAC24				9
+#define SAC15				10
+#define SAC25				11
+#define SAC16				12
+#define SAC26				13
+#define SAC17				14
+#define SAC27				15
+#define SAC18				16
+#define SAC28				17
+#define SAC19				18
+#define SAC29				19
+
+//Relay
+#define	NUMBER_OF_RELAYS	10
+#define RELAY_0				0
+#define RELAY_1				1
+#define RELAY_2				2
+#define RELAY_3				3
+#define RELAY_4				4
+#define RELAY_5				5
+#define RELAY_6				6
+#define RELAY_7				7
+#define RELAY_8				8
+#define RELAY_9				9
+
+//Relay control pins and ports
+#define PA11_OUT0						GPIO_PIN_11
+#define PA11_OUT0_PORT					GPIOA
+#define PA12_OUT1						GPIO_PIN_12
+#define PA12_OUT1_PORT					GPIOA
+#define PA13_OUT2						GPIO_PIN_13
+#define PA13_OUT2_PORT					GPIOA
+#define PA14_OUT3						GPIO_PIN_14
+#define PA14_OUT3_PORT					GPIOA
+#define PA15_OUT4						GPIO_PIN_15
+#define PA15_OUT4_PORT					GPIOA
+
+#define PC10_OUT5						GPIO_PIN_10
+#define PC10_OUT5_PORT					GPIOC
+#define PC11_OUT6						GPIO_PIN_11
+#define PC11_OUT6_PORT					GPIOC
+#define PC12_OUT7						GPIO_PIN_12
+#define PC12_OUT7_PORT					GPIOC
+
+#define PB3_OUT8						GPIO_PIN_3
+#define PB3_OUT8_PORT					GPIOB
+
+#define PB4_OUT9						GPIO_PIN_4
+#define PB4_OUT9_PORT					GPIOB
+
+
+
+#define RELAY_PIN_0						PA11_OUT0
+#define RELAY_PIN_1						PA12_OUT1
+#define RELAY_PIN_2						PA13_OUT2
+#define RELAY_PIN_3						PA14_OUT3
+#define RELAY_PIN_4						PA15_OUT4
+#define RELAY_PIN_5						PC10_OUT5
+#define RELAY_PIN_6						PC11_OUT6
+#define RELAY_PIN_7						PC12_OUT7
+#define RELAY_PIN_8						PB3_OUT8
+#define RELAY_PIN_9						PB4_OUT9
+
+#define RELAY_PORT_0						PA11_OUT0_PORT
+#define RELAY_PORT_1						PA12_OUT1_PORT
+#define RELAY_PORT_2						PA13_OUT2_PORT
+#define RELAY_PORT_3						PA14_OUT3_PORT
+#define RELAY_PORT_4						PA15_OUT4_PORT
+#define RELAY_PORT_5						PC10_OUT5_PORT
+#define RELAY_PORT_6						PC11_OUT6_PORT
+#define RELAY_PORT_7						PC12_OUT7_PORT
+#define RELAY_PORT_8						PB3_OUT8_PORT
+#define RELAY_PORT_9						PB4_OUT9_PORT
 
 #ifdef __cplusplus
 }
