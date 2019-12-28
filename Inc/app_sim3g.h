@@ -10,7 +10,7 @@
 #define APP_SIM3G_H_
 
 
-enum SIM3G_STATE{
+typedef enum {
 	SIM3G_STATUS = 0,
 	WAIT_FOR_SIM3G_STATUS_RESPONSE,
 
@@ -35,10 +35,18 @@ enum SIM3G_STATE{
 	SEND_DATA,
 	WAIT_FOR_SEND_DATA_RESPONSE,
 	DISCONNECT_CONNECTION,
-	WAIT_FOR_DISCONNECT_CONNECTION_RESPONSE
-};
+	WAIT_FOR_DISCONNECT_CONNECTION_RESPONSE,
+	MAX_NUMBER_STATES
+}SIM3G_STATE;
+
+
+typedef struct {
+	SIM3G_STATE state;
+	void (*func)(void);
+}Sim3g_Machine_Type;
 
 void Sim3g_Init(void);
+void Sim3g_Run(void);
 #endif /* APP_SIM3G_H_ */
 
 

@@ -74,3 +74,6 @@ uint8_t SCH_Delete_Task(uint8_t TASK_INDEX) {
       return Return_code; // return status
 }
 
+FlagStatus isTaskDone(uint8_t taskIndex){
+	return (SCH_tasks_G[taskIndex].pTask == 0x0000);
+}

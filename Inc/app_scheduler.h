@@ -27,7 +27,7 @@ void SCH_Update(void);
 uint8_t SCH_Add_Task(void (* pFunction)(), const uint32_t DELAY, const uint32_t PERIOD);
 void SCH_Dispatch_Tasks(void);
 uint8_t SCH_Delete_Task(uint8_t TASK_INDEX);
-
+FlagStatus isTaskDone(uint8_t taskIndex);
 
 
 #endif /* APP_SCHEDULER_H_ */

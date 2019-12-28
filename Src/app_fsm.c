@@ -5,4 +5,7 @@
  *      Author: VAIO
  */
 
+#include "main.h"
+#include "app_sim3g.h"
+
 
