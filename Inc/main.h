@@ -75,14 +75,14 @@ void Error_Handler(void);
 
 
 //LED output control signals
-#define LED7_SDI						GPIO_PIN_2
-#define LED7_SDI_PORT					GPIOC
-#define LED7_SCK						GPIO_PIN_3
-#define LED7_SCK_PORT					GPIOC
-#define LED7_LE							GPIO_PIN_4
-#define LED7_LE_PORT					GPIOC
-#define LED7_OE							GPIO_PIN_5
-#define LED7_OE_PORT					GPIOC
+#define LED_SDI						GPIO_PIN_3
+#define LED_SDI_PORT					GPIOC
+#define LED_SCK						GPIO_PIN_4
+#define LED_SCK_PORT					GPIOC
+#define LED_LE							GPIO_PIN_5
+#define LED_LE_PORT					GPIOC
+#define LED_OE							GPIO_PIN_6
+#define LED_OE_PORT					GPIOC
 
 //BUZZER
 #define PB5_BUZZER_PIN					GPIO_PIN_5
@@ -301,6 +301,11 @@ void Error_Handler(void);
 #define RELAY_PORT_7						PC12_OUT7_PORT
 #define RELAY_PORT_8						PB3_OUT8_PORT
 #define RELAY_PORT_9						PB4_OUT9_PORT
+
+
+
+
+
 
 #ifdef __cplusplus
 }

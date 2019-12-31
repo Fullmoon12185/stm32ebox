@@ -74,14 +74,6 @@ void LED_Init(void){
 	GPIO_InitStruct.Pin = LED4_PIN;
 	HAL_GPIO_Init(LED4_GPIO_PORT, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin = LED7_SDI;
-	HAL_GPIO_Init(LED7_SDI_PORT, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = LED7_SCK;
-	HAL_GPIO_Init(LED7_SCK_PORT, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = LED7_LE;
-	HAL_GPIO_Init(LED7_LE_PORT, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = LED7_OE;
-	HAL_GPIO_Init(LED7_OE_PORT, &GPIO_InitStruct);
 }
 
 
@@ -149,6 +141,8 @@ void Sim5320_GPIO_Init(void){
 	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
 	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
 }
+
+
 
 
 

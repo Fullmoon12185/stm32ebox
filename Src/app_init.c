@@ -9,6 +9,7 @@
 #include "app_accel.h"
 #include "app_flash_database.h"
 #include "app_gpio.h"
+#include "app_led_display.h"
 #include "app_sim3g.h"
 #include "app_temperature.h"
 #include "app_timer.h"
@@ -45,6 +46,10 @@ void System_Initialization(void)
         	ADC_DMA_Init();
         	DEBUG_INIT(printf("GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
+        case LED_DISPLAY_INIT:
+        	Led_Display_Init();
+        	DEBUG_INIT(printf("LED_DISPLAY_INIT - Done \r\n"));
+        	break;
         case FLASH_INIT:
         	DEBUG_INIT(printf("FLASH_INIT - Done \r\n"));
         	break;
