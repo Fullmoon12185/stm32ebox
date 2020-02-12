@@ -16,12 +16,12 @@ uint32_t ledStatusBuffer = 0;
 
 
 
-static void Latch_Enable(void);
-static void Latch_Disable(void);
+static void Latch_Enable(int8_t count);
+static void Latch_Disable(int8_t count);
 static void Output_Enable(void);
-static void Output_Disable(void);
-static void Clock_On(void);
-static void Clock_Off(void);
+//static void Output_Disable(void);
+static void Clock_On(int8_t count);
+static void Clock_Off(int8_t count);
 
 
 void Led_Display_Init(void){
@@ -40,29 +40,43 @@ void Led_Display_Init(void){
 	GPIO_InitStruct.Pin = LED_OE;
 	HAL_GPIO_Init(LED_OE_PORT, &GPIO_InitStruct);
 
-	Output_Disable();
-	Latch_Disable();
-	Clock_Off();
+	Output_Enable();
+	Latch_Disable(1);
+	Clock_Off(1);
 }
 
 
-static void Latch_Enable(void){
-	HAL_GPIO_WritePin(LED_LE_PORT, LED_LE, GPIO_PIN_SET);
+static void Latch_Enable(int8_t count){
+	if(count <= 0) return;
+	while(count-- != 0){
+		HAL_GPIO_WritePin(LED_LE_PORT, LED_LE, GPIO_PIN_SET);
+	}
 }
-static void Latch_Disable(void){
-	HAL_GPIO_WritePin(LED_LE_PORT, LED_LE, GPIO_PIN_RESET);
+static void Latch_Disable(int8_t count){
+	if(count <= 0) return;
+	while(count-- != 0){
+		HAL_GPIO_WritePin(LED_LE_PORT, LED_LE, GPIO_PIN_RESET);
+	}
 }
 static void Output_Enable(void){
 	HAL_GPIO_WritePin(LED_OE_PORT, LED_OE, GPIO_PIN_RESET);
 }
-static void Output_Disable(void){
-	HAL_GPIO_WritePin(LED_OE_PORT, LED_OE, GPIO_PIN_SET);
+//static void Output_Disable(void){
+//	HAL_GPIO_WritePin(LED_OE_PORT, LED_OE, GPIO_PIN_SET);
+//}
+static void Clock_On(int8_t count){
+	if(count <= 0) return;
+	while(count-- != 0){
+		HAL_GPIO_WritePin(LED_SCK_PORT, LED_SCK, GPIO_PIN_SET);
+	}
+
 }
-static void Clock_On(void){
-	HAL_GPIO_WritePin(LED_SCK_PORT, LED_SCK, GPIO_PIN_SET);
-}
-static void Clock_Off(void){
-	HAL_GPIO_WritePin(LED_SCK_PORT, LED_SCK, GPIO_PIN_RESET);
+static void Clock_Off(int8_t count){
+	if(count <= 0) return;
+	while(count-- != 0){
+		HAL_GPIO_WritePin(LED_SCK_PORT, LED_SCK, GPIO_PIN_RESET);
+	}
+
 }
 static void Data_Out(GPIO_PinState state){
 	HAL_GPIO_WritePin(LED_SDI_PORT, LED_SDI, state);
@@ -80,22 +94,15 @@ void Led_Display_Update_Buffer(uint8_t ledpos, FlagStatus status){
 uint8_t ledCounter = 0;
 void Led_Display(void){
 	uint8_t i;
-	Output_Enable();
-	Latch_Disable();
+
 	for (i = 0; i < 32; i ++){
-		Clock_Off();
-		Clock_Off();
-		Clock_Off();
-		Clock_Off();
 		Data_Out((ledStatusBuffer >> i) & 0x01);
-		Clock_On();
-		Clock_On();
-		Clock_On();
-		Clock_On();
+		Clock_Off(4);
+		Clock_On(4);
 	}
-	Latch_Enable();
-	Clock_Off();
-	Latch_Disable();
+	Latch_Disable(4);
+	Latch_Enable(4);
+	Latch_Disable(1);
 }
 
 

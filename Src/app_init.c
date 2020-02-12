@@ -25,7 +25,21 @@
 
 
 enum InitState initState = HAL_INIT;
+void Sys_Init(void){
 
+	HAL_Init();
+	SystemClock_Config();
+
+	UART3_Init();
+	UART1_Init();
+	DEBUG_INIT(printf("UART_INIT - Done \r\n"));
+	MX_GPIO_Init();
+	DEBUG_INIT(printf("GPIO_INIT - ADC_DMA_Init - Done \r\n"));
+
+	Timer_Init();
+   	DEBUG_INIT(printf("TIMER_INIT - Done \r\n"));
+
+}
 void System_Initialization(void)
 {
     while(initState != MAX_INIT_STATE){
@@ -37,18 +51,21 @@ void System_Initialization(void)
         	SystemClock_Config();
             break;
         case UART_INIT:
-        	UART2_Init();
+        	UART3_Init();
         	UART1_Init();
         	DEBUG_INIT(printf("UART_INIT - Done \r\n"));
         	break;
         case GPIO_INIT:
         	MX_GPIO_Init();
-        	ADC_DMA_Init();
         	DEBUG_INIT(printf("GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
         case LED_DISPLAY_INIT:
         	Led_Display_Init();
         	DEBUG_INIT(printf("LED_DISPLAY_INIT - Done \r\n"));
+        	break;
+        case RELAY_INIT:
+        	Relay_Init();
+        	DEBUG_INIT(printf("RELAY_INIT - Done \r\n"));
         	break;
         case FLASH_INIT:
         	DEBUG_INIT(printf("FLASH_INIT - Done \r\n"));
@@ -71,8 +88,11 @@ void System_Initialization(void)
         	DEBUG_INIT(printf("I2C_Init - Done \r\n"));
         	break;
         case ADC_INIT:
+        	ADC_DMA_Init();
         	ADC1_Init();
         	DEBUG_INIT(printf("ADC_INIT - Done \r\n"));
+        	break;
+        case ACCELERATOR_INIT:
         	break;
         case WATCH_DOG_INIT:
 
@@ -83,7 +103,7 @@ void System_Initialization(void)
         	DEBUG_INIT(printf("START_DMA_ADC - Done \r\n"));
         	break;
         case SIM_3G_INIT:
-        	Sim3g_Init();
+//        	Sim3g_Init();
         	DEBUG_INIT(printf("SIM_3G_INIT - Done \r\n"));
         	break;
         default:

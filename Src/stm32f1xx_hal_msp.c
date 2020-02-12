@@ -103,6 +103,29 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 		GPIO_InitStruct.Pin = USART2_RX_PIN;
 
 		HAL_GPIO_Init(USART2_RX_GPIO_PORT, &GPIO_InitStruct);
+	} else if(huart->Instance == USART3){
+		/*##-1- Enable peripherals and GPIO Clocks #################################*/
+		/* Enable GPIO TX/RX clock */
+		USART3_TX_GPIO_CLK_ENABLE();
+		USART3_RX_GPIO_CLK_ENABLE();
+
+
+		/* Enable USARTx clock */
+		USART3_CLK_ENABLE();
+
+		/*##-2- Configure peripheral GPIO ##########################################*/
+		/* UART TX GPIO pin configuration  */
+		GPIO_InitStruct.Pin       = USART3_TX_PIN;
+		GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull      = GPIO_PULLUP;
+		GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
+
+		HAL_GPIO_Init(USART3_TX_GPIO_PORT, &GPIO_InitStruct);
+
+		/* UART RX GPIO pin configuration  */
+		GPIO_InitStruct.Pin = USART3_RX_PIN;
+
+		HAL_GPIO_Init(USART3_RX_GPIO_PORT, &GPIO_InitStruct);
 	}
 
 
@@ -144,6 +167,16 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 		  HAL_GPIO_DeInit(USART2_TX_GPIO_PORT, USART2_TX_PIN);
 		  /* Configure UART Rx as alternate function  */
 		  HAL_GPIO_DeInit(USART2_RX_GPIO_PORT, USART2_RX_PIN);
+	}  else if(huart->Instance == USART3){
+		/*##-1- Reset peripherals ##################################################*/
+		  USART3_FORCE_RESET();
+		  USART3_RELEASE_RESET();
+
+		  /*##-2- Disable peripherals and GPIO Clocks #################################*/
+		  /* Configure UART Tx as alternate function  */
+		  HAL_GPIO_DeInit(USART3_TX_GPIO_PORT, USART3_TX_PIN);
+		  /* Configure UART Rx as alternate function  */
+		  HAL_GPIO_DeInit(USART3_RX_GPIO_PORT, USART3_RX_PIN);
 	}
 
 }
@@ -205,13 +238,12 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     PB0     ------> ADC1_IN8
     PB1     ------> ADC1_IN9
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_6
-                          |GPIO_PIN_7;
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
+                          |GPIO_PIN_4 |GPIO_PIN_5 |GPIO_PIN_6 |GPIO_PIN_7;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -267,11 +299,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     PB0     ------> ADC1_IN8
     PB1     ------> ADC1_IN9
     */
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2);
 
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_6
-                          |GPIO_PIN_7);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
+            |GPIO_PIN_4 |GPIO_PIN_5 |GPIO_PIN_6 |GPIO_PIN_7);
 
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0|GPIO_PIN_1);
 

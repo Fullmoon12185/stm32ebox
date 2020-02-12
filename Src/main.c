@@ -24,6 +24,7 @@
 #include "app_uart.h"
 #include "app_adc.h"
 #include "app_scheduler.h"
+#include "app_relay.h"
 
 
 extern uint32_t arrayOfADCValues[NUMBER_OF_ADC_CHANNELS*NUMBER_OF_SAMPLES_PER_AVERAGE];
@@ -31,7 +32,21 @@ extern uint32_t arrayOfAverageADCValues[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLE
 
 uint32_t temp;
 void test1(void){
-	HAL_GPIO_TogglePin(LED4_GPIO_PORT, LED4_PIN);
+	static uint8_t bool = 0;
+	static uint8_t index = 0;
+
+	if(bool == 0){
+		Set_Relay(index);
+	} else {
+		Reset_Relay(index);
+	}
+	if(index == 9) {
+		bool = (bool + 1)%2;
+		index = 0;
+	} else {
+		index ++;
+	}
+
 }
 
 void test2(void){
@@ -39,16 +54,32 @@ void test2(void){
 }
 int main(void)
 {
+//	Sys_Init();
 	System_Initialization();
 	SCH_Add_Task(test1, 0, 100);
-	SCH_Add_Task(test2, 0, 1000);
+	SCH_Add_Task(test2, 0, 100);
 	while (1){
 		/* Insert delay 100 ms */
 
+
+//		Set_Relay(8);
+//		HAL_Delay(1000);
+//		Reset_Relay(8);
+//
+//		HAL_Delay(1000);
+//
+//		Set_Relay(7);
+//		HAL_Delay(1000);
+//		Reset_Relay(7);
+//
+//		HAL_Delay(1000);
 		SCH_Dispatch_Tasks();
 //		temp = GetADCValue(0);
 //		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
-//		HAL_Delay(1000);
+//		HAL_Delay(100);
+//		test1();
+//		test2();
+//		printf("TIMER_INIT - Done \r\n");
 	}
 	return 0;
 }
@@ -63,7 +94,7 @@ int main(void)
 void Error_Handler(void)
 {
 	while(1){
-		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
+//		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
 		HAL_Delay(100);
 	}
 }

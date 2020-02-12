@@ -14,6 +14,7 @@ enum InitState {
     UART_INIT,
 	GPIO_INIT,
 	LED_DISPLAY_INIT,
+	RELAY_INIT,
 	FLASH_INIT,
     TIMER_INIT,
 	ADC_INIT,
@@ -26,6 +27,7 @@ enum InitState {
 	SIM_3G_INIT,
     MAX_INIT_STATE
 };
+void Sys_Init(void);
 
 void System_Initialization(void);
 

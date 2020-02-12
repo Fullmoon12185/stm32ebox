@@ -17,11 +17,12 @@
 #else
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
-void Clear_UART1_Receive_Buffer(void);
+void Clear_Sim3g_Receive_Buffer(void);
 
 /* UART handler declaration */
 UART_HandleTypeDef Uart1Handle;
 UART_HandleTypeDef Uart2Handle;
+UART_HandleTypeDef Uart3Handle;
 /* Buffer used for transmission */
 uint8_t  aUART_TxBuffer[] = " ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT**** \r\n";
 
@@ -77,11 +78,34 @@ void UART2_Init(void)
    printf("** Test finished successfully. ** \n\r");
 
 }
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+void UART3_Init(void)
+{
+	Uart3Handle.Instance = USART3;
+	Uart3Handle.Init.BaudRate = 115200;
+	Uart3Handle.Init.WordLength = UART_WORDLENGTH_8B;
+	Uart3Handle.Init.StopBits = UART_STOPBITS_1;
+	Uart3Handle.Init.Parity = UART_PARITY_NONE;
+	Uart3Handle.Init.Mode = UART_MODE_TX_RX;
+	Uart3Handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	Uart3Handle.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&Uart3Handle) != HAL_OK) {
+    Error_Handler();
+  }
+  /* Output a message on Hyperterminal using printf function */
+   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
+   printf("** Test finished successfully. ** \n\r");
+
+}
 PUTCHAR_PROTOTYPE
 {
   /* Place your implementation of fputc here */
   /* e.g. write a character to the USART1 and Loop until the end of transmission */
-  HAL_UART_Transmit(&Uart2Handle, (uint8_t *)&ch, 1, 0xFFFF);
+  HAL_UART_Transmit(&Uart3Handle, (uint8_t *)&ch, 1, 0xFFFF);
 
   return ch;
 }
@@ -117,22 +141,43 @@ void UART1_Transmit(uint8_t * buffer){
 	return;
 }
 
-void Clear_UART1_Receive_Buffer(void){
+void Sim3g_Transmit(uint8_t * buffer, uint8_t buffer_len){
+	if(buffer_len == 0) {
+		return;
+	} else {
+		if(HAL_UART_Transmit_IT(&Uart1Handle, (uint8_t*)buffer, buffer_len)!= HAL_OK){
+			Error_Handler();
+		}
+		UartTransmitReady = RESET;
+	}
+	return;
+}
+
+
+void Clear_Sim3g_Receive_Buffer(void){
 	uint8_t i;
 	for(i = 0; i < RXBUFFERSIZE; i++){
 		aUART_RxBuffer[i] = 0;
 	}
 }
-void UART1_Receive(void){
+
+void Sim3g_Receive_Setup(void){
 	UartReceiveReady = RESET;
-	Clear_UART1_Receive_Buffer();
+	Clear_Sim3g_Receive_Buffer();
 	HAL_UART_Receive_IT(&Uart1Handle, (uint8_t *)aUART_RxBuffer, RXBUFFERSIZE);
 }
 
-ITStatus isUART1ReceiveReady(){
+void ATcommandSending(uint8_t * buffer){
+	if(isSim3gTransmissionReady() == SET){
+		UART1_Transmit(buffer);
+	}
+	Sim3g_Receive_Setup();
+}
+
+ITStatus isSim3gReceiveReady(){
 	return UartReceiveReady;
 }
-ITStatus isUART1TransmissionReady(void){
+ITStatus isSim3gTransmissionReady(void){
 	return UartTransmitReady;
 }
 

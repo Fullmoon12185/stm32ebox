@@ -48,41 +48,42 @@ typedef enum
 void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
-#define B1_Pin 							GPIO_PIN_13
-#define B1_GPIO_Port 					GPIOC
-#define B1_EXTI_IRQn 					EXTI15_10_IRQn
-#define LD2_Pin 						GPIO_PIN_5
-#define LD2_GPIO_Port 					GPIOA
-#define TMS_Pin 						GPIO_PIN_13
-#define TMS_GPIO_Port 					GPIOA
-#define TCK_Pin 						GPIO_PIN_14
-#define TCK_GPIO_Port					GPIOA
-#define SWO_Pin 						GPIO_PIN_3
-#define SWO_GPIO_Port 					GPIOB
+//#define B1_Pin 							GPIO_PIN_13
+//#define B1_GPIO_Port 					GPIOC
+//#define B1_EXTI_IRQn 					EXTI15_10_IRQn
+//#define LD2_Pin 						GPIO_PIN_5
+//#define LD2_GPIO_Port 					GPIOA
+
+//#define TMS_Pin 						GPIO_PIN_13
+//#define TMS_GPIO_Port 					GPIOA
+//#define TCK_Pin 						GPIO_PIN_14
+//#define TCK_GPIO_Port					GPIOA
+//#define SWO_Pin 						GPIO_PIN_3
+//#define SWO_GPIO_Port 					GPIOB
 
 
 
-#define LED1_PIN                         GPIO_PIN_5
-#define LED1_GPIO_PORT                   GPIOA
-#define LED2_PIN                         GPIO_PIN_9
-#define LED2_GPIO_PORT                   GPIOC
-#define LED3_PIN                         GPIO_PIN_8
-#define LED3_GPIO_PORT                   GPIOC
-#define LED4_PIN                         GPIO_PIN_5
-#define LED4_GPIO_PORT                   GPIOC
+//#define LED1_PIN                         GPIO_PIN_5
+//#define LED1_GPIO_PORT                   GPIOA
+#define LED2_PIN                         GPIO_PIN_2
+#define LED2_GPIO_PORT                   GPIOB
+//#define LED3_PIN                         GPIO_PIN_8
+//#define LED3_GPIO_PORT                   GPIOC
+//#define LED4_PIN                         GPIO_PIN_5
+//#define LED4_GPIO_PORT                   GPIOC
 
 
 
 
 //LED output control signals
-#define LED_SDI						GPIO_PIN_3
+#define LED_SDI							GPIO_PIN_6
 #define LED_SDI_PORT					GPIOC
-#define LED_SCK						GPIO_PIN_4
+#define LED_SCK							GPIO_PIN_3
 #define LED_SCK_PORT					GPIOC
-#define LED_LE							GPIO_PIN_5
-#define LED_LE_PORT					GPIOC
-#define LED_OE							GPIO_PIN_6
-#define LED_OE_PORT					GPIOC
+#define LED_LE							GPIO_PIN_4
+#define LED_LE_PORT						GPIOC
+#define LED_OE							GPIO_PIN_5
+#define LED_OE_PORT						GPIOC
 
 //BUZZER
 #define PB5_BUZZER_PIN					GPIO_PIN_5
@@ -165,6 +166,19 @@ void Error_Handler(void);
 #define USART2_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
 #define USART2_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
 
+///////////////////////////////////////////////////////////////////////////////
+#define USART3_TX_PIN 					GPIO_PIN_10
+#define USART3_TX_GPIO_PORT 				GPIOB
+#define USART3_RX_PIN 					GPIO_PIN_11
+#define USART3_RX_GPIO_PORT 				GPIOB
+
+#define USART3_CLK_ENABLE()              __HAL_RCC_USART3_CLK_ENABLE();
+#define DMA3_CLK_ENABLE()                __HAL_RCC_DMA3_CLK_ENABLE()
+#define USART3_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
+#define USART3_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
+
+#define USART3_FORCE_RESET()             __HAL_RCC_USART3_FORCE_RESET()
+#define USART3_RELEASE_RESET()           __HAL_RCC_USART3_RELEASE_RESET()
 
 
 #define		SAMPLE_STEPS							4
@@ -258,10 +272,10 @@ void Error_Handler(void);
 #define PA11_OUT0_PORT					GPIOA
 #define PA12_OUT1						GPIO_PIN_12
 #define PA12_OUT1_PORT					GPIOA
-#define PA13_OUT2						GPIO_PIN_13
-#define PA13_OUT2_PORT					GPIOA
-#define PA14_OUT3						GPIO_PIN_14
-#define PA14_OUT3_PORT					GPIOA
+#define PB8_OUT2						GPIO_PIN_8
+#define PB8_OUT2_PORT					GPIOB
+#define PB9_OUT3						GPIO_PIN_9
+#define PB9_OUT3_PORT					GPIOB
 #define PA15_OUT4						GPIO_PIN_15
 #define PA15_OUT4_PORT					GPIOA
 
@@ -282,8 +296,8 @@ void Error_Handler(void);
 
 #define RELAY_PIN_0						PA11_OUT0
 #define RELAY_PIN_1						PA12_OUT1
-#define RELAY_PIN_2						PA13_OUT2
-#define RELAY_PIN_3						PA14_OUT3
+#define RELAY_PIN_2						PB8_OUT2
+#define RELAY_PIN_3						PB9_OUT3
 #define RELAY_PIN_4						PA15_OUT4
 #define RELAY_PIN_5						PC10_OUT5
 #define RELAY_PIN_6						PC11_OUT6
@@ -293,14 +307,15 @@ void Error_Handler(void);
 
 #define RELAY_PORT_0						PA11_OUT0_PORT
 #define RELAY_PORT_1						PA12_OUT1_PORT
-#define RELAY_PORT_2						PA13_OUT2_PORT
-#define RELAY_PORT_3						PA14_OUT3_PORT
+#define RELAY_PORT_2						PB8_OUT2_PORT
+#define RELAY_PORT_3						PB9_OUT3_PORT
 #define RELAY_PORT_4						PA15_OUT4_PORT
 #define RELAY_PORT_5						PC10_OUT5_PORT
 #define RELAY_PORT_6						PC11_OUT6_PORT
 #define RELAY_PORT_7						PC12_OUT7_PORT
 #define RELAY_PORT_8						PB3_OUT8_PORT
 #define RELAY_PORT_9						PB4_OUT9_PORT
+
 
 
 
