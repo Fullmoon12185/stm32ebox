@@ -5,12 +5,14 @@
  *      Author: VAIO
  */
 #include "main.h"
+#include "app_led_display.h"
 
+#define		NUMBER_OF_LEDS	20
 
+uint8_t ledPositions[NUMBER_OF_LEDS] = {
+		25, 24, 27, 26, 29, 28, 31, 30, 23, 22,
+		9, 8, 11, 10, 13, 12, 15, 14, 7, 6
 
-uint8_t ledPositions[20] = {
-		9, 8, 11, 10, 13, 12, 15, 14, 7, 6,
-		25, 24, 27, 26, 29, 28, 31, 30, 23, 22
 };
 uint32_t ledStatusBuffer = 0;
 
@@ -23,6 +25,7 @@ static void Output_Enable(void);
 static void Clock_On(int8_t count);
 static void Clock_Off(int8_t count);
 
+void Clear_Led_Display_Buffer(void);
 
 void Led_Display_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -43,6 +46,8 @@ void Led_Display_Init(void){
 	Output_Enable();
 	Latch_Disable(1);
 	Clock_Off(1);
+	Clear_Led_Display_Buffer();
+
 }
 
 
@@ -84,25 +89,33 @@ static void Data_Out(GPIO_PinState state){
 
 
 void Led_Display_Update_Buffer(uint8_t ledpos, FlagStatus status){
-	if(status == SET){
+	if(ledpos >= NUMBER_OF_LEDS) return;
+	if(status == RESET){
 		ledStatusBuffer = ledStatusBuffer & (~ (1 << ledPositions[ledpos]));
 	} else {
 		ledStatusBuffer = ledStatusBuffer | (1 << ledPositions[ledpos]);
 	}
 }
 
+void Clear_Led_Display_Buffer(void){
+	uint8_t i = 0;
+	for(i = 0; i < NUMBER_OF_LEDS; i++){
+		Led_Display_Update_Buffer(i, RESET);
+	}
+
+}
 uint8_t ledCounter = 0;
 void Led_Display(void){
 	uint8_t i;
 
 	for (i = 0; i < 32; i ++){
 		Data_Out((ledStatusBuffer >> i) & 0x01);
-		Clock_Off(4);
-		Clock_On(4);
+		Clock_Off(1);
+		Clock_On(1);
 	}
-	Latch_Disable(4);
-	Latch_Enable(4);
+	Latch_Enable(1);
 	Latch_Disable(1);
+
 }
 
 

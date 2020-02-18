@@ -35,8 +35,9 @@ typedef enum {
 	MQTT_WAIT_FOR_RESPONSE_FROM_PUBLISH_STATE,
 	MQTT_PING_REQUEST_STATE,
 	MQTT_WAIT_FOR_RESPONSE_FROM_REQUEST_STATE,
-	MQTT_DISCONNECT,
-	MQTT_WAIT_FOR_DISCONNECT_RESPONSE,
+	MQTT_DISCONNECT_STATE,
+	MQTT_WAIT_FOR_RESPONSE_FROM_DISCONNECT_STATE,
+	MQTT_WAIT_FOR_NEW_COMMAND,
 	MAX_MQTT_NUMBER_STATES
 } MQTT_STATE;
 
@@ -46,6 +47,12 @@ typedef struct {
 }MQTT_Machine_Type;
 
 
-void MQTT_Run(void);
+uint8_t MQTT_Run(void);
+void Set_Mqtt_State(MQTT_STATE newState);
+MQTT_STATE Get_Mqtt_State(void);
+
+void Setup_Mqtt_Connect_Message(void);
+void Setup_Mqtt_Subscribe_Message(const uint8_t * topic);
+void Setup_Mqtt_Publish_Message(const uint8_t * topic, uint8_t * message, uint8_t lenOfMessage);
 
 #endif /* APP_SIM5320MQTT_H_ */

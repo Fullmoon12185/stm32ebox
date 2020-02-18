@@ -217,6 +217,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
+#include "app_uart.h"
 
 /** @addtogroup STM32F1xx_HAL_Driver
   * @{
@@ -2033,7 +2034,7 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
     /* UART in mode Receiver -------------------------------------------------*/
     if (((isrflags & USART_SR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET))
     {
-      UART_Receive_IT(huart);
+      Custom_UART_Receive_IT(huart);
       return;
     }
   }
@@ -2071,7 +2072,7 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
       /* UART in mode Receiver -----------------------------------------------*/
       if (((isrflags & USART_SR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET))
       {
-        UART_Receive_IT(huart);
+    	  Custom_UART_Receive_IT(huart);
       }
 
       /* If Overrun error occurs, or if any error occurs in DMA mode reception,
@@ -3024,16 +3025,16 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
       }
     }
 
-    if (--huart->RxXferCount == 0U || ch == '\n')
+    if (--huart->RxXferCount == 0U || ch == '\r')
     {
-      /* Disable the UART Data Register not empty Interrupt */
-      __HAL_UART_DISABLE_IT(huart, UART_IT_RXNE);
-
-      /* Disable the UART Parity Error Interrupt */
-      __HAL_UART_DISABLE_IT(huart, UART_IT_PE);
-
-      /* Disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-      __HAL_UART_DISABLE_IT(huart, UART_IT_ERR);
+//      /* Disable the UART Data Register not empty Interrupt */
+//      __HAL_UART_DISABLE_IT(huart, UART_IT_RXNE);
+//
+//      /* Disable the UART Parity Error Interrupt */
+//      __HAL_UART_DISABLE_IT(huart, UART_IT_PE);
+//
+//      /* Disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+//      __HAL_UART_DISABLE_IT(huart, UART_IT_ERR);
 
       /* Rx process is completed, restore huart->RxState to Ready */
       huart->RxState = HAL_UART_STATE_READY;

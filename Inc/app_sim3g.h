@@ -12,8 +12,11 @@
 
 
 typedef enum {
-	SIM3G_STATUS = 0,
+	SIM3G_START_UP = 0,
+	WAIT_FOR_SIM3G_STARTUP_RESPONSE,
+	SIM3G_STATUS,
 	WAIT_FOR_SIM3G_STATUS_RESPONSE,
+
 
 	POWER_ON_SIM3G,
 	WAIT_FOR_SIM3G_POWER_ON,
@@ -46,7 +49,7 @@ typedef enum {
 //	ADJUST_NUMBER_OF_RETRANSMISSION,
 //	WAIT_FOR_ADJUST_NUMBER_OF_RETRANSMISSION_RESPONSE,
 
-	MAX_NUMBER_STATES
+	MAX_SIM3G_NUMBER_STATES
 }SIM3G_STATE;
 
 
@@ -56,12 +59,26 @@ typedef struct {
 }Sim3g_Machine_Type;
 
 
-
+void testSendcommand(void);
 
 void Sim3g_Init(void);
-void Sim3g_Run(void);
+uint8_t Sim3g_Run(void);
+uint8_t isSim3g_Run_Finished(void);
 void Set_Sim3G_State(SIM3G_STATE newState);
 SIM3G_STATE Get_Sim3G_State(void);
+
+
+
+void Sim3g_Disable(void);
+void Sim3g_Enable(void);
+void Sim3g_WakeUp(void);
+void Power_Signal_Low(void);
+void Power_Signal_High(void);
+void Reset_Signal_Low(void);
+void Reset_Signal_High(void);
+void Sim3g_Clear_Timeout_Flag(void);
+void Sim3g_Command_Timeout(void);
+uint8_t is_Sim3g_Command_Timeout(void);
 
 #endif /* APP_SIM3G_H_ */
 

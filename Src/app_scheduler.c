@@ -60,18 +60,20 @@ void SCH_Dispatch_Tasks(void) {
 //   SCH_Report_Status(); // Report system status
 }
 
-uint8_t SCH_Delete_Task(uint8_t TASK_INDEX) {
-	uint8_t Return_code;
-     if (SCH_tasks_G[TASK_INDEX].pTask == 0) {
-    	 Return_code = 0;
-     } else {
-         Return_code = 1;
-     }
-      SCH_tasks_G[TASK_INDEX].pTask = 0x0000;
-      SCH_tasks_G[TASK_INDEX].Delay = 0;
-      SCH_tasks_G[TASK_INDEX].Period = 0;
-      SCH_tasks_G[TASK_INDEX].RunMe = 0;
-      return Return_code; // return status
+uint8_t SCH_Delete_Task(uint8_t taskIndex) {
+	uint8_t Return_code  = 0;
+	if(taskIndex < SCH_MAX_TASKS){
+		if (SCH_tasks_G[taskIndex].pTask == 0) {
+			Return_code = 0;
+		} else {
+			Return_code = 1;
+		}
+		SCH_tasks_G[taskIndex].pTask = 0x0000;
+		SCH_tasks_G[taskIndex].Delay = 0;
+		SCH_tasks_G[taskIndex].Period = 0;
+		SCH_tasks_G[taskIndex].RunMe = 0;
+	}
+	  return Return_code; // return status
 }
 
 FlagStatus isTaskDone(uint8_t taskIndex){

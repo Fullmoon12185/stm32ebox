@@ -35,6 +35,15 @@ extern "C" {
 #include "string.h"
 
 
+///* Private function prototypes -----------------------------------------------*/
+//#ifdef __GNUC__
+///* With GCC, small printf (option LD Linker->Libraries->Small printf
+//   set to 'Yes') calls __io_putchar() */
+//#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+//#else
+//#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+//#endif /* __GNUC__ */
+
 typedef enum
 {
   ABNORMAL = 0,
@@ -149,7 +158,7 @@ void Error_Handler(void);
 /* Size of Trasmission buffer */
 #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
 /* Size of Reception buffer */
-#define RXBUFFERSIZE                      100
+#define RXBUFFERSIZE                      50
 
 
 

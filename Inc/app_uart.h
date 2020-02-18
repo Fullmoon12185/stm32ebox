@@ -14,11 +14,16 @@ void UART1_Init(void);
 void UART1_Transmit(uint8_t* buffer);
 void Sim3g_Transmit(uint8_t * buffer, uint8_t buffer_len);
 
-void Sim3g_Receive_Setup(void);
+
+
+HAL_StatusTypeDef Sim3g_Receive_Setup(void);
 void ATcommandSending(uint8_t * buffer);
+void MQTTCommandSending(uint8_t * buffer, uint8_t buffer_len);
+HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart);
 ITStatus isSim3gReceiveReady();
 ITStatus isSim3gTransmissionReady(void);
 FlagStatus isReceivedData(const uint8_t * str);
+FlagStatus isPBDone(void);
 FlagStatus isOK(void);
 FlagStatus isERROR(void);
 FlagStatus isGreaterThanSymbol(void);
@@ -26,4 +31,6 @@ FlagStatus isGreaterThanSymbol(void);
 
 void UART2_Init(void);
 void UART3_Init(void);
+void UART3_SendToHost(uint8_t * buffer);
+void UART3_SendReceivedBuffer(void);
 #endif /* APP_UART_H_ */

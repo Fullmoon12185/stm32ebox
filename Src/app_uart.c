@@ -7,31 +7,30 @@
 #include "main.h"
 #include "app_uart.h"
 #include "app_string.h"
+#include "app_relay.h"
 
 
-/* Private function prototypes -----------------------------------------------*/
-#ifdef __GNUC__
-/* With GCC, small printf (option LD Linker->Libraries->Small printf
-   set to 'Yes') calls __io_putchar() */
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
+
 void Clear_Sim3g_Receive_Buffer(void);
+void Copy_Received_Data_To_Processing_Buffer(void);
+HAL_StatusTypeDef Setup_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
 
 /* UART handler declaration */
 UART_HandleTypeDef Uart1Handle;
 UART_HandleTypeDef Uart2Handle;
 UART_HandleTypeDef Uart3Handle;
 /* Buffer used for transmission */
-uint8_t  aUART_TxBuffer[] = " ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT**** \r\n";
+uint8_t  aUART_TxBuffer[] = "";
 
 
 /* Buffer used for reception */
 uint8_t aUART_RxBuffer[RXBUFFERSIZE];
+uint8_t Sim3gDataProcessingBuffer[RXBUFFERSIZE];
 
 __IO ITStatus UartTransmitReady = SET;
 __IO ITStatus UartReceiveReady = RESET;
+
+__IO ITStatus isGreaterThanSymbolReceived = RESET;
 
 
 
@@ -53,7 +52,7 @@ void UART1_Init(void){
 	if(HAL_UART_Init(&Uart1Handle) != HAL_OK){
 		Error_Handler();
 	}
-	UART1_Transmit(aUART_TxBuffer);
+	Sim3g_Receive_Setup();
 }
 /**
   * @brief USART2 Initialization Function
@@ -73,9 +72,9 @@ void UART2_Init(void)
   if (HAL_UART_Init(&Uart2Handle) != HAL_OK) {
     Error_Handler();
   }
-  /* Output a message on Hyperterminal using printf function */
-   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
-   printf("** Test finished successfully. ** \n\r");
+//  /* Output a message on Hyperterminal using printf function */
+//   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
+//   printf("** Test finished successfully. ** \n\r");
 
 }
 /**
@@ -96,20 +95,19 @@ void UART3_Init(void)
   if (HAL_UART_Init(&Uart3Handle) != HAL_OK) {
     Error_Handler();
   }
-  /* Output a message on Hyperterminal using printf function */
-   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
-   printf("** Test finished successfully. ** \n\r");
+//  /* Output a message on Hyperterminal using printf function */
+//   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
+//   printf("** Test finished successfully. ** \n\r");
 
 }
-PUTCHAR_PROTOTYPE
-{
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART1 and Loop until the end of transmission */
-  HAL_UART_Transmit(&Uart3Handle, (uint8_t *)&ch, 1, 0xFFFF);
-
-  return ch;
-}
-
+//PUTCHAR_PROTOTYPE
+//{
+//  /* Place your implementation of fputc here */
+//  /* e.g. write a character to the USART1 and Loop until the end of transmission */
+//  HAL_UART_Transmit(&Uart3Handle, (uint8_t *)&ch, 1, 0xFFFF);
+//
+//  return ch;
+//}
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle){
   /* Set transmission flag: transfer complete */
@@ -120,13 +118,25 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle){
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle){
   /* Set transmission flag: transfer complete */
 	UartReceiveReady = SET;
+//	Setup_UART_Receive_IT(&Uart1Handle, (uint8_t *)aUART_RxBuffer, RXBUFFERSIZE);
 
+//	UART3_SendToHost((uint8_t *)"a\r");
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle){
     Error_Handler();
 }
 
+
+
+void UART3_SendToHost(uint8_t * buffer){
+	uint8_t buffer_len = GetStringLength((uint8_t *) buffer);
+	HAL_UART_Transmit(&Uart3Handle, (uint8_t *)buffer, buffer_len, 0xFFFFFFFF);
+}
+
+void UART3_SendReceivedBuffer(void){
+	UART3_SendToHost((uint8_t *)Sim3gDataProcessingBuffer);
+}
 
 void UART1_Transmit(uint8_t * buffer){
 	uint8_t buffer_len = GetStringLength((uint8_t*)buffer);
@@ -153,7 +163,53 @@ void Sim3g_Transmit(uint8_t * buffer, uint8_t buffer_len){
 	return;
 }
 
+HAL_StatusTypeDef Setup_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size)
+{
 
+    huart->pRxBuffPtr = pData;
+    huart->RxXferSize = Size;
+    huart->RxXferCount = Size;
+
+    huart->ErrorCode = HAL_UART_ERROR_NONE;
+    huart->RxState = HAL_UART_STATE_BUSY_RX;
+
+
+    return HAL_OK;
+
+}
+
+HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart)
+{
+  uint8_t ch;
+  static uint8_t receiveBufferIndex = 0;
+
+  /* Check that a Rx process is ongoing */
+  if (huart->RxState == HAL_UART_STATE_BUSY_RX)
+  {
+	ch = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
+	if (ch == '\n')
+	{
+		aUART_RxBuffer[receiveBufferIndex] = 0;
+		receiveBufferIndex = 0;
+		UartReceiveReady = SET;
+		huart->ErrorCode = HAL_UART_ERROR_NONE;
+		huart->RxState = HAL_UART_STATE_BUSY_RX;
+
+		Copy_Received_Data_To_Processing_Buffer();
+
+	} else if(ch == '>') {
+		isGreaterThanSymbolReceived = SET;
+	} else {
+		aUART_RxBuffer[receiveBufferIndex] = (uint8_t)(ch & (uint8_t)0x00FF);
+		receiveBufferIndex ++;
+	}
+    return HAL_OK;
+  }
+  else
+  {
+    return HAL_BUSY;
+  }
+}
 void Clear_Sim3g_Receive_Buffer(void){
 	uint8_t i;
 	for(i = 0; i < RXBUFFERSIZE; i++){
@@ -161,37 +217,68 @@ void Clear_Sim3g_Receive_Buffer(void){
 	}
 }
 
-void Sim3g_Receive_Setup(void){
-	UartReceiveReady = RESET;
-	Clear_Sim3g_Receive_Buffer();
-	HAL_UART_Receive_IT(&Uart1Handle, (uint8_t *)aUART_RxBuffer, RXBUFFERSIZE);
-}
+void Copy_Received_Data_To_Processing_Buffer(void){
+	uint8_t i;
+	for(i = 0; i < RXBUFFERSIZE; i++){
 
+		Sim3gDataProcessingBuffer[i] = aUART_RxBuffer[i];
+	}
+	Clear_Sim3g_Receive_Buffer();
+}
+HAL_StatusTypeDef Sim3g_Receive_Setup(void){
+	Clear_Sim3g_Receive_Buffer();
+	if(HAL_UART_Receive_IT(&Uart1Handle, (uint8_t *)aUART_RxBuffer, RXBUFFERSIZE) != HAL_OK){
+		return HAL_ERROR;
+	}
+	return HAL_OK;
+
+}
 void ATcommandSending(uint8_t * buffer){
 	if(isSim3gTransmissionReady() == SET){
 		UART1_Transmit(buffer);
 	}
-	Sim3g_Receive_Setup();
+//	Sim3g_Receive_Setup();
 }
+
+void MQTTCommandSending(uint8_t * buffer, uint8_t buffer_len){
+	if(isSim3gTransmissionReady() == SET){
+		Sim3g_Transmit(buffer, buffer_len);
+	}
+//	Sim3g_Receive_Setup();
+}
+
 
 ITStatus isSim3gReceiveReady(){
-	return UartReceiveReady;
+	if(UartReceiveReady == SET){
+		UartReceiveReady = RESET;
+
+		return SET;
+	} else {
+		return RESET;
+	}
 }
 ITStatus isSim3gTransmissionReady(void){
-	return UartTransmitReady;
+	if(UartTransmitReady == SET){
+		UartTransmitReady = RESET;
+
+		return SET;
+	} else {
+		return RESET;
+	}
+
 }
 
 
-FlagStatus isReivedData1(const char * str){
-	return strcmp((char *)aUART_RxBuffer, str) == 0;
+FlagStatus isReceivedData1(const char * str){
+	return strcmp((char *)Sim3gDataProcessingBuffer, str) == 0;
 }
 
 FlagStatus isReceivedData(const uint8_t * str){
 	uint8_t i = 0;
-	uint8_t str_len = GetStringLength((uint8_t*)str);
-
+	uint8_t str_len = sizeof(str);
+	uint8_t str_len1 = GetStringLength(Sim3gDataProcessingBuffer);
 	while(i < str_len){
-		if(aUART_RxBuffer[i] != str[i]){
+		if(Sim3gDataProcessingBuffer[i] != str[i]){
 			return RESET;
 		}
 		i++;
@@ -199,30 +286,38 @@ FlagStatus isReceivedData(const uint8_t * str){
 	return SET;
 }
 
+FlagStatus isPBDone(void){
+	if(Sim3gDataProcessingBuffer[0] == 'P' && Sim3gDataProcessingBuffer[1] == 'B'){
+		return SET;
+	}
+	return RESET;
+}
+
 FlagStatus isOK(void){
-	if(aUART_RxBuffer[0] == 'O' && aUART_RxBuffer[1] == 'K'){
+	if(Sim3gDataProcessingBuffer[0] == 'O' && Sim3gDataProcessingBuffer[1] == 'K'){
 		return SET;
 	}
 	return RESET;
 }
 
 FlagStatus isERROR(void){
-	if(aUART_RxBuffer[0] == 'E' && aUART_RxBuffer[1] == 'R' && aUART_RxBuffer[2] == 'R' && aUART_RxBuffer[3] == 'O' && aUART_RxBuffer[4] == 'R'){
+	if(Sim3gDataProcessingBuffer[0] == 'E' && Sim3gDataProcessingBuffer[1] == 'R' && Sim3gDataProcessingBuffer[2] == 'R' && Sim3gDataProcessingBuffer[3] == 'O' && Sim3gDataProcessingBuffer[4] == 'R'){
 		return SET;
 	}
 	return RESET;
 }
 
 FlagStatus isConnect_OK(void){
-	if(aUART_RxBuffer[0] == 'C' && aUART_RxBuffer[1] == 'o' && aUART_RxBuffer[2] == 'n' && aUART_RxBuffer[3] == 'n' && aUART_RxBuffer[4] == 'e'
-			&& aUART_RxBuffer[5] == 'c' && aUART_RxBuffer[6] == 't' && aUART_RxBuffer[7] == ' ' && aUART_RxBuffer[8] == 'o' && aUART_RxBuffer[9] == 'k'){
+	if(Sim3gDataProcessingBuffer[0] == 'C' && Sim3gDataProcessingBuffer[1] == 'o' && Sim3gDataProcessingBuffer[2] == 'n' && Sim3gDataProcessingBuffer[3] == 'n' && aUART_RxBuffer[4] == 'e'
+			&& Sim3gDataProcessingBuffer[5] == 'c' && Sim3gDataProcessingBuffer[6] == 't' && Sim3gDataProcessingBuffer[7] == ' ' && Sim3gDataProcessingBuffer[8] == 'o' && Sim3gDataProcessingBuffer[9] == 'k'){
 		return SET;
 	}
 	return RESET;
 }
 
 FlagStatus isGreaterThanSymbol(void){
-	if(aUART_RxBuffer[0] == '>'){
+	if(isGreaterThanSymbolReceived == SET){
+		isGreaterThanSymbolReceived = RESET;
 		return SET;
 	}
 	return RESET;
