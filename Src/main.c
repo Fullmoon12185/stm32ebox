@@ -24,19 +24,24 @@
 #include "app_uart.h"
 #include "app_adc.h"
 #include "app_scheduler.h"
-
+#include "app_relay.h"
 #include "app_led_display.h"
 #include "app_sim3g.h"
 #include "app_test.h"
 
 
-
-
-
-extern uint32_t arrayOfADCValues[NUMBER_OF_ADC_CHANNELS*NUMBER_OF_SAMPLES_PER_AVERAGE];
-extern uint32_t arrayOfAverageADCValues[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
-
-uint32_t temp;
+//extern uint32_t array_Of_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+//
+//
+//extern uint32_t array_Of_Max_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+//extern uint32_t array_Of_Min_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+//
+//extern uint32_t array_Of_Vpp_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+//extern uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+//
+//extern uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+//extern uint32_t array_Of_Power_Consumption[NUMBER_OF_ADC_CHANNELS];
+//extern uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
 
 
 int main(void)
@@ -51,14 +56,16 @@ int main(void)
 //	SCH_Add_Task(test5, 0, 200);
 
 
-	UART3_SendToHost((uint8_t*)"Power_Signal_Low \r\n");
-	HAL_Delay(1000);
-	Power_Signal_Low();
-	HAL_Delay(100);
-	Power_Signal_High();
-	UART3_SendToHost((uint8_t*)"Power_Signal_High \r\n");
+//	UART3_SendToHost((uint8_t*)"Power_Signal_Low \r\n");
+//	HAL_Delay(1000);
+//	Power_Signal_Low();
+//	HAL_Delay(100);
+//	Power_Signal_High();
+//	UART3_SendToHost((uint8_t*)"Power_Signal_High \r\n");
+	Set_Relay(0);
+	Set_Relay(1);
 
-	Set_Sim3G_State(SIM3G_START_UP);
+	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
 //
 
@@ -71,9 +78,11 @@ int main(void)
 //		Reset_Relay(8);
 //
 //		HAL_Delay(1000);
-//		test6();
+//		test7();
 //		test5();
 		main_fsm();
+		FSM_Process_Data_Received_From_Sim3g();
+//		PowerConsumption_FSM();
 //		Sim3g_Receive_Setup();
 
 //		Set_Relay(7);
@@ -83,12 +92,6 @@ int main(void)
 //		HAL_Delay(1000);
 		SCH_Dispatch_Tasks();
 //		Led_Display();
-//		temp = GetADCValue(0);
-//		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
-//		HAL_Delay(100);
-//		test1();
-//		test2();
-//		printf("TIMER_INIT - Done \r\n");
 	}
 	return 0;
 }

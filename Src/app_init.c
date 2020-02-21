@@ -99,7 +99,7 @@ void System_Initialization(void)
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
             break;
         case START_DMA_ADC:
-        	StartGettingADCValues();
+        	ADC_Start_Getting_Values();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"START_DMA_ADC - Done \r\n"));
         	break;
         case SIM_3G_INIT:

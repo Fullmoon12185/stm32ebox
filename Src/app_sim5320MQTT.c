@@ -20,30 +20,43 @@
 #define		MQTT_MESSAGE_BUFFER_LENGTH	128
 #define		CLOUD_MQTT		1
 
-#define		NUMBER_OF_SUBSCRIBE_TOPIC	2
-#define		NUMBER_OF_PUBLISH_TOPIC		2
+
+
 
 extern const uint8_t OK[];
 extern const uint8_t CONNECT_OK[];
 extern const uint8_t ERROR_1[];
 extern const uint8_t GREATER_THAN_SYMBOL[];
 extern const uint8_t NETWORK_OPENED[];
-
-const uint8_t Send_ok[] = "Send ok\r";
-const uint8_t RECV_FROM[] = "RECV FROM\r";
-const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"tailor.cloudmqtt.com\",13255\r";
+extern FlagStatus isOKFlag;
+extern FlagStatus isErrorFlag;
+extern FlagStatus isIPCloseFlag;
+extern FlagStatus isRecvFromFlag;
+extern FlagStatus isSendOKFlag;
 
 const uint8_t MQTTCLOSE_COMMAND[]   = "AT+CIPCLOSE\r\n";
 const uint8_t CLIENT_ID[] 			= "ABCDEF";
-const uint8_t USERNAME[] 			= "wayjxdzy";
-const uint8_t PASSWORD[] 			= "2Awwc3zlS20r";
-const uint8_t SUBSCRIBE_TOPIC_1[] 	= "sensor/s";
-const uint8_t SUBSCRIBE_TOPIC_2[] 	= "sensor/123";
 
-const uint8_t PUBLISH_TOPIC_1[] 		= "sensor/s1";
+//nguyen cloudmqtt
+
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"tailor.cloudmqtt.com\",13255\r";
+//const uint8_t USERNAME[] 			= "wayjxdzy";
+//const uint8_t PASSWORD[] 			= "2Awwc3zlS20r";
+
+//Vinh cloudmqtt
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"tailor.cloudmqtt.com\",13204\r";
+const uint8_t USERNAME[] 			= "lyooeovx";
+const uint8_t PASSWORD[] 			= "7Pq6P2PWLqME";
+
+//subscribe topin khong nen co len la 10
+const uint8_t SUBSCRIBE_TOPIC_1[] 	= "sensor/eBOX";
+const uint8_t SUBSCRIBE_TOPIC_2[] 	= "sensor/1234";
+
+const uint8_t PUBLISH_TOPIC_1[] 		= "FromeBox";
 const uint8_t PUBLISH_TOPIC_2[] 		= "sensor/s2";
 
 uint8_t publish_message[20] = "123456789";
+uint8_t publish_message_length = 0;
 
 uint8_t mqttMessageLength;
 uint8_t mqttMessage[MQTT_MESSAGE_BUFFER_LENGTH];
@@ -171,10 +184,10 @@ void SM_Send_Data(uint8_t mesageLength){
 
 //	ATcommandSending((uint8_t *)commandBuffer);
 	MQTTCommandSending((uint8_t *)commandBuffer, commandBufferIndex);
-	UART3_SendToHost((uint8_t *)commandBuffer);
 }
 
 void SM_Mqtt_Open(void){
+	SCH_Delete_Task(mqtt_Timeout_Task_Index);
 	Mqtt_Clear_Timeout_Flag();
 	mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_COMMAND_TIME_OUT,0);
 	ATcommandSending((uint8_t *)MQTTOPEN_COMMAND);
@@ -182,13 +195,14 @@ void SM_Mqtt_Open(void){
 }
 
 void SM_Mqtt_Wait_For_Response_From_Open_State(void){
-	if(isSim3gReceiveReady()){
-		if(isReceivedData((uint8_t *)OK)){
-			mqttState = MQTT_CONNECT_STATE;
-		} else if(isReceivedData((uint8_t *)ERROR_1)){
-			mqttState = MAX_MQTT_NUMBER_STATES;
-		}
+	if(isOKFlag){
+		isOKFlag = RESET;
+		mqttState = MQTT_CONNECT_STATE;
+	} else if(isErrorFlag){
+		isErrorFlag = 0;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
+
 	if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
@@ -206,20 +220,17 @@ void SM_Mqtt_Wait_For_Response_From_Connect_State(void){
 	if(isGreaterThanSymbol()){
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 	}
-	if(isSim3gReceiveReady()){
-		if(isReceivedData((uint8_t *)RECV_FROM)){
-			mqttState = MQTT_SUBSCRIBE_STATE;
-		} else if(isReceivedData((uint8_t *)ERROR_1)){
-			mqttState = MAX_MQTT_NUMBER_STATES;
-		}
+	if(isRecvFromFlag){
+		isRecvFromFlag = RESET;
+		mqttState = MQTT_SUBSCRIBE_STATE;
+	} else if(isErrorFlag){
+		isErrorFlag = 0;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
 	if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
 }
-
-
-
 
 void SM_Mqtt_Subscribe (void) {
 	SCH_Delete_Task(mqtt_Timeout_Task_Index);
@@ -240,18 +251,19 @@ void SM_Mqtt_Wait_For_Response_From_Subscribe_State(void){
 	if(isGreaterThanSymbol()){
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 	}
-	if(isSim3gReceiveReady()){
-		if(isReceivedData((uint8_t *)RECV_FROM)){
-			subscribeTopicIndex ++;
-			if(subscribeTopicIndex < NUMBER_OF_SUBSCRIBE_TOPIC){
-				mqttState = MQTT_SUBSCRIBE_STATE;
-			} else {
-				mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
-			}
-		} else if(isReceivedData((uint8_t *)ERROR_1)){
-			mqttState = MAX_MQTT_NUMBER_STATES;
+	if(isRecvFromFlag){
+		isRecvFromFlag = RESET;
+		subscribeTopicIndex ++;
+		if(subscribeTopicIndex < NUMBER_OF_SUBSCRIBE_TOPIC){
+			mqttState = MQTT_SUBSCRIBE_STATE;
+		} else {
+			mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
 		}
+	} else if(isErrorFlag){
+		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
+
 	if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
@@ -259,12 +271,13 @@ void SM_Mqtt_Wait_For_Response_From_Subscribe_State(void){
 
 
 void SM_Wait_For_New_Command(void){
-	if(isSim3gReceiveReady()){
-		if(isReceivedData((uint8_t *)RECV_FROM)){
-			mqttState = MQTT_PUBLISH_STATE;
-		} else if(isReceivedData((uint8_t *)ERROR_1)){
-			mqttState = MAX_MQTT_NUMBER_STATES;
-		}
+	if(isIPCloseFlag){
+		isIPCloseFlag = RESET;
+		mqttState = MQTT_OPEN_STATE;
+	}
+	else if(isErrorFlag){
+		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
 }
 
@@ -280,13 +293,12 @@ void SM_Mqtt_Wait_For_Response_From_Publish_State(void){
 	if(isGreaterThanSymbol()){
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 	}
-	if(isSim3gReceiveReady()){
-		if(isReceivedData((uint8_t *)Send_ok)){
-			mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
-
-		} else if(isReceivedData((uint8_t *)ERROR_1)){
-			mqttState = MAX_MQTT_NUMBER_STATES;
-		}
+	if(isSendOKFlag){
+		isSendOKFlag = RESET;
+		mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
+	} else if(isErrorFlag){
+		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
 	if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
@@ -300,13 +312,14 @@ void SM_Mqtt_Disconnect(void){
 	mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_DISCONNECT_STATE;
 }
 void SM_Wait_For_Response_From_Disconnect_State(void){
-	if(isSim3gReceiveReady()){
-		if(isReceivedData((uint8_t *)OK)){
-			mqttState = MQTT_OPEN_STATE;
-		} else if(isReceivedData((uint8_t *)ERROR_1)){
-			mqttState = MAX_MQTT_NUMBER_STATES;
-		}
+	if(isOKFlag){
+		isOKFlag = RESET;
+		mqttState = MQTT_OPEN_STATE;
+	} else if(isErrorFlag){
+		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
+
 	if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
@@ -316,16 +329,22 @@ void SM_Mqtt_Ping_Request(void) {
 	SCH_Delete_Task(mqtt_Timeout_Task_Index);
 	Mqtt_Clear_Timeout_Flag();
 	mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_COMMAND_TIME_OUT,0);
+	Setup_Mqtt_Ping_Request_Message();
 	mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_REQUEST_STATE;
 }
 void SM_Wait_For_Mqtt_Ping_Resquest_Response(void){
-	if(isSim3gReceiveReady()){
-		if(isReceivedData((uint8_t *)OK)){
-			mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
-		} else if(isReceivedData((uint8_t *)ERROR_1)){
-			mqttState = MAX_MQTT_NUMBER_STATES;
-		}
+	if(isGreaterThanSymbol()){
+		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 	}
+
+	if(isOKFlag){
+		isOKFlag = RESET;
+		mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
+	} else if(isErrorFlag){
+		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
+	}
+
 	if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
@@ -362,6 +381,65 @@ void Setup_Mqtt_Connect_Message(void){
 	mqttMessage[mqttMessageIndex++] = 0b11000010;  //enable username, password, clean session
 
 	// Keep-alive (maximum duration)
+//	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
+//	mqttMessage[mqttMessageIndex++] = 0x3c;                     // Keep-alive Time Length LSB
+
+	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
+		mqttMessage[mqttMessageIndex++] = 0x0;                     // Keep-alive Time Length LSB
+
+	// Client ID
+	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
+	mqttMessage[mqttMessageIndex++] = clientIdLength;        // Client ID length LSB
+	for (i = 0; i < clientIdLength; i ++){
+		mqttMessage[mqttMessageIndex++] = CLIENT_ID[i];
+	}
+
+	// Username
+	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
+	mqttMessage[mqttMessageIndex++] = usernameLength;        // Client ID length LSB
+	for (i = 0; i < usernameLength; i ++){
+		mqttMessage[mqttMessageIndex++] = USERNAME[i];
+	}
+
+	// Password
+	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
+	mqttMessage[mqttMessageIndex++] = passwordLength;        // Client ID length LSB
+	for (i = 0; i < passwordLength; i ++){
+		mqttMessage[mqttMessageIndex++] = PASSWORD[i];
+	}
+	mqttMessageLength = mqttMessageIndex;
+	SM_Send_Data(mqttMessageLength);
+
+}
+///////////////////////////////////////////////////////////////////////////
+void Setup_Mqtt_Connect_Message_311(void){
+	uint8_t i;
+	uint8_t clientIdLength = GetStringLength((uint8_t*)CLIENT_ID);
+	uint8_t usernameLength = GetStringLength((uint8_t*)USERNAME);
+	uint8_t passwordLength = GetStringLength((uint8_t*)PASSWORD);
+
+	Clear_Mqtt_Message_Buffer();
+
+	// Header
+	mqttMessage[mqttMessageIndex++] = MQTT_MSG_CONNECT;
+	mqttMessage[mqttMessageIndex++] = 16 + clientIdLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
+
+	// Protocol name
+	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
+	mqttMessage[mqttMessageIndex++] = 6;                      // Protocol Name Length LSB
+	mqttMessage[mqttMessageIndex++] = 'M';
+	mqttMessage[mqttMessageIndex++] = 'Q';
+	mqttMessage[mqttMessageIndex++] = 'T';
+	mqttMessage[mqttMessageIndex++] = 'T';
+
+	// Protocol level
+	mqttMessage[mqttMessageIndex++] = 3;                      // MQTT Protocol version = 4 (mqtt 3.1.1)
+
+	// Connection flags   2 for clean session
+ //   mqttMessage[9] = 2;
+	mqttMessage[mqttMessageIndex++] = 0b11000010;  //enable username, password, clean session
+
+	// Keep-alive (maximum duration)
 	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
 	mqttMessage[mqttMessageIndex++] = 0x3c;                     // Keep-alive Time Length LSB
 
@@ -371,73 +449,19 @@ void Setup_Mqtt_Connect_Message(void){
 	for (i = 0; i < clientIdLength; i ++){
 		mqttMessage[mqttMessageIndex++] = CLIENT_ID[i];
 	}
-//	memcpy(&mqttMessage[16], CLIENT_ID, clientIdLength);
-
 	// Username
 	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
 	mqttMessage[mqttMessageIndex++] = usernameLength;        // Client ID length LSB
 	for (i = 0; i < usernameLength; i ++){
 		mqttMessage[mqttMessageIndex++] = USERNAME[i];
 	}
-//	memcpy(&mqttMessage[18 + clientIdLength], USERNAME, usernameLength);
-
 	// Password
 	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
 	mqttMessage[mqttMessageIndex++] = passwordLength;        // Client ID length LSB
 	for (i = 0; i < passwordLength; i ++){
 		mqttMessage[mqttMessageIndex++] = PASSWORD[i];
 	}
-//	memcpy(&mqttMessage[20 + clientIdLength + usernameLength], PASSWORD, passwordLength);
 	mqttMessageLength = mqttMessageIndex;
-	SM_Send_Data(mqttMessageLength);
-
-}
-///////////////////////////////////////////////////////////////////////////
-void Setup_Mqtt_Connect_Message_311(void){
-	uint8_t clientIdLength = sizeof(CLIENT_ID);
-	uint8_t usernameLength = sizeof(USERNAME);
-	uint8_t passwordLength = sizeof(PASSWORD);
-
-	Clear_Mqtt_Message_Buffer();
-	mqttMessageLength = 19 + clientIdLength + usernameLength + passwordLength;
-
-	// Header
-	mqttMessage[mqttMessageIndex++] = MQTT_MSG_CONNECT;
-	mqttMessage[mqttMessageIndex++] = 17 + clientIdLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
-
-	// Protocol name
-	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
-	mqttMessage[mqttMessageIndex++] = 4;                      // Protocol Name Length LSB
-	mqttMessage[mqttMessageIndex++] = 'M';
-	mqttMessage[mqttMessageIndex++] = 'Q';
-	mqttMessage[mqttMessageIndex++] = 'T';
-	mqttMessage[mqttMessageIndex++] = 'T';
-
-	// Protocol level
-	mqttMessage[mqttMessageIndex++] = 4;                      // MQTT Protocol version = 4 (mqtt 3.1.1)
-
-	// Connection flags   2 for clean session
- //   mqttMessage[9] = 2;
-	mqttMessage[mqttMessageIndex++] = 0b11000010;  //enable username, password, clean session
-
-	// Keep-alive (maximum duration)
-	mqttMessage[mqttMessageIndex++] = 100;                     // Keep-alive Time Length MSB
-	mqttMessage[mqttMessageIndex++] = 100;                     // Keep-alive Time Length LSB
-
-	// Client ID
-	mqttMessage[12] = 0;                     // Client ID length MSB
-	mqttMessage[13] = clientIdLength;        // Client ID length LSB
-	memcpy(&mqttMessage[14], CLIENT_ID, clientIdLength);
-
-	// Username
-	mqttMessage[14 + clientIdLength] = 0;                     // Client ID length MSB
-	mqttMessage[15 + clientIdLength] = usernameLength;        // Client ID length LSB
-	memcpy(&mqttMessage[16 + clientIdLength], USERNAME, usernameLength);
-
-	// Password
-	mqttMessage[16 + clientIdLength + usernameLength] = 0;                     // Client ID length MSB
-	mqttMessage[17 + clientIdLength + usernameLength] = passwordLength;        // Client ID length LSB
-	memcpy(&mqttMessage[18 + clientIdLength + usernameLength], PASSWORD, passwordLength);
 	SM_Send_Data(mqttMessageLength);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -463,8 +487,6 @@ void Setup_Mqtt_Subscribe_Message(const uint8_t * topic){
 	for (i = 0; i < lenTopic; i++){
 		mqttMessage[mqttMessageIndex++] = topic[i];
 	}
-//	memcpy(&mqttMessage[mqttMessageIndex], SUBSCRIBE_TOPIC, lenTopic);
-//	mqttMessageIndex += lenTopic;
 
 	// Write QoS
 	mqttMessage[mqttMessageIndex++] = 0;
@@ -489,15 +511,11 @@ void Setup_Mqtt_Publish_Message(const uint8_t * topic, uint8_t * message, uint8_
 	for (i = 0; i < lenOfTopic; i++){
 		mqttMessage[mqttMessageIndex++] = topic[i];
 	}
-//	memcpy(&mqttMessage[mqttMessageIndex], PUBLISH_TOPIC, lenTopic);
-//	mqttMessageIndex += lenTopic;
 
 	// Write msg
 	for (i = 0; i < lenOfMessage; i++){
 		mqttMessage[mqttMessageIndex++] = message[i];
 	}
-//	memcpy(&mqttMessage[mqttMessageIndex], publish_message, lenMsg);
-//	mqttMessageIndex += lenMsg;
 	mqttMessageLength = mqttMessageIndex;
 	SM_Send_Data(mqttMessageLength);
 }
@@ -512,4 +530,5 @@ void Setup_Mqtt_Ping_Request_Message(void){
 	mqttMessageLength = mqttMessageIndex;
 	SM_Send_Data(mqttMessageLength);
 }
+
 

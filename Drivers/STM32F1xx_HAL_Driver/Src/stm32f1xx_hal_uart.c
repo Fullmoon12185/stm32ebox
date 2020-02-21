@@ -1270,10 +1270,10 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData,
     __HAL_UNLOCK(huart);
 
     /* Enable the UART Parity Error Interrupt */
-    __HAL_UART_ENABLE_IT(huart, UART_IT_PE);
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_PE);
 
     /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
-    __HAL_UART_ENABLE_IT(huart, UART_IT_ERR);
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_ERR);
 
     /* Enable the UART Data Register not empty Interrupt */
     __HAL_UART_ENABLE_IT(huart, UART_IT_RXNE);

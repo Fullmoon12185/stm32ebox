@@ -12,42 +12,18 @@
 
 
 typedef enum {
-	SIM3G_START_UP = 0,
-	WAIT_FOR_SIM3G_STARTUP_RESPONSE,
-	SIM3G_STATUS,
-	WAIT_FOR_SIM3G_STATUS_RESPONSE,
-
-
-	POWER_ON_SIM3G,
+	POWER_ON_SIM3G = 0,
 	WAIT_FOR_SIM3G_POWER_ON,
 	POWER_OFF_SIM3G,
 	WAIT_FOR_SIM3G_POWER_OFF,
 
 	RESET_SIM3G,
 	WAIT_FOR_SIM3G_RESET,
+	SIM3G_START_UP,
+	WAIT_FOR_SIM3G_STARTUP_RESPONSE,
 
-	APN_SETTING,
-	WAIT_FOR_APN_SETTING_RESPONSE,
-	DEFINE_TCPIP_CONTEXT,
-	WAIT_FOR_DEFINE_TCPIP_CONTEXT_RESPONSE,
-//	SET_AUTHENTICATION_PARAMETER,
-//	WAIT_FOR_SET_AUTHENTICATION_PARAMETER_RESPONSE,
-	SET_PDP_CONTEXT_NUMBER,
-	WAIT_FOR_SET_PDP_CONTEXT_NUMBER_RESPONSE,
-	COMMAND_MODE,
-	WAIT_FOR_COMMAND_MODE_RESPONSE,
-	NETOPEN,
-	WAIT_FOR_NETOPEN_RESPONSE,
-	IPCONFIG,
-	WAIT_FOR_IPCONFIG_RESPONSE,
-	NETCLOSE,
-	WAIT_FOR_NETCLOSE_RESPONSE,
-//	RECEIVE_DATA_LENGTH_OPTION,
-//	WAIT_FOR_RECEIVE_DATA_LENGTH_OPTION_RESPONSE,
-//	RECEIVE_DATA_ADDRESS_OPTION,
-//	WAIT_FOR_RECEIVE_DATA_ADDRESS_OPTION_RESPONSE,
-//	ADJUST_NUMBER_OF_RETRANSMISSION,
-//	WAIT_FOR_ADJUST_NUMBER_OF_RETRANSMISSION_RESPONSE,
+	SIM3G_SETTING,
+	WAIT_FOR_SIM3G_SETTING_RESPONSE,
 
 	MAX_SIM3G_NUMBER_STATES
 }SIM3G_STATE;
@@ -59,7 +35,16 @@ typedef struct {
 }Sim3g_Machine_Type;
 
 
-void testSendcommand(void);
+typedef struct {
+	uint8_t * ATCommand;
+	uint8_t * expectedReturn;
+}AT_COMMAND_ARRAY;
+
+
+
+void TestSendATcommand(void);
+
+
 
 void Sim3g_Init(void);
 uint8_t Sim3g_Run(void);
@@ -79,6 +64,18 @@ void Reset_Signal_High(void);
 void Sim3g_Clear_Timeout_Flag(void);
 void Sim3g_Command_Timeout(void);
 uint8_t is_Sim3g_Command_Timeout(void);
+
+
+
+FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message);
+void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID);
+FlagStatus isReceivedData(const uint8_t * str);
+
+void FSM_Process_Data_Received_From_Sim3g(void);
+FlagStatus isGreaterThanSymbol(void);
+FlagStatus isRecvFrom(void);
+FlagStatus isIPClose(void);
+FlagStatus isSendOK(void);
 
 #endif /* APP_SIM3G_H_ */
 

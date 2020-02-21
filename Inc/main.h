@@ -57,6 +57,10 @@ typedef enum
 void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
+
+#define		BOX_ID		1
+
+
 //#define B1_Pin 							GPIO_PIN_13
 //#define B1_GPIO_Port 					GPIOC
 //#define B1_EXTI_IRQn 					EXTI15_10_IRQn
@@ -158,7 +162,8 @@ void Error_Handler(void);
 /* Size of Trasmission buffer */
 #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
 /* Size of Reception buffer */
-#define RXBUFFERSIZE                      50
+#define RXBUFFERSIZE                      100
+
 
 
 
@@ -328,7 +333,11 @@ void Error_Handler(void);
 
 
 
+#define		NUMBER_OF_SUBSCRIBE_TOPIC	2
+#define		NUMBER_OF_PUBLISH_TOPIC		2
 
+#define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 		48
+#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE 	16
 
 
 #ifdef __cplusplus
