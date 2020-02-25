@@ -16,4 +16,5 @@ void ADC_Start_Getting_Values(void);
 void ADC_Stop_Getting_Values(void);
 void PowerConsumption_FSM(void);
 
+void Zero_Point_Detection(void);
 #endif /* APP_ADC_H_ */

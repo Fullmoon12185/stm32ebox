@@ -49,48 +49,22 @@ int main(void)
 //	Sys_Init();
 	System_Initialization();
 //	SCH_Add_Task(test1, 0, 100);
-	SCH_Add_Task(test2, 0, 100);
-//	SCH_Add_Task(test3, 0, 50);
-
-//	SCH_Add_Task(test4, 0, 200);
-//	SCH_Add_Task(test5, 0, 200);
 
 
-//	UART3_SendToHost((uint8_t*)"Power_Signal_Low \r\n");
-//	HAL_Delay(1000);
-//	Power_Signal_Low();
-//	HAL_Delay(100);
-//	Power_Signal_High();
-//	UART3_SendToHost((uint8_t*)"Power_Signal_High \r\n");
-	Set_Relay(0);
-	Set_Relay(1);
+//	Set_Relay(0);
+//	Set_Relay(1);
 
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
 //
 
 	while (1){
-		/* Insert delay 100 ms */
-
-//		Sim3g_Run();
-//		Set_Relay(8);
-//		HAL_Delay(1000);
-//		Reset_Relay(8);
-//
-//		HAL_Delay(1000);
-//		test7();
-//		test5();
 		main_fsm();
 		FSM_Process_Data_Received_From_Sim3g();
+//		Zero_Point_Detection();
 //		PowerConsumption_FSM();
-//		Sim3g_Receive_Setup();
-
-//		Set_Relay(7);
-//		HAL_Delay(1000);
-//		Reset_Relay(7);
-//
-//		HAL_Delay(1000);
 		SCH_Dispatch_Tasks();
+
 //		Led_Display();
 	}
 	return 0;

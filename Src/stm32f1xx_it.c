@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx_it.h"
+#include "app_test.h"
 
 extern TIM_HandleTypeDef    TimHandle;
 extern UART_HandleTypeDef Uart1Handle;
@@ -155,7 +156,8 @@ void SysTick_Handler(void)
   */
 void EXTI15_10_IRQHandler(void)
 {
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+  HAL_GPIO_EXTI_IRQHandler(ZERO_POINT_DETECTION_PIN);
+//  test2();
 }
 /**
   * @brief  This function handles TIM interrupt request.

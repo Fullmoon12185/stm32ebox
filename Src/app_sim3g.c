@@ -78,7 +78,7 @@ FlagStatus isIPCloseFlag = RESET;
 FlagStatus isRecvFromFlag = RESET;
 FlagStatus isReadyToSendDataToServer = RESET;
 FlagStatus isSendOKFlag = RESET;
-
+FlagStatus isReceiveDataFromServer = RESET;
 
 
 static uint8_t sim3g_TimeoutFlag = 0;
@@ -157,7 +157,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 
 const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
-		{(uint8_t*)"ATE0\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGDCONT=1,\"IP\",\"v-internet\"\r", 		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
@@ -432,13 +432,13 @@ void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID){
 			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
 			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
 	}
-	UART3_SendToHost(Sim3gDataProcessingBuffer + 2);
+//	UART3_SendToHost(Sim3gDataProcessingBuffer + 2);
 	if(relayStatus == SET){
 		Set_Relay(relayIndex);
-		UART3_SendToHost((uint8_t*)"s");
+//		UART3_SendToHost((uint8_t*)"s");
 	} else {
 		Reset_Relay(relayIndex);
-		UART3_SendToHost((uint8_t*)"r");
+//		UART3_SendToHost((uint8_t*)"r");
 	}
 
 }
@@ -462,10 +462,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				processDataState = PREPARE_FOR_SENDING_DATA;
 			}else if(preReadCharacter == '\r' && readCharacter == '\n'){
 				processDataState = PREPARE_PROCESSING_RECEIVED_DATA;
-
 			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE && readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE){
 				processDataState = PROCESSING_RECEIVED_DATA;
 				Clear_Sim3gDataProcessingBuffer();
+				isReceiveDataFromServer = SET;
 			} else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
 			}
@@ -489,6 +489,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		} else if(isReceivedData((uint8_t *)IP_CLOSE)){
 			isIPCloseFlag = SET;
 		} else if(isReceivedData((uint8_t *)RECV_FROM)){
+			isSendOKFlag = RESET;
 			isRecvFromFlag = SET;
 		} else if(isReceivedData((uint8_t *)Send_ok)){
 			isSendOKFlag = SET;
@@ -519,16 +520,6 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 	}
 }
 
-
-void Clear_All_Flags(void){
-	isPBDoneFlag = RESET;
-	isOKFlag = RESET;
-	isErrorFlag = RESET;
-	isIPCloseFlag = RESET;
-	isRecvFromFlag = RESET;
-	isReadyToSendDataToServer = RESET;
-	isSendOKFlag = RESET;
-}
 void Clear_Sim3gDataProcessingBuffer(void){
 	uint8_t i;
 	for(i = 0; i < RXBUFFERSIZE; i++){
@@ -541,14 +532,6 @@ void UART3_SendReceivedBuffer(void){
 }
 
 
-FlagStatus isGreaterThanSymbol(void){
-	if(isReadyToSendDataToServer){
-		isReadyToSendDataToServer = RESET;
-		return SET;
-	} else {
-		return RESET;
-	}
-}
 
 FlagStatus isRecvFrom(void){
 	return isRecvFromFlag;
@@ -560,3 +543,12 @@ FlagStatus isIPClose(void){
 FlagStatus isSendOK(void){
 	return isIPCloseFlag;
 }
+
+void Set_Is_Receive_Data_From_Server(FlagStatus status){
+	isReceiveDataFromServer = status;
+}
+FlagStatus Get_Is_Receive_Data_From_Server(void){
+	return isReceiveDataFromServer;
+}
+
+

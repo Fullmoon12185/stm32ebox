@@ -16,8 +16,8 @@
 extern const uint8_t SUBSCRIBE_TOPIC_1[];
 extern const uint8_t SUBSCRIBE_TOPIC_2[];
 
-extern const uint8_t PUBLISH_TOPIC_1[];
-extern const uint8_t PUBLISH_TOPIC_2[];
+extern const uint8_t PUBLISH_TOPIC_STATUS[];
+extern const uint8_t PUBLISH_TOPIC_POWER[];
 
 void test1(void){
 
@@ -80,9 +80,7 @@ void test5(void){
 }
 
 void test6(void){
-	Setup_Mqtt_Connect_Message();//////////////////////////////////////////////////////////////////////////
-	Setup_Mqtt_Subscribe_Message((uint8_t*)SUBSCRIBE_TOPIC_1);
-	Setup_Mqtt_Publish_Message((uint8_t *)PUBLISH_TOPIC_1, (uint8_t *)"123456789", 9);
+
 }
 
 void test7(void){

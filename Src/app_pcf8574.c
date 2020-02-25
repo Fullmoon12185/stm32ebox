@@ -39,3 +39,82 @@ FlagStatus SAC_Status(uint8_t sacIndex){
 
 
 
+
+#define SLAVE_ADDRESS_SENSOR 0x4F
+#define BEGIN			0
+//#define
+extern I2C_HandleTypeDef I2cHandle;
+
+uint8_t address1 = 0x20, addres2 = 0x24;
+uint8_t flagReceiveCplt=0, flagTransmitCplt=0;
+uint8_t sfmReadPowerStateMode = 0;
+uint8_t aRxBuffer[16];
+
+uint8_t PCF_Scan(){
+	uint8_t i, count = 0;
+	HAL_StatusTypeDef result ;
+	printf("Scan I2C");
+	for( i = 1; i< 128; i++){
+		result = HAL_I2C_IsDeviceReady(&I2cHandle, (uint16_t) (i<<1), 2, 2);
+		if(result != HAL_OK){
+			printf("."); // No ACK received at that address
+		}
+		else{
+			count ++;
+			printf("0x%X", i);
+
+//			return i;
+		}
+	}
+	printf("count: %d", count);
+	return i;
+}
+
+void PCF_init(){
+//scan for address1 and 2
+	address1 = PCF_Scan();
+	HAL_I2C_Master_Receive_DMA(&I2cHandle, address1, (uint8_t *) aRxBuffer, 16);
+}
+
+
+uint8_t PCF_read(uint8_t address){
+	return;
+}
+//void PCF_write(uint8_t);
+
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *I2cHandle)
+{
+  /* Toggle LED2: Transfer in reception process is correct */
+//  BSP_LED_Toggle(LED2);
+	flagReceiveCplt = 1;
+	HAL_I2C_Master_Receive_DMA(&I2cHandle, address1, (uint8_t *) aRxBuffer, 16);
+}
+
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef * I2cHandle){
+	flagTransmitCplt = 1;
+}
+
+void FSM_ReadPowerState(){	//call in main loop(1)
+
+
+}
+
+void Set_Input_PCF_Pins(void){
+	uint8_t initData[1] = {0xff};
+	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)64, (uint8_t *) initData, 1, 0xffff);
+	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)72, (uint8_t *) initData, 1, 0xffff);
+	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)76, (uint8_t *) initData, 1, 0xffff);
+//	//	HAL_I2C_Master_Transmit(hi2c, DevAddress, pData, Size, Timeout)/
+//
+//		for(uint16_t i = 0; i< 100; i++){
+//			while(HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+//			while(HAL_I2C_Master_Receive(&hi2c1, (uint16_t) 65, (uint8_t *)receiveI2C, 2, 100) != HAL_OK );
+//			storeBuffer[i] = receiveI2C[0];
+//	//		printBuffer ="";
+//			sprintf(printBuffer,"\r%d  ", receiveI2C[0]);
+//					HAL_UART_Transmit(&huart3, printBuffer, 4, 100);
+//			HAL_Delay(1);
+//		}
+}
+
+

@@ -18,6 +18,7 @@
 #include "app_sim3g.h"
 #include "app_spi.h"
 #include "app_i2c.h"
+#include "app_pcf8574.h"
 #include "app_25LC512.h"
 #include "app_init.h"
 #include "app_relay.h"
@@ -85,6 +86,7 @@ void System_Initialization(void)
         	break;
         case I2C_INIT:
         	I2C_Init();
+        	Set_Input_PCF_Pins();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"I2C_Init - Done \r\n"));
         	break;
         case ADC_INIT:

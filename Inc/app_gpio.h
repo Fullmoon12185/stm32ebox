@@ -12,7 +12,6 @@
 
 void MX_GPIO_Init(void);
 
-
 #endif /* APP_GPIO_H_ */
 
 

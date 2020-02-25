@@ -10,12 +10,12 @@
 #include "app_scheduler.h"
 #include "app_uart.h"
 #include "app_fsm.h"
+#include "app_test.h"
+#include "math.h"
 
 
-#define NUM_OF_SAMPLE	50
-#define NUM_OF_FILTER	100
-
-
+#define		REFERENCE_1V8_VOLTAGE_INDEX		12
+#define		DIFFERENCE_ADC_VALUE_THRESHOLD				10
 
 ADC_HandleTypeDef ADC1Handle;
 DMA_HandleTypeDef Hdma_adc1Handle;
@@ -23,14 +23,14 @@ DMA_HandleTypeDef Hdma_adc1Handle;
 
 //uint32_t ADCValues[NUMBER_OF_ADC_CHANNELS];
 
-uint16_t AdcDmaBuffer[NUMBER_OF_ADC_CHANNELS];
-uint16_t AdcBuffer[NUM_OF_SAMPLE][NUMBER_OF_ADC_CHANNELS];
-uint32_t AdcBufferFilter[NUM_OF_FILTER][NUMBER_OF_ADC_CHANNELS];
-uint16_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS],
+int32_t AdcDmaBuffer[NUMBER_OF_ADC_CHANNELS];
+int32_t AdcBuffer[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
+//int32_t AdcBufferFilter[NUM_OF_FILTER][NUMBER_OF_ADC_CHANNELS];
+int32_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS],
 		AdcBufferPeakMin[NUMBER_OF_ADC_CHANNELS],
 		AdcBufferPeakPeak[NUMBER_OF_ADC_CHANNELS];
-uint16_t AdcDmaBufferIndex = 0, AdcDmaBufferIndexFilter = 0;
-uint16_t AdcBufferCurrent[NUMBER_OF_ADC_CHANNELS];
+int32_t AdcDmaBufferIndex = 0, AdcDmaBufferIndexFilter = 0;
+int32_t AdcBufferCurrent[NUMBER_OF_ADC_CHANNELS];
 uint8_t strtmp[] = "Begin read ADcs \r\n";
 //uint32_t array_Of_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //uint32_t arrayOfAverageADCValues[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
@@ -39,41 +39,35 @@ uint8_t strtmp[] = "Begin read ADcs \r\n";
 //uint32_t array_Of_Min_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //
 //uint32_t array_Of_Vpp_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //
-//uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//uint32_t array_Of_Power_Consumption[NUMBER_OF_ADC_CHANNELS];
-//uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
+uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+uint32_t array_Of_Power_Consumption[NUMBER_OF_ADC_CHANNELS];
+uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
+FlagStatus array_Of_Outlet_Status[NUMBER_OF_ADC_CHANNELS];
+
+
 
 uint8_t AdcDmaFlag = 0, AdcDmaStoreFlag = 0;
 #define ADC_READING_TIME_OUT	95
 
 typedef enum {
-	START_GETTING_ADC = 0,
+	SETUP_TIMER_ONE_SECOND = 0,
+	FIND_ZERO_VOLTAGE_POINT,
+	START_GETTING_ADC,
 	WAIT_FOR_DATA_COMPLETE_TRANSMIT,
 	STOP_GETTING_ADC,
-	FIND_MIN_MAX,
+	REPORT_POWER_DATA,
 	COMPUTE_PEAK_TO_PEAK_VOLTAGE,
 	COMPUTE_POWER_CONSUMPTION,
-	MAX_NUMBER_OF_ADC_STATE
+	PREPARE_FOR_THE_NEXT_CONVERSION,
+	MAX_NUMBER_OF_ADC_STATES
 }ADC_STATE;
 
 uint8_t adc_TimeoutFlag = 0;
-uint8_t adc_Timeout_Task_Index = 0;
-ADC_STATE adcState = START_GETTING_ADC;
-
-void ClearAllBuffers(void);
-
-void ADC_Setup_Min_Max_Value_Buffers(void);
-void ADC_Get_Voltage_PeakToPeak(void);
-void ADC_Get_Voltage_MinMax(void);
-
-void ClearAllBuffers(void){
-
-
-}
-
-
+uint8_t adc_Timeout_Task_Index = SCH_MAX_TASKS;
+FlagStatus is_Ready_To_Find_Min_Max_Voltage = RESET;
+ADC_STATE adcState = SETUP_TIMER_ONE_SECOND;
 
 
 /**
@@ -122,7 +116,7 @@ void ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -231,12 +225,15 @@ void ADC1_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-  ClearAllBuffers();
 }
 
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+//	is_Ready_To_Find_Min_Max_Voltage = SET;
+//	test2();
+	return;
+}
 /**
   * Enable DMA controller clock
   */
@@ -261,85 +258,6 @@ void ADC_Stop_Getting_Values(void){
 }
 
 
-void ADC_Setup_Min_Max_Value_Buffers(void){
-	uint8_t i;
- 	for (i = 0; i < NUMBER_OF_ADC_CHANNELS; i ++){
- 		AdcBufferPeakMax[i] = 0;
- 		AdcBufferPeakMin[i] = 4096;
-	}
-}
-
-//void AverageADCValueCalculation(void){
-//	uint8_t i, j;
-//	uint32_t tempAverage;
-//	static uint8_t circularIndexOfArrayOfAverageADCValues = 0;
-//	if(AdcDmaStoreFlag == 1){
-//		ADC_Stop_Getting_Values();
-//		circularIndexOfArrayOfAverageADCValues = (circularIndexOfArrayOfAverageADCValues + 1) % NUMBER_OF_SAMPLES_PER_SECOND;
-//		for(i = 0; i < NUMBER_OF_ADC_CHANNELS; i ++){
-//			tempAverage = 0;
-//			for(j = 0; j < NUMBER_OF_SAMPLES_PER_AVERAGE; j++){
-//				tempAverage = tempAverage + array_Of_ADC_Values[i + j*NUMBER_OF_ADC_CHANNELS];
-//			}
-//			arrayOfAverageADCValues[i][circularIndexOfArrayOfAverageADCValues] = tempAverage >> SAMPLE_STEPS;
-//		}
-//
-//		ADC_Start_Getting_Values();
-//		adcCompleteTransfer = 0;
-//
-//		UpdatePublishMessage(0, arrayOfAverageADCValues[i][circularIndexOfArrayOfAverageADCValues]);
-//		UART3_SendToHost((uint8_t*)"\r");
-//		HAL_Delay(1);
-//	}
-//}
-//
-//
-//void ADC_Get_Voltage_MinMax(void){
-//
-//	uint8_t adcChannelIndex = 0;
-//	uint8_t j = 0;
-//	ADC_Setup_Min_Max_Value_Buffers();
-//	for(adcChannelIndex = 0; adcChannelIndex < NUMBER_OF_ADC_CHANNELS; adcChannelIndex ++){
-//		for(j = 0; j < NUMBER_OF_SAMPLES_PER_SECOND; j ++){
-//			if(arrayOfAverageADCValues[adcChannelIndex][j] > array_Of_Max_ADC_Values[adcChannelIndex]){
-//				array_Of_Max_ADC_Values[adcChannelIndex] = arrayOfAverageADCValues[adcChannelIndex][j];
-//			}
-//			if(arrayOfAverageADCValues[adcChannelIndex][j] < array_Of_Min_ADC_Values[adcChannelIndex]){
-//				array_Of_Min_ADC_Values[adcChannelIndex] = arrayOfAverageADCValues[adcChannelIndex][j];
-//			}
-//		}
-//	}
-//
-//}
-//
-//void ADC_Get_Voltage_PeakToPeak(void){
-//	uint8_t adcChannelIndex = 0;
-////	ADC_Stop_Getting_Values();
-//	for(adcChannelIndex = 0; adcChannelIndex < NUMBER_OF_ADC_CHANNELS; adcChannelIndex ++){
-//		array_Of_Vpp_ADC_Values[adcChannelIndex] =  array_Of_Max_ADC_Values[adcChannelIndex] -	array_Of_Min_ADC_Values[adcChannelIndex];
-//	}
-//}
-//
-//void ADC_ComputePowerConsumption(void){
-//	uint8_t adcChannelIndex = 0;
-//	for(adcChannelIndex = 0; adcChannelIndex < NUMBER_OF_ADC_CHANNELS; adcChannelIndex ++){
-////		array_Of_Vrms_ADC_Values[adcChannelIndex] = array_Of_Vpp_ADC_Values[adcChannelIndex]*707/2;
-////		array_Of_Vrms_ADC_Values[adcChannelIndex] = array_Of_Vpp_ADC_Values[adcChannelIndex] - CALIBRATION/10000;
-////		array_Of_Irms_ADC_Values[adcChannelIndex] = array_Of_Vrms_ADC_Values[adcChannelIndex]*1000/SENSITIVITY;
-//
-//		array_Of_Irms_ADC_Values[adcChannelIndex] = array_Of_Vpp_ADC_Values[adcChannelIndex]*237;
-////		if(array_Of_Irms_ADC_Values[adcChannelIndex] > 100 && array_Of_Irms_ADC_Values[adcChannelIndex] < 1000){
-////			array_Of_Irms_ADC_Values[adcChannelIndex] = 0;
-////		}
-//		array_Of_Power_Consumption[adcChannelIndex] = SUPPLY_VOLTAGE * array_Of_Irms_ADC_Values[adcChannelIndex] /100;
-//		array_Of_Power_Consumption_In_WattHour[adcChannelIndex] += array_Of_Power_Consumption[adcChannelIndex];
-//	}
-//
-//
-//}
-
-
-
 void Adc_Clear_Timeout_Flag(void){
 	adc_TimeoutFlag = 0;
 }
@@ -349,77 +267,158 @@ void Adc_Reading_Timeout(void){
 uint8_t is_Adc_Reading_Timeout(void){
 	return adc_TimeoutFlag;
 }
-void PowerConsumption_FSM(void){
-	switch(adcState){
-	case START_GETTING_ADC:
-		ADC_Setup_Min_Max_Value_Buffers();
-		ADC_Start_Getting_Values();
-		adcState = WAIT_FOR_DATA_COMPLETE_TRANSMIT;
+
+
+
+void Zero_Point_Detection(void){
+	static uint8_t zeroPointState = 0;
+	switch(zeroPointState){
+	case 0:
+		if(HAL_GPIO_ReadPin(ZERO_POINT_DETECTION_PORT, ZERO_POINT_DETECTION_PIN) == GPIO_PIN_SET){
+			zeroPointState = 1;
+			is_Ready_To_Find_Min_Max_Voltage = SET;
+		}
 		break;
+	case 1:
+		if(HAL_GPIO_ReadPin(ZERO_POINT_DETECTION_PORT, ZERO_POINT_DETECTION_PIN) == GPIO_PIN_RESET){
+			zeroPointState = 0;
+		}
+		break;
+	}
+}
+
+
+void PowerConsumption_FSM(void){
+	static uint8_t externalInterruptCounter = 0;
+	static uint8_t cycleCounter = 0;
+	static int16_t tempAdcValue[NUMBER_OF_ADC_CHANNELS];
+	static int16_t preTempAdcValue[NUMBER_OF_ADC_CHANNELS];
+
+	switch(adcState){
+	case SETUP_TIMER_ONE_SECOND:
+		SCH_Delete_Task(adc_Timeout_Task_Index);
+		Adc_Clear_Timeout_Flag();
+		adc_Timeout_Task_Index = SCH_Add_Task(Adc_Reading_Timeout, 100, 0);
+		is_Ready_To_Find_Min_Max_Voltage = RESET;
+		externalInterruptCounter = 0;
+		AdcDmaBufferIndexFilter = 0;
+		cycleCounter = 0;
+		adcState = FIND_ZERO_VOLTAGE_POINT;
+		break;
+	case FIND_ZERO_VOLTAGE_POINT:
+		if(is_Ready_To_Find_Min_Max_Voltage){
+			is_Ready_To_Find_Min_Max_Voltage = RESET;
+			externalInterruptCounter++;
+			AdcDmaBufferIndexFilter = 0;
+			adcState = START_GETTING_ADC;
+		}
+		break;
+
+	case START_GETTING_ADC:
+		if(is_Ready_To_Find_Min_Max_Voltage){
+			is_Ready_To_Find_Min_Max_Voltage = RESET;
+			externalInterruptCounter++;
+		} else {
+			if(externalInterruptCounter < 3){
+				ADC_Start_Getting_Values();
+				adcState = WAIT_FOR_DATA_COMPLETE_TRANSMIT;
+			} else {
+				adcState = COMPUTE_PEAK_TO_PEAK_VOLTAGE;
+			}
+		}
+		break;
+
 	case WAIT_FOR_DATA_COMPLETE_TRANSMIT:
 		if(AdcDmaStoreFlag){
+//			test2();
+			ADC_Stop_Getting_Values();
 			AdcDmaStoreFlag = 0;
 			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
-				AdcBufferFilter[AdcDmaBufferIndexFilter][i] = AdcDmaBuffer[i];
+				//filter noise
+				tempAdcValue[i] = AdcDmaBuffer[i];// - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
+//				if(AdcDmaBufferIndexFilter == 0){
+//					preTempAdcValue[i] = tempAdcValue[i];
+//				} else {
+//					if(tempAdcValue[i] < preTempAdcValue[i] + DIFFERENCE_ADC_VALUE_THRESHOLD
+//						|| tempAdcValue[i] > preTempAdcValue[i] - DIFFERENCE_ADC_VALUE_THRESHOLD){
+//						preTempAdcValue[i] = tempAdcValue[i];
+//					} else {
+//						tempAdcValue[i] = preTempAdcValue[i];
+//					}
+//				}
+				//save data to a buffer for later use
+				AdcBuffer[i][AdcDmaBufferIndexFilter] =  tempAdcValue[i];
+
+				array_Of_Vrms_ADC_Values[i] = tempAdcValue[i] * tempAdcValue[i];
+
+				//Find min max on the fly
+				if(AdcDmaBufferIndexFilter == 0){
+					AdcBufferPeakMax[i] = tempAdcValue[i];
+					AdcBufferPeakMin[i] = tempAdcValue[i];
+				} else {
+					if(tempAdcValue[i] > AdcBufferPeakMax[i]) AdcBufferPeakMax[i] = tempAdcValue[i];
+					if(tempAdcValue[i] < AdcBufferPeakMin[i]) AdcBufferPeakMin[i] = tempAdcValue[i];
+				}
 			}
 			AdcDmaBufferIndexFilter++;
-			if (AdcDmaBufferIndexFilter >= NUM_OF_FILTER) {
-				AdcDmaBufferIndexFilter = 0;
-				uint32_t sumFilter = 0;
-				for(uint16_t itmp = 0; itmp< NUM_OF_FILTER; itmp ++){
-					sumFilter += AdcBufferFilter[itmp][0] ;
-				}
-				AdcBuffer[AdcDmaBufferIndex][0] = sumFilter/NUM_OF_FILTER;
-//					HAL_UART_Transmit(&huart3, (uint8_t*) strtmp, sprintf(strtmp, "%d\t",AdcBuffer[AdcDmaBufferIndex][0]), 500);
-//					HAL_UART_Transmit(&huart3, (uint8_t*) strtmp, sprintf(strtmp, "%d\r\n", AdcBufferPeakPeak[0] + 2170), 500);
-				AdcDmaBufferIndex++;
-				if (AdcDmaBufferIndex >= NUM_OF_SAMPLE) {
-					AdcDmaBufferIndex = 0;
-					AdcDmaFlag = 1;
-					ADC_Stop_Getting_Values();
-					AdcDmaFlag = 0;
-					//					mode = FSM_MODE_TRANSMIT_UART;
-					adcState = COMPUTE_PEAK_TO_PEAK_VOLTAGE;
-				} else {
-					//					HAL_ADC_Start_DMA(&hadc1, AdcDmaBuffer, NUM_OF_ADC_CHANNEL);
-				}
-
-			}
-
+			adcState = START_GETTING_ADC;
 		}
 		break;
 	case COMPUTE_PEAK_TO_PEAK_VOLTAGE:
 		for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
-			for (uint8_t j = 0; j < NUMBER_OF_ADC_CHANNELS; j++) {
-				if (AdcBufferPeakMax[i] < AdcBuffer[j][i])
-					AdcBufferPeakMax[i] = AdcBuffer[j][i];
-				if (AdcBufferPeakMin[i] > AdcBuffer[j][i])
-					AdcBufferPeakMin[i] = AdcBuffer[j][i];
+			if(cycleCounter == 0){
+				AdcBufferPeakPeak[i] = AdcBufferPeakMax[i]- AdcBufferPeakMin[i];
+			} else {
+				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] + AdcBufferPeakMax[i]- AdcBufferPeakMin[i];
 			}
-			AdcBufferPeakPeak[i] = (8* AdcBufferPeakPeak[i] + 2 * (AdcBufferPeakMax[i]- AdcBufferPeakMin[i]))/10;
 		}
-//			HAL_UART_Transmit(&huart3, "\t\t\t", 3, 100);
-//			I = adcPeak/2  / 4096 * 3v3 /680  * 2000   * 1000 = adc * 2.3696 / 2
-//			I = 3.3 *
-		// P = 220 * adc * 2.3696 / 1.4
-		snprintf((char *)strtmp, sizeof(strtmp), "\r\n");
-		UART3_SendToHost(strtmp);
-//			I = AdcBufferPeakPeak[0] * 2.3696;
-//			P = AdcBufferPeakPeak[0] * 521.312;
-		uint32_t current = AdcBufferPeakPeak[0] * 1184;//1185;	//2370;
-		uint32_t power = AdcBufferPeakPeak[0]  *185;//186;//260;	//521312;
-		if(current < 2370) current = 0 ;
-		else current = current / 1000;
-		sprintf((char *)strtmp, "I: %ld\t", current);
-		UART3_SendToHost(strtmp);
-		sprintf((char *)strtmp, "P: %ld\t", power);
-		UART3_SendToHost(strtmp);
-//		HAL_UART_Transmit(&huart3, (uint8_t*)strtmp, sprintf(strtmp, "I: %d\t", current), 500);
-//		HAL_UART_Transmit(&huart3, (uint8_t*)strtmp, sprintf(strtmp, "P: %d\t", power), 500);
+		cycleCounter++;
+		if(cycleCounter == NUMBER_OF_SAMPLES_PER_AVERAGE){
+			cycleCounter = 0;
+			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++){
+				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
+			}
 
-		//transmit or do something here
-//			mode = FSM_MODE_BEGIN;
-		adcState = START_GETTING_ADC;
+			adcState = COMPUTE_POWER_CONSUMPTION;
+		} else {
+			externalInterruptCounter = 0;
+			adcState = FIND_ZERO_VOLTAGE_POINT;
+		}
+
+		break;
+	case COMPUTE_POWER_CONSUMPTION:
+		for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
+			if(AdcBufferPeakPeak[i] < 20){
+				array_Of_Irms_ADC_Values[i] = 0;
+				array_Of_Power_Consumption[i] = 0;
+				array_Of_Outlet_Status[i] = RESET;
+			}
+			else{
+				//convert adc value to voltage
+				// Votage = (PP/2)*3.3V/4096
+				// current = Votage/680(om) * 1000 (mA)
+				// Current(rms) = current*0.707
+				// Real input current = Current(rms) * 2000 (ratio)
+				array_Of_Outlet_Status[i] = SET;
+				array_Of_Irms_ADC_Values[i] = AdcBufferPeakPeak[i];// -  AdcBufferPeakPeak[REFERENCE_1V8_VOLTAGE_INDEX];
+				array_Of_Power_Consumption[i] = array_Of_Irms_ADC_Values[i];
+			}
+			array_Of_Power_Consumption_In_WattHour[i] +=  array_Of_Power_Consumption[i]; //wattsecond
+		}
+		sprintf((char*) strtmp, "%d\t", (int) array_Of_Irms_ADC_Values[0]);
+		UART3_SendToHost((uint8_t *)strtmp);
+		test2();
+		adcState = REPORT_POWER_DATA;
+		break;
+	case REPORT_POWER_DATA:
+		if(is_Adc_Reading_Timeout()){
+			test2();
+//			sprintf((char*) strtmp, "%d\t", (int) array_Of_Irms_ADC_Values[0]);
+//			UART3_SendToHost((uint8_t *)strtmp);
+//			sprintf((char*) strtmp, "%d\r\n", (int) array_Of_Power_Consumption[0]);
+//			UART3_SendToHost((uint8_t *)strtmp);
+			adcState = SETUP_TIMER_ONE_SECOND;
+		}
 		break;
 
 	default:

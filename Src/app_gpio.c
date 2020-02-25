@@ -9,7 +9,7 @@
 void LED_Init(void);
 void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
-
+void ZeroPoint_Detection_Pin_Init(void);
 
 
 /**
@@ -30,27 +30,12 @@ void MX_GPIO_Init(void)
 //	/*Configure GPIO pin Output Level */
 //	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 //
-//	/*Configure GPIO pin : B1_Pin */
-//	GPIO_InitStruct.Pin = B1_Pin;
-//	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-//	GPIO_InitStruct.Pull = GPIO_NOPULL;
-//	HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-//
-//	/*Configure GPIO pin : LD2_Pin */
-//	GPIO_InitStruct.Pin = LD2_Pin;
-//	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-//	GPIO_InitStruct.Pull = GPIO_NOPULL;
-//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-//	HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
-//
-//	/* EXTI interrupt init*/
-//	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-//	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 
 	LED_Init();
 	GPIO_Relay_Init();
 	Buzzer_Init();
-//	Sim5320_GPIO_Init();
+	ZeroPoint_Detection_Pin_Init();
 }
 
 void LED_Init(void){
@@ -66,20 +51,10 @@ void LED_Init(void){
 	GPIO_InitStruct.Pin = LED2_PIN;
 	HAL_GPIO_Init(LED2_GPIO_PORT, &GPIO_InitStruct);
 
-
-//	GPIO_InitStruct.Pin = LED3_PIN;
-//	HAL_GPIO_Init(LED3_GPIO_PORT, &GPIO_InitStruct);
-//
-//	GPIO_InitStruct.Pin = LED4_PIN;
-//	HAL_GPIO_Init(LED4_GPIO_PORT, &GPIO_InitStruct);
-
 }
 
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	return;
-	//	HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
-}
+
 
 void GPIO_Relay_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -124,6 +99,23 @@ void Buzzer_Init(void){
 	HAL_GPIO_Init(BUZZER_PORT, &GPIO_InitStruct);
 }
 
+
+
+void ZeroPoint_Detection_Pin_Init(void){
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	/*Configure GPIO pin : B1_Pin */
+	/* GPIO Ports Clock Enable */
+
+	GPIO_InitStruct.Pin = ZERO_POINT_DETECTION_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(ZERO_POINT_DETECTION_PORT, &GPIO_InitStruct);
+
+
+	/* EXTI interrupt init*/
+//	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+//	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
 
 
 

@@ -127,11 +127,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
 		HAL_GPIO_Init(USART3_RX_GPIO_PORT, &GPIO_InitStruct);
 	}
-
-
-
-
-
 }
 
 /**
@@ -178,7 +173,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 		  /* Configure UART Rx as alternate function  */
 		  HAL_GPIO_DeInit(USART3_RX_GPIO_PORT, USART3_RX_PIN);
 	}
-
 }
 
 /**
