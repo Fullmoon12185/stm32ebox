@@ -34,12 +34,7 @@ int32_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS],
 		AdcBufferPeakPeak[NUMBER_OF_ADC_CHANNELS];
 int32_t AdcDmaBufferIndex = 0, AdcDmaBufferIndexFilter = 0;
 int32_t AdcBufferCurrent[NUMBER_OF_ADC_CHANNELS];
-int32_t AdcCalibrateZeroValues[NUMBER_OF_ADC_CHANNELS] = {
-		858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858
-};
-int32_t tempAdcCalibrateZeroValues[NUMBER_OF_ADC_CHANNELS] = {
-		785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785
-};
+
 uint8_t strtmp[] = "Begin read ADcs \r\n";
 //uint32_t array_Of_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //uint32_t arrayOfAverageADCValues[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
@@ -343,28 +338,11 @@ void PowerConsumption_FSM(void){
 			ADC_Stop_Getting_Values();
 			AdcDmaStoreFlag = 0;
 			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
-				//filter noise
-//				if(AdcDmaBufferIndexFilter == 0){
 					AdcBuffer[i][AdcDmaBufferIndexFilter] = AdcDmaBuffer[i] - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
 					if(AdcBuffer[i][AdcDmaBufferIndexFilter] < 10 && AdcBuffer[i][AdcDmaBufferIndexFilter] > -10){
 						AdcBuffer[i][AdcDmaBufferIndexFilter] = 0;
 					}
 
-//				} else {
-//					if(AdcDmaBuffer[i] > AdcBuffer[i][AdcDmaBufferIndexFilter - 1] + 20 ||
-//						AdcDmaBuffer[i] < AdcBuffer[i][AdcDmaBufferIndexFilter - 1] - 20)
-//						AdcBuffer[i][AdcDmaBufferIndexFilter] = AdcBuffer[i][AdcDmaBufferIndexFilter - 1];
-//					else {
-//						AdcBuffer[i][AdcDmaBufferIndexFilter] = AdcDmaBuffer[i];
-//					}
-//				}
-			}
-
-//			UART3_SendToHost((uint8_t *)"0\t");
-//			sprintf((char*) strtmp, "%d\t", (int) AdcBuffer[REFERENCE_1V8_VOLTAGE_INDEX][AdcDmaBufferIndexFilter]);
-//			UART3_SendToHost((uint8_t *)strtmp);
-//			sprintf((char*) strtmp, "%d\r\n", (int) AdcBuffer[0][AdcDmaBufferIndexFilter]);
-//			UART3_SendToHost((uint8_t *)strtmp);
 			AdcDmaBufferIndexFilter++;
 			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
 				AdcDmaBufferIndexFilter = 0;
