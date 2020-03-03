@@ -11,7 +11,7 @@
 FlagStatus array_Of_Relay_Statuses[NUMBER_OF_RELAYS];
 WorkingStatus array_Of_Relay_Physical_Statuses[NUMBER_OF_RELAYS];
 WorkingStatus array_Of_Fuse_Statuses[NUMBER_OF_RELAYS];
-
+FlagStatus isUpdateRelayStatus = RESET;
 
 void Update_Relay_Physical_Status(void);
 
@@ -51,12 +51,18 @@ void Relay_Init(void){
 }
 void Set_Relay(uint8_t relayIndex){
 	if(relayIndex > 9) return;
+	if(array_Of_Relay_Statuses[relayIndex] == RESET){
+		isUpdateRelayStatus = SET;
+	}
 	array_Of_Relay_Statuses[relayIndex] = SET;
 	HAL_GPIO_WritePin(array_Of_Relay_Ports[relayIndex], array_Of_Relay_Pins[relayIndex], SET);
 }
 
 void Reset_Relay(uint8_t relayIndex){
 	if(relayIndex > 9) return;
+	if(array_Of_Relay_Statuses[relayIndex] == SET){
+		isUpdateRelayStatus = SET;
+	}
 	array_Of_Relay_Statuses[relayIndex] = RESET;
 	HAL_GPIO_WritePin(array_Of_Relay_Ports[relayIndex], array_Of_Relay_Pins[relayIndex], RESET);
 }
@@ -70,6 +76,14 @@ void Update_Relay_Physical_Status(void){
 
 FlagStatus Get_Relay_Status(uint8_t relayIndex){
 	return array_Of_Relay_Statuses[relayIndex];
+}
+FlagStatus Get_Is_Update_Relay_Status(void){
+	if(isUpdateRelayStatus){
+		isUpdateRelayStatus = RESET;
+		return SET;
+	} else {
+		return RESET;
+	}
 }
 
 

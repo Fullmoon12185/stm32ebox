@@ -12,12 +12,13 @@
 #include "app_scheduler.h"
 #include "app_sim5320MQTT.h"
 
+#define		CLOUD_MQTT  	0
+#define		MOSQUITTO		1
+
+
 #define		DEBUG_MQTT(X)	X
-
-
 #define 	MQTT_COMMAND_TIME_OUT		5000
 
-#define		CLOUD_MQTT		1
 
 
 
@@ -46,13 +47,20 @@ const uint8_t CLIENT_ID[] 			= "ABCDEF";
 //const uint8_t PASSWORD[] 			= "2Awwc3zlS20r";
 
 //Vinh cloudmqtt
+#if(CLOUD_MQTT == 1)
 const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"tailor.cloudmqtt.com\",13204\r";
 const uint8_t USERNAME[] 			= "lyooeovx";
 const uint8_t PASSWORD[] 			= "7Pq6P2PWLqME";
 
+#elif(MOSQUITTO == 1)
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"broker.hivemq.com\",1883\r";
+const uint8_t USERNAME[] 			= "";
+const uint8_t PASSWORD[] 			= "";
+
+#endif
 //subscribe topin khong nen co len la 10
 const uint8_t SUBSCRIBE_TOPIC_1[] 	= "eBox/switch";
-const uint8_t SUBSCRIBE_TOPIC_2[] 	= "sensor/1234";
+const uint8_t SUBSCRIBE_TOPIC_2[] 	= "eBox/saves1";
 
 const uint8_t PUBLISH_TOPIC_STATUS[] 		= "eBox/status";
 const uint8_t PUBLISH_TOPIC_POWER[] 		= "eBox/power";
@@ -118,7 +126,7 @@ MQTT_Machine_Type MQTT_State_Machine [] = {
 		{MQTT_RECEIVE_GREATER_THAN_SYMBOL_PUBLISH_STATE, 		SM_Mqtt_Receive_Greater_Than_Symbol_Publish_State   },
 		{MQTT_WAIT_FOR_RESPONSE_FROM_PUBLISH_STATE,				SM_Mqtt_Wait_For_Response_From_Publish_State		},
 		{MQTT_PING_REQUEST_STATE,								SM_Mqtt_Ping_Request								},
-		{MQTT_RECEIVE_GREATER_THAN_SYMBOL_PING_REQUEST_STATE, 		SM_Mqtt_Receive_Greater_Than_Symbol_Ping_Request_State   },
+		{MQTT_RECEIVE_GREATER_THAN_SYMBOL_PING_REQUEST_STATE, 	SM_Mqtt_Receive_Greater_Than_Symbol_Ping_Request_State   },
 		{MQTT_WAIT_FOR_RESPONSE_FROM_REQUEST_STATE,				SM_Wait_For_Mqtt_Ping_Resquest_Response				},
 		{MQTT_DISCONNECT_STATE, 								SM_Mqtt_Disconnect									},
 		{MQTT_WAIT_FOR_RESPONSE_FROM_DISCONNECT_STATE,			SM_Wait_For_Response_From_Disconnect_State			},
@@ -436,6 +444,7 @@ void SM_Wait_For_Mqtt_Ping_Resquest_Response(void){
 ///////////////////////////////////////////////////////////////////////////
 void Setup_Mqtt_Connect_Message(void){
 
+#if(CLOUD_MQTT == 1)
 	uint8_t i;
 	uint8_t clientIdLength = GetStringLength((uint8_t*)CLIENT_ID);
 	uint8_t usernameLength = GetStringLength((uint8_t*)USERNAME);
@@ -445,8 +454,8 @@ void Setup_Mqtt_Connect_Message(void){
 
 	// Header
 	mqttMessage[mqttMessageIndex++] = MQTT_MSG_CONNECT;
-	mqttMessage[mqttMessageIndex++] = 18 + clientIdLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
 
+	mqttMessage[mqttMessageIndex++] = 18 + clientIdLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
 	// Protocol name
 	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
 	mqttMessage[mqttMessageIndex++] = 6;                      // Protocol Name Length LSB
@@ -493,6 +502,77 @@ void Setup_Mqtt_Connect_Message(void){
 	}
 	mqttMessageLength = mqttMessageIndex;
 	SM_Send_Data(mqttMessageLength);
+
+
+#elif(MOSQUITTO == 1)
+	uint8_t i;
+	uint8_t clientIdLength = GetStringLength((uint8_t*)CLIENT_ID);
+	uint8_t usernameLength = 0;//GetStringLength((uint8_t*)USERNAME);
+	uint8_t passwordLength = 0;//GetStringLength((uint8_t*)PASSWORD);
+
+	Clear_Mqtt_Message_Buffer();
+
+	// Header
+	mqttMessage[mqttMessageIndex++] = MQTT_MSG_CONNECT;
+
+	mqttMessage[mqttMessageIndex++] = 14 + clientIdLength;    // Remaining length of the message (bytes 2-13 + clientId)
+	// Protocol name
+	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
+		mqttMessage[mqttMessageIndex++] = 6;                      // Protocol Name Length LSB
+		mqttMessage[mqttMessageIndex++] = 'M';
+		mqttMessage[mqttMessageIndex++] = 'Q';
+		mqttMessage[mqttMessageIndex++] = 'I';
+		mqttMessage[mqttMessageIndex++] = 's';
+		mqttMessage[mqttMessageIndex++] = 'd';
+		mqttMessage[mqttMessageIndex++] = 'p';
+
+		// Protocol level
+		mqttMessage[mqttMessageIndex++] = 3;
+
+	// Protocol level
+	// MQTT Protocol version = 3 (mqtt 3.1)
+	// MQTT Protocol version = 4 (mqtt 3.1.1)
+	// MQTT Protocol version = 5 (mqtt 5.0)
+//	mqttMessage[mqttMessageIndex++] = 5;
+
+	// Connection flags   2 for clean session
+ //   mqttMessage[9] = 2;
+	mqttMessage[mqttMessageIndex++] = 0b00000010;  //enable username, password, clean session
+
+	// Keep-alive (maximum duration)
+	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
+	mqttMessage[mqttMessageIndex++] = 0x3c;                     // Keep-alive Time Length LSB
+
+//	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
+//	mqttMessage[mqttMessageIndex++] = 0x0;                     // Keep-alive Time Length LSB
+
+	// Client ID
+	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
+	mqttMessage[mqttMessageIndex++] = clientIdLength;        // Client ID length LSB
+	for (i = 0; i < clientIdLength; i ++){
+		mqttMessage[mqttMessageIndex++] = CLIENT_ID[i];
+	}
+
+	if(usernameLength > 0){
+		// Username
+		mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
+		mqttMessage[mqttMessageIndex++] = usernameLength;        // Client ID length LSB
+		for (i = 0; i < usernameLength; i ++){
+			mqttMessage[mqttMessageIndex++] = USERNAME[i];
+		}
+	}
+
+	if(passwordLength > 0){
+		// Password
+		mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
+		mqttMessage[mqttMessageIndex++] = passwordLength;        // Client ID length LSB
+		for (i = 0; i < passwordLength; i ++){
+			mqttMessage[mqttMessageIndex++] = PASSWORD[i];
+		}
+	}
+	mqttMessageLength = mqttMessageIndex;
+	SM_Send_Data(mqttMessageLength);
+#endif
 }
 /////////////////////////////////////////////////////////////////////////////
 //void Setup_Mqtt_Connect_Message_311(void){

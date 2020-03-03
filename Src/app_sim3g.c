@@ -11,7 +11,7 @@
 #include "app_relay.h"
 #include "app_string.h"
 
-#define DEBUG_SIM3G(X)    						//X
+#define DEBUG_SIM3G(X)    						X
 
 #define DATA_TO_SEND_LENGTH						20
 
@@ -33,28 +33,28 @@ extern const uint8_t SUBSCRIBE_TOPIC_1[];
 extern const uint8_t SUBSCRIBE_TOPIC_2[];
 
 
-const uint8_t AT[] = "AT\r";
-const uint8_t AT_CGDCONT[] = "AT+CGDCONT=1,\"IP\",\"v-internet\"\r";
-//Define PDP context
-const uint8_t AT_CGSOCKCONT[] = "AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r";
-//Set authentication parameters
-const uint8_t AT_CGSOCKAUTH[] = "AT+CGSOCKAUTH=1,1,\"teST\",\"1234\"\r";
-//Set the number of active PDP context
-const uint8_t AT_CGSOCKSETPN[] = "AT+CSOCKSETPN=1\r";
-const uint8_t AT_CIPMODE[] = "AT+CIPMODE=0\r";
-//PDP context activation
-const uint8_t AT_NETOPEN[] = "AT+NETOPEN=,,1\r";
-//Get SIM ip address
-const uint8_t AT_IPADDR [] = "AT+IPADDR\r";
-//PDP context deactivatioin
-const uint8_t AT_NETCLOSE[] = "AT+NETCLOSE\r";
-//Option of receiving data's length
-const uint8_t AT_CIPHEAD[] = "AT+CIPHEAD=1\r";
-//Option of receiving data's length
-const uint8_t AT_CIPSRIP[] = "AT+CIPSRIP=1\r";
-//when we use tcp/ip we need to adjust number of retransmission according to network status or
-//you want to know your data is received by remote end
-const uint8_t AT_CIPCCFG [] = "AT+CIPCCFG=3,500,1,1\r";
+//const uint8_t AT[] = "AT\r";
+//const uint8_t AT_CGDCONT[] = "AT+CGDCONT=1,\"IP\",\"v-internet\"\r";
+////Define PDP context
+//const uint8_t AT_CGSOCKCONT[] = "AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r";
+////Set authentication parameters
+//const uint8_t AT_CGSOCKAUTH[] = "AT+CGSOCKAUTH=1,1,\"teST\",\"1234\"\r";
+////Set the number of active PDP context
+//const uint8_t AT_CGSOCKSETPN[] = "AT+CSOCKSETPN=1\r";
+//const uint8_t AT_CIPMODE[] = "AT+CIPMODE=0\r";
+////PDP context activation
+//const uint8_t AT_NETOPEN[] = "AT+NETOPEN=,,1\r";
+////Get SIM ip address
+//const uint8_t AT_IPADDR [] = "AT+IPADDR\r";
+////PDP context deactivatioin
+//const uint8_t AT_NETCLOSE[] = "AT+NETCLOSE\r";
+////Option of receiving data's length
+//const uint8_t AT_CIPHEAD[] = "AT+CIPHEAD=1\r";
+////Option of receiving data's length
+//const uint8_t AT_CIPSRIP[] = "AT+CIPSRIP=1\r";
+////when we use tcp/ip we need to adjust number of retransmission according to network status or
+////you want to know your data is received by remote end
+//const uint8_t AT_CIPCCFG [] = "AT+CIPCCFG=3,500,1,1\r";
 
 
 __IO ITStatus isGreaterThanSymbolReceived = RESET;
@@ -372,7 +372,7 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 	} else if(isErrorFlag){
 		sim3gState = POWER_OFF_SIM3G;
 	} else {
-		sim3gState = SIM3G_START_UP;
+		sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
 	}
 
 }
@@ -432,15 +432,11 @@ void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID){
 			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
 			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
 	}
-//	UART3_SendToHost(Sim3gDataProcessingBuffer + 2);
 	if(relayStatus == SET){
 		Set_Relay(relayIndex);
-//		UART3_SendToHost((uint8_t*)"s");
 	} else {
 		Reset_Relay(relayIndex);
-//		UART3_SendToHost((uint8_t*)"r");
 	}
-
 }
 
 void FSM_Process_Data_Received_From_Sim3g(void){

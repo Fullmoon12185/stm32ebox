@@ -15,6 +15,7 @@ void Set_Relay(uint8_t relayIndex);
 void Reset_Relay(uint8_t relayIndex);
 void Update_Relay_Physical_Status(void);
 FlagStatus Get_Relay_Status(uint8_t relayIndex);
+FlagStatus Get_Is_Update_Relay_Status(void);
 void Check_Physical_Working_Statuses_Of_Relays_Fuses(uint8_t relayIndex);
 void Check_All_Physical_Working_Statuses_Of_Relays_Fuses(void);
 

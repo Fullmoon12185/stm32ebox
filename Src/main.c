@@ -30,41 +30,19 @@
 #include "app_test.h"
 
 
-//extern uint32_t array_Of_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//
-//
-//extern uint32_t array_Of_Max_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//extern uint32_t array_Of_Min_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//
-//extern uint32_t array_Of_Vpp_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//extern uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//
-//extern uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-//extern uint32_t array_Of_Power_Consumption[NUMBER_OF_ADC_CHANNELS];
-//extern uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
-
 
 int main(void)
 {
-//	Sys_Init();
 	System_Initialization();
-//	SCH_Add_Task(test1, 0, 100);
-
-
-//	Set_Relay(0);
-//	Set_Relay(1);
-
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
-//
-
+	Set_Relay(0);
 	while (1){
-		main_fsm();
-		FSM_Process_Data_Received_From_Sim3g();
-//		Zero_Point_Detection();
-//		PowerConsumption_FSM();
+//		main_fsm();
+//		FSM_Process_Data_Received_From_Sim3g();
+		Zero_Point_Detection();
+		PowerConsumption_FSM();
 		SCH_Dispatch_Tasks();
-
 //		Led_Display();
 	}
 	return 0;

@@ -24,6 +24,9 @@ DMA_HandleTypeDef Hdma_adc1Handle;
 //uint32_t ADCValues[NUMBER_OF_ADC_CHANNELS];
 
 int32_t AdcDmaBuffer[NUMBER_OF_ADC_CHANNELS];
+
+int32_t PowerFactor[NUMBER_OF_ADC_CHANNELS];
+
 int32_t AdcBuffer[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
 //int32_t AdcBufferFilter[NUM_OF_FILTER][NUMBER_OF_ADC_CHANNELS];
 int32_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS],
@@ -31,6 +34,12 @@ int32_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS],
 		AdcBufferPeakPeak[NUMBER_OF_ADC_CHANNELS];
 int32_t AdcDmaBufferIndex = 0, AdcDmaBufferIndexFilter = 0;
 int32_t AdcBufferCurrent[NUMBER_OF_ADC_CHANNELS];
+int32_t AdcCalibrateZeroValues[NUMBER_OF_ADC_CHANNELS] = {
+		858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858
+};
+int32_t tempAdcCalibrateZeroValues[NUMBER_OF_ADC_CHANNELS] = {
+		785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785
+};
 uint8_t strtmp[] = "Begin read ADcs \r\n";
 //uint32_t array_Of_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //uint32_t arrayOfAverageADCValues[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
@@ -40,11 +49,12 @@ uint8_t strtmp[] = "Begin read ADcs \r\n";
 //
 //uint32_t array_Of_Vpp_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+uint32_t array_Of_Average_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //
 uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 uint32_t array_Of_Power_Consumption[NUMBER_OF_ADC_CHANNELS];
 uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
-FlagStatus array_Of_Outlet_Status[NUMBER_OF_ADC_CHANNELS];
+//FlagStatus array_Of_Outlet_Status[NUMBER_OF_ADC_CHANNELS];
 
 
 
@@ -58,6 +68,7 @@ typedef enum {
 	WAIT_FOR_DATA_COMPLETE_TRANSMIT,
 	STOP_GETTING_ADC,
 	REPORT_POWER_DATA,
+	COMPUTE_ROOT_MEAN_SQUARE,
 	COMPUTE_PEAK_TO_PEAK_VOLTAGE,
 	COMPUTE_POWER_CONSUMPTION,
 	PREPARE_FOR_THE_NEXT_CONVERSION,
@@ -116,7 +127,7 @@ void ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
   if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -291,8 +302,8 @@ void Zero_Point_Detection(void){
 void PowerConsumption_FSM(void){
 	static uint8_t externalInterruptCounter = 0;
 	static uint8_t cycleCounter = 0;
-	static int16_t tempAdcValue[NUMBER_OF_ADC_CHANNELS];
-	static int16_t preTempAdcValue[NUMBER_OF_ADC_CHANNELS];
+//	static int32_t tempAdcValue[NUMBER_OF_ADC_CHANNELS];
+//	static int16_t preTempAdcValue[NUMBER_OF_ADC_CHANNELS];
 
 	switch(adcState){
 	case SETUP_TIMER_ONE_SECOND:
@@ -320,9 +331,8 @@ void PowerConsumption_FSM(void){
 			externalInterruptCounter++;
 		} else {
 			if(externalInterruptCounter < 3){
-				ADC_Start_Getting_Values();
 				adcState = WAIT_FOR_DATA_COMPLETE_TRANSMIT;
-			} else {
+			} else if(externalInterruptCounter == 3) {
 				adcState = COMPUTE_PEAK_TO_PEAK_VOLTAGE;
 			}
 		}
@@ -330,55 +340,116 @@ void PowerConsumption_FSM(void){
 
 	case WAIT_FOR_DATA_COMPLETE_TRANSMIT:
 		if(AdcDmaStoreFlag){
-//			test2();
 			ADC_Stop_Getting_Values();
 			AdcDmaStoreFlag = 0;
 			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
 				//filter noise
-				tempAdcValue[i] = AdcDmaBuffer[i];// - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
 //				if(AdcDmaBufferIndexFilter == 0){
-//					preTempAdcValue[i] = tempAdcValue[i];
+					AdcBuffer[i][AdcDmaBufferIndexFilter] = AdcDmaBuffer[i] - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
+					if(AdcBuffer[i][AdcDmaBufferIndexFilter] < 10 && AdcBuffer[i][AdcDmaBufferIndexFilter] > -10){
+						AdcBuffer[i][AdcDmaBufferIndexFilter] = 0;
+					}
+
 //				} else {
-//					if(tempAdcValue[i] < preTempAdcValue[i] + DIFFERENCE_ADC_VALUE_THRESHOLD
-//						|| tempAdcValue[i] > preTempAdcValue[i] - DIFFERENCE_ADC_VALUE_THRESHOLD){
-//						preTempAdcValue[i] = tempAdcValue[i];
-//					} else {
-//						tempAdcValue[i] = preTempAdcValue[i];
+//					if(AdcDmaBuffer[i] > AdcBuffer[i][AdcDmaBufferIndexFilter - 1] + 20 ||
+//						AdcDmaBuffer[i] < AdcBuffer[i][AdcDmaBufferIndexFilter - 1] - 20)
+//						AdcBuffer[i][AdcDmaBufferIndexFilter] = AdcBuffer[i][AdcDmaBufferIndexFilter - 1];
+//					else {
+//						AdcBuffer[i][AdcDmaBufferIndexFilter] = AdcDmaBuffer[i];
 //					}
 //				}
-				//save data to a buffer for later use
-				AdcBuffer[i][AdcDmaBufferIndexFilter] =  tempAdcValue[i];
-
-				array_Of_Vrms_ADC_Values[i] = tempAdcValue[i] * tempAdcValue[i];
-
-				//Find min max on the fly
-				if(AdcDmaBufferIndexFilter == 0){
-					AdcBufferPeakMax[i] = tempAdcValue[i];
-					AdcBufferPeakMin[i] = tempAdcValue[i];
-				} else {
-					if(tempAdcValue[i] > AdcBufferPeakMax[i]) AdcBufferPeakMax[i] = tempAdcValue[i];
-					if(tempAdcValue[i] < AdcBufferPeakMin[i]) AdcBufferPeakMin[i] = tempAdcValue[i];
-				}
 			}
+
+//			UART3_SendToHost((uint8_t *)"0\t");
+//			sprintf((char*) strtmp, "%d\t", (int) AdcBuffer[REFERENCE_1V8_VOLTAGE_INDEX][AdcDmaBufferIndexFilter]);
+//			UART3_SendToHost((uint8_t *)strtmp);
+//			sprintf((char*) strtmp, "%d\r\n", (int) AdcBuffer[0][AdcDmaBufferIndexFilter]);
+//			UART3_SendToHost((uint8_t *)strtmp);
 			AdcDmaBufferIndexFilter++;
+			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
+				AdcDmaBufferIndexFilter = 0;
+			}
+			ADC_Start_Getting_Values();
 			adcState = START_GETTING_ADC;
 		}
 		break;
-	case COMPUTE_PEAK_TO_PEAK_VOLTAGE:
+	case COMPUTE_ROOT_MEAN_SQUARE:
+		UART3_SendToHost((uint8_t *)"\r\n");
 		for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
+			array_Of_Vrms_ADC_Values[i] = array_Of_Vrms_ADC_Values[i]*10000/AdcDmaBufferIndexFilter;
+			array_Of_Vrms_ADC_Values[i] = sqrt(array_Of_Vrms_ADC_Values[i]);
+
+			sprintf((char*) strtmp, "%d\t", (int) array_Of_Vrms_ADC_Values[i]);
+			UART3_SendToHost((uint8_t *)strtmp);
+		}
+
+		adcState = COMPUTE_POWER_CONSUMPTION;
+		break;
+	case COMPUTE_PEAK_TO_PEAK_VOLTAGE:
+		for(uint8_t sampleIndex = 0; sampleIndex < AdcDmaBufferIndexFilter; sampleIndex ++){
+			for(uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS; channelIndex ++){
+				if(sampleIndex == 0){
+					AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+				} else {
+					if(AdcBufferPeakMax[channelIndex] < AdcBuffer[channelIndex][sampleIndex]){
+						AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					}
+					if(AdcBufferPeakMin[channelIndex] > AdcBuffer[channelIndex][sampleIndex]){
+						AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					}
+				}
+			}
+
+		}
+
+		for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS; channelIndex++) {
+			int32_t tempPeakPeak = AdcBufferPeakMax[channelIndex] - AdcBufferPeakMin[channelIndex];
+
+			if(AdcBufferPeakMax[channelIndex] <= 10 || AdcBufferPeakMin[channelIndex] >= -10){
+				tempPeakPeak = 0;
+			} else if(tempPeakPeak < 60){
+				tempPeakPeak = 0;
+			}
+
 			if(cycleCounter == 0){
-				AdcBufferPeakPeak[i] = AdcBufferPeakMax[i]- AdcBufferPeakMin[i];
+				AdcBufferPeakPeak[channelIndex] = tempPeakPeak;
 			} else {
-				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] + AdcBufferPeakMax[i]- AdcBufferPeakMin[i];
+				AdcBufferPeakPeak[channelIndex] = AdcBufferPeakPeak[channelIndex] + tempPeakPeak;
+			}
+			for(uint8_t sampleIndex = 0; sampleIndex < AdcDmaBufferIndexFilter; sampleIndex ++){
+				int32_t tempRealADCValue = AdcBuffer[channelIndex][sampleIndex];
+//				if(tempRealADCValue < 50 && tempRealADCValue > - 50){
+//					tempRealADCValue = 0;
+//				}
+				array_Of_Vrms_ADC_Values[channelIndex] += tempRealADCValue * tempRealADCValue;
+			}
+			array_Of_Vrms_ADC_Values[channelIndex] = (array_Of_Vrms_ADC_Values[channelIndex])/AdcDmaBufferIndexFilter;
+			if(cycleCounter == 0){
+				array_Of_Average_Vrms_ADC_Values[channelIndex] = sqrt(array_Of_Vrms_ADC_Values[channelIndex]);
+			} else {
+				array_Of_Average_Vrms_ADC_Values[channelIndex] = array_Of_Average_Vrms_ADC_Values[channelIndex] + sqrt(array_Of_Vrms_ADC_Values[channelIndex]);
 			}
 		}
+
+
 		cycleCounter++;
 		if(cycleCounter == NUMBER_OF_SAMPLES_PER_AVERAGE){
 			cycleCounter = 0;
 			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++){
 				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
+				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
+				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
+
 			}
 
+			sprintf((char*) strtmp, "%d\t", (int) PowerFactor[0]);
+			UART3_SendToHost((uint8_t *)strtmp);
+			sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[0] * 237);
+			UART3_SendToHost((uint8_t *)strtmp);
+			sprintf((char*) strtmp, "%d\t", (int) AdcBufferPeakPeak[0]);
+			UART3_SendToHost((uint8_t *)strtmp);
+			UART3_SendToHost((uint8_t *)"\r\n");
 			adcState = COMPUTE_POWER_CONSUMPTION;
 		} else {
 			externalInterruptCounter = 0;
@@ -391,7 +462,7 @@ void PowerConsumption_FSM(void){
 			if(AdcBufferPeakPeak[i] < 20){
 				array_Of_Irms_ADC_Values[i] = 0;
 				array_Of_Power_Consumption[i] = 0;
-				array_Of_Outlet_Status[i] = RESET;
+//				array_Of_Outlet_Status[i] = RESET;
 			}
 			else{
 				//convert adc value to voltage
@@ -399,20 +470,25 @@ void PowerConsumption_FSM(void){
 				// current = Votage/680(om) * 1000 (mA)
 				// Current(rms) = current*0.707
 				// Real input current = Current(rms) * 2000 (ratio)
-				array_Of_Outlet_Status[i] = SET;
-				array_Of_Irms_ADC_Values[i] = AdcBufferPeakPeak[i];// -  AdcBufferPeakPeak[REFERENCE_1V8_VOLTAGE_INDEX];
+//				array_Of_Outlet_Status[i] = SET;
+				array_Of_Irms_ADC_Values[i] = AdcBufferPeakPeak[i]*84;// -  AdcBufferPeakPeak[REFERENCE_1V8_VOLTAGE_INDEX];
+
 				array_Of_Power_Consumption[i] = array_Of_Irms_ADC_Values[i];
 			}
 			array_Of_Power_Consumption_In_WattHour[i] +=  array_Of_Power_Consumption[i]; //wattsecond
 		}
-		sprintf((char*) strtmp, "%d\t", (int) array_Of_Irms_ADC_Values[0]);
-		UART3_SendToHost((uint8_t *)strtmp);
+//		sprintf((char*) strtmp, "%d\t", (int) array_Of_Irms_ADC_Values[0]);
+//		UART3_SendToHost((uint8_t *)strtmp);
 		test2();
 		adcState = REPORT_POWER_DATA;
 		break;
 	case REPORT_POWER_DATA:
 		if(is_Adc_Reading_Timeout()){
 			test2();
+			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS; channelIndex++) {
+				array_Of_Vrms_ADC_Values[channelIndex]  = 0;
+				array_Of_Average_Vrms_ADC_Values[channelIndex] = 0;
+			}
 //			sprintf((char*) strtmp, "%d\t", (int) array_Of_Irms_ADC_Values[0]);
 //			UART3_SendToHost((uint8_t *)strtmp);
 //			sprintf((char*) strtmp, "%d\r\n", (int) array_Of_Power_Consumption[0]);
