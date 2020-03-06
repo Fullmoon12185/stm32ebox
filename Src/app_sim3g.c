@@ -230,6 +230,7 @@ void Sim3g_State_Display(void){
 	}
 
 }
+
 void Set_Sim3G_State(SIM3G_STATE newState){
 	sim3gState = newState;
 }

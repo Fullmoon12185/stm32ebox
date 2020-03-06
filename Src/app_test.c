@@ -44,11 +44,11 @@ void test3(void){
 	static uint8_t index1 = 0;
 
 	if(bool1 == 0){
-		Led_Display_Update_Buffer(index1*2, 1);
-		Led_Display_Update_Buffer(index1*2 + 1, 1);
+//		Led_Display_Update_Buffer(index1*2, 1);
+//		Led_Display_Update_Buffer(index1*2 + 1, 1);
 	} else {
-		Led_Display_Update_Buffer(index1*2, 0);
-		Led_Display_Update_Buffer(index1*2 + 1, 0);
+//		Led_Display_Update_Buffer(index1*2, 0);
+//		Led_Display_Update_Buffer(index1*2 + 1, 0);
 	}
 	if(index1 == 9) {
 		bool1 = (bool1 + 1)%2;

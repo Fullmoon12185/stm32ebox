@@ -340,6 +340,104 @@ void Error_Handler(void);
 #define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 		48
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE 	16
 
+//Vinh add begin
+
+//fsm Main
+#define FSM_Main_FINISH				0
+#define FSM_Main_BEGIN				1
+//#define
+#define FSM_Main_CHECK_STATUS		2
+#define FSM_Main_CHECK_SYSTEM		4
+#define FSM_Main_CHECK_COMMAND		3
+#define FSM_Main_ERR_HANDLE			5
+#define FSM_Main_WAR_HANDLE			6
+
+#define No_CHANNEL 10
+
+enum NodeName {
+	SYSTEM = 0,
+	NODE1 = 1,
+	NODE2 = 2,
+	NODE3 = 3,
+	NODE4 = 4,
+	NODE5 = 5,
+	NODE6 = 6,
+	NODE7 = 7,
+	NODE8 = 8,
+	NODE9 = 9,
+	NODE10 = 10,
+};
+
+enum NodeStatus {
+	NODENORMAL 		= 	0,
+	CHARGING		=	1,
+	CHARGEFULL		=	2,
+	UNPLUG			=	3,
+	NOPOWER			=	4,
+	NOFUSE			=	5,
+	NORELAY			=	6,
+	NODEOVERCURRENT	=	7,
+	NODEOVERMONEY	=	8,
+	NODEOVERTIME	=	9
+};
+
+//cap dien ma chua cam thi time out
+// dang sac het thoi gian thi timeout
+// dang sac ma rut thi cung boa UNPLUG
+// kiem tra fuse vaf relay
+
+enum SystemStatus {
+	SYSTEMNORMAL		=	0,
+	NODEOVERTOTAL		=	1,
+	NODEUNDERTOTAL		=	2,
+	SYSTEMOVERCURRENT	=	3,
+	SYSTEMOVERTEMP		=	4,
+	SYSTEMSHAKING		=	5,
+	SYSTEMNOINTERNET	=	6
+};
+//...
+
+typedef struct PowerNodes {
+//	uint8_t nodeID;				//1 to 10
+	enum NodeStatus  nodeStatus;			//avaiable = 0; charging = 1;	chargefull = 2
+//	uint16_t nodeValue;			//Adc PP value , ADC value
+	uint32_t current;	// in uA
+//	uint8_t voltage;	// = 220
+//	uint8_t frequency;	// = 50 in Hz
+	uint8_t powerFactor; // = 1pF
+	uint32_t lastPower;
+	uint32_t power;		// in mW
+//	uint32_t workingTime;		//from start to now
+	uint32_t energy; 	// in mWs
+	uint32_t limitEnergy;		//set this value from web app
+} PowerNode;
+
+typedef struct PowerSystems {
+	PowerNode nodes[10];
+	uint16_t valueRef;	//read from 1v8
+	uint16_t valueTotal;			//total Adc PP from Main CT
+	float currentTotal;			//sum of all channel
+	float refTotalCurrent;		//read from Big CT
+	enum SystemStatus status;				//as in enum SystemStatus
+	uint8_t ambientTemp;
+	uint8_t internalTemp;
+
+} powerSystem;
+
+typedef struct Commands {
+	uint8_t target;
+	uint8_t command;
+	uint8_t data;
+} Command;
+extern powerSystem Main;
+//powerSystem Main;
+
+void power_setup();
+//void power_loop();
+//void power_loop2();
+void power_loop3();
+
+//Vinh add
 
 #ifdef __cplusplus
 }
