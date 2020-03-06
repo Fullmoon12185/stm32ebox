@@ -25,21 +25,16 @@ DMA_HandleTypeDef Hdma_adc1Handle;
 
 int32_t AdcDmaBuffer[NUMBER_OF_ADC_CHANNELS];
 
-int32_t PowerFactor[NUMBER_OF_ADC_CHANNELS];
+int32_t PowerFactor[NUMBER_OF_RELAYS];
 
-int32_t AdcBuffer[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
+int32_t AdcBuffer[NUMBER_OF_RELAYS][NUMBER_OF_SAMPLES_PER_SECOND];
 //int32_t AdcBufferFilter[NUM_OF_FILTER][NUMBER_OF_ADC_CHANNELS];
-int32_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS],
-		AdcBufferPeakMin[NUMBER_OF_ADC_CHANNELS],
-		AdcBufferPeakPeak[NUMBER_OF_ADC_CHANNELS];
+int32_t AdcBufferPeakMax[NUMBER_OF_RELAYS],
+		AdcBufferPeakMin[NUMBER_OF_RELAYS],
+		AdcBufferPeakPeak[NUMBER_OF_RELAYS];
 int32_t AdcDmaBufferIndex = 0, AdcDmaBufferIndexFilter = 0;
-int32_t AdcBufferCurrent[NUMBER_OF_ADC_CHANNELS];
-int32_t AdcCalibrateZeroValues[NUMBER_OF_ADC_CHANNELS] = {
-		858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858, 858
-};
-int32_t tempAdcCalibrateZeroValues[NUMBER_OF_ADC_CHANNELS] = {
-		785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785, 785
-};
+int32_t AdcBufferCurrent[NUMBER_OF_RELAYS];
+
 uint8_t strtmp[] = "Begin read ADcs \r\n";
 //uint32_t array_Of_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //uint32_t arrayOfAverageADCValues[NUMBER_OF_ADC_CHANNELS][NUMBER_OF_SAMPLES_PER_SECOND];
@@ -48,12 +43,12 @@ uint8_t strtmp[] = "Begin read ADcs \r\n";
 //uint32_t array_Of_Min_ADC_Values[NUMBER_OF_ADC_CHANNELS];
 //
 //uint32_t array_Of_Vpp_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-uint32_t array_Of_Average_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
+uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_RELAYS];
+uint32_t array_Of_Average_Vrms_ADC_Values[NUMBER_OF_RELAYS];
 //
-uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS];
-uint32_t array_Of_Power_Consumption[NUMBER_OF_ADC_CHANNELS];
-uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
+uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_RELAYS];
+uint32_t array_Of_Power_Consumption[NUMBER_OF_RELAYS];
+uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_RELAYS];
 //FlagStatus array_Of_Outlet_Status[NUMBER_OF_ADC_CHANNELS];
 
 
@@ -342,7 +337,7 @@ void PowerConsumption_FSM(void){
 		if(AdcDmaStoreFlag){
 			ADC_Stop_Getting_Values();
 			AdcDmaStoreFlag = 0;
-			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
+			for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
 				//filter noise
 //				if(AdcDmaBufferIndexFilter == 0){
 					AdcBuffer[i][AdcDmaBufferIndexFilter] = AdcDmaBuffer[i] - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
@@ -375,7 +370,7 @@ void PowerConsumption_FSM(void){
 		break;
 	case COMPUTE_ROOT_MEAN_SQUARE:
 		UART3_SendToHost((uint8_t *)"\r\n");
-		for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
+		for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
 			array_Of_Vrms_ADC_Values[i] = array_Of_Vrms_ADC_Values[i]*10000/AdcDmaBufferIndexFilter;
 			array_Of_Vrms_ADC_Values[i] = sqrt(array_Of_Vrms_ADC_Values[i]);
 
@@ -387,7 +382,7 @@ void PowerConsumption_FSM(void){
 		break;
 	case COMPUTE_PEAK_TO_PEAK_VOLTAGE:
 		for(uint8_t sampleIndex = 0; sampleIndex < AdcDmaBufferIndexFilter; sampleIndex ++){
-			for(uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS; channelIndex ++){
+			for(uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex ++){
 				if(sampleIndex == 0){
 					AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
 					AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
@@ -403,7 +398,7 @@ void PowerConsumption_FSM(void){
 
 		}
 
-		for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS; channelIndex++) {
+		for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex++) {
 			int32_t tempPeakPeak = AdcBufferPeakMax[channelIndex] - AdcBufferPeakMin[channelIndex];
 
 			if(AdcBufferPeakMax[channelIndex] <= 10 || AdcBufferPeakMin[channelIndex] >= -10){
@@ -436,7 +431,7 @@ void PowerConsumption_FSM(void){
 		cycleCounter++;
 		if(cycleCounter == NUMBER_OF_SAMPLES_PER_AVERAGE){
 			cycleCounter = 0;
-			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++){
+			for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++){
 				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
 				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
 				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
@@ -458,7 +453,7 @@ void PowerConsumption_FSM(void){
 
 		break;
 	case COMPUTE_POWER_CONSUMPTION:
-		for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS; i++) {
+		for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
 			if(AdcBufferPeakPeak[i] < 20){
 				array_Of_Irms_ADC_Values[i] = 0;
 				array_Of_Power_Consumption[i] = 0;
@@ -485,7 +480,7 @@ void PowerConsumption_FSM(void){
 	case REPORT_POWER_DATA:
 		if(is_Adc_Reading_Timeout()){
 			test2();
-			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS; channelIndex++) {
+			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex++) {
 				array_Of_Vrms_ADC_Values[channelIndex]  = 0;
 				array_Of_Average_Vrms_ADC_Values[channelIndex] = 0;
 			}
