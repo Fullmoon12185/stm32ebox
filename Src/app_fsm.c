@@ -149,7 +149,9 @@ void Update_Publish_Power_Message_All_Outlets(void){
 	for(uint8_t outletID = 0; outletID < NUMBER_OF_RELAYS; outletID++){
 		publish_message[publishMessageIndex++] = outletID + 0x30;
 		publish_message[publishMessageIndex++] = '-';
-		tempValue = array_Of_Power_Consumption_In_WattHour[outletID];
+//		tempValue = array_Of_Power_Consumption_In_WattHour[outletID];
+//		if(outletID == 0) tempValue =
+		tempValue = Main.nodes[outletID].energy/1000;///3600;
 //		if(displayData >= 10000){
 //			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
 //			tempValue = tempValue % 10000;
@@ -193,7 +195,6 @@ void Update_Publish_Power_Message_All_Outlets(void){
 
 
 void Update_Publish_Status_Message(void){
-	static uint8_t chargingStatus = 1;
 	uint8_t publishMessageIndex = 0;
 	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
 		publish_message[publishMessageIndex] = 0;
@@ -201,20 +202,26 @@ void Update_Publish_Status_Message(void){
 	publishMessageIndex = 0;
 //	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
 
-	for(uint8_t outletID = 0; outletID < NUMBER_OF_RELAYS; outletID ++){
-		publish_message[publishMessageIndex++] = outletID + 0x30;
-		publish_message[publishMessageIndex++] = '-';
-		if(Get_Relay_Status(outletID)){
-			if(array_Of_Power_Consumption_In_WattHour[outletID] < 1000){
-				chargingStatus = 1;
-			} else {
-				chargingStatus = 2;
-			}
-			publish_message[publishMessageIndex++] = chargingStatus + 0x30;
-		} else {
-			publish_message[publishMessageIndex++] = 0x30;
+	for(uint8_t outletID = 0; outletID <= NUMBER_OF_RELAYS; outletID ++){
+		if (outletID < NUMBER_OF_RELAYS) publish_message[publishMessageIndex++] = outletID + 0x30;
+		else {
+			publish_message[publishMessageIndex++] = 1 + 0x30;
+			publish_message[publishMessageIndex++] = 0 + 0x30;
 		}
-		if(outletID < NUMBER_OF_RELAYS - 1)
+		publish_message[publishMessageIndex++] = '-';
+//		if(Get_Relay_Status(outletID)){
+//			if(array_Of_Power_Consumption_In_WattHour[outletID] < 1000){
+//				chargingStatus = 1;
+//			} else {
+//				chargingStatus = 2;
+//			}
+//			publish_message[publishMessageIndex++] = chargingStatus + 0x30;
+//		} else {
+//			publish_message[publishMessageIndex++] = 0x30;
+//		}
+		if(outletID == 0 ) publish_message[publishMessageIndex++] = 0x30 + Main.status;
+		else publish_message[publishMessageIndex++] = 0x30 + Main.nodes[outletID-1].nodeStatus;
+		if(outletID < NUMBER_OF_RELAYS )
 			publish_message[publishMessageIndex++] = ',';
 	}
 	publish_message_length = publishMessageIndex;
@@ -310,6 +317,7 @@ void main_fsm(void){
 						publish_message_TimeoutIndex = SCH_Add_Task(Publish_Message_Timeout, TIME_FOR_PUBLISH_MESSAGE, 0);
 					}
 				}
+
 			}
 		}
 		break;

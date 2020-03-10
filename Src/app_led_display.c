@@ -14,6 +14,9 @@
 //};
 //uint32_t ledStatusBuffer = 0;
 uint32_t ledStatus;
+enum LedColor ledStatusBuffer[No_CHANNEL] = { NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE };
+uint8_t ledStateBuffer[No_CHANNEL] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 static void Latch_Enable(int8_t count);
 static void Latch_Disable(int8_t count);
 static void Output_Enable(void);
@@ -82,7 +85,6 @@ static void Data_Out(GPIO_PinState state) {
 	HAL_GPIO_WritePin(LED_SDI_PORT, LED_SDI, state);
 }
 
-
 void Led_Display_Show(void) {
 	uint8_t i;
 	uint32_t ledValue = ledStatus << 4;
@@ -122,8 +124,8 @@ void Led_Display_Color(uint8_t position, enum LedColor color) {
 //	if(position >=0  && position < No_CHANNEL) position -=1;
 //	if(position >= 0 && position <No_CHANNEL) {
 //		position = No_CHANNEL - position - 1;
-		ledStatus &= ~(0x00000003 << (position * 2));
-		ledStatus |= colorMask << (position * 2);
+	ledStatus &= ~(0x00000003 << (position * 2));
+	ledStatus |= colorMask << (position * 2);
 //	}
 //	Led_Display();
 }
@@ -158,5 +160,34 @@ void Led_Display_Set_All(void) {
 //
 //}
 
-
+void LED_Display_fsm() { // call each 200ms
+	enum LedColor tmp;
+	for (uint8_t i = 0; i < No_CHANNEL; i++) {
+		tmp = ledStatusBuffer[i];
+		if (tmp == NONE || tmp == RED || tmp == GREEN || tmp == YELLOW) Led_Display_Color(i, tmp);
+		else if (tmp == BLINK_RED_FAST) {
+			if (ledStatusBuffer[i] < 1) Led_Display_Color(i, RED);
+			else if (ledStatusBuffer[i] < 2) Led_Display_Color(i, NONE);
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 2) ledStatusBuffer[i] = 0;
+		} else if (tmp == BLINK_RED_SLOW) {
+			if (ledStatusBuffer[i] < 2) Led_Display_Color(i, RED);
+			else if (ledStatusBuffer[i] < 3) Led_Display_Color(i, NONE);
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 3) ledStatusBuffer[i] = 0;
+		} else if (tmp == BLINK_GREEN_FAST) {
+			if (ledStatusBuffer[i] < 1) Led_Display_Color(i, GREEN);
+			else if (ledStatusBuffer[i] < 2) Led_Display_Color(i, NONE);
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 2) ledStatusBuffer[i] = 0;
+		} else if (tmp == BLINK_GREEN_SLOW) {
+			if (ledStatusBuffer[i] < 2) Led_Display_Color(i, GREEN);
+			else if (ledStatusBuffer[i] < 3) Led_Display_Color(i, NONE);
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 3) ledStatusBuffer[i] = 0;
+		}
+//		ledStatusBuffer[i] ++;
+	}
+	Led_Display_Show();
+}
 

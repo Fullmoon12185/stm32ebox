@@ -16,7 +16,7 @@
 #define DATA_TO_SEND_LENGTH						20
 
 #define TIMER_TO_POWER_ON_SIM3G					10
-#define TIMER_TO_POWER_OFF_SIM3G				500
+#define TIMER_TO_POWER_OFF_SIM3G				200
 #define TIMER_TO_POWER_ON_SIM3G_TIMEOUT			200
 #define TIMER_TO_POWER_OFF_SIM3G_TIMEOUT		1000
 
@@ -142,10 +142,11 @@ void Clear_Sim3gDataProcessingBuffer(void);
 Sim3g_Machine_Type Sim3G_State_Machine [] = {
 		{POWER_ON_SIM3G, 									SM_Power_On_Sim3g									},
 		{WAIT_FOR_SIM3G_POWER_ON, 							SM_Wait_For_Sim3g_Power_On							},
-		{RESET_SIM3G, 										SM_Reset_Sim3g										},
-		{WAIT_FOR_SIM3G_RESET, 								SM_Wait_For_Sim3g_Reset		  						},
 		{POWER_OFF_SIM3G, 									SM_Power_Off_Sim3g									},
 		{WAIT_FOR_SIM3G_POWER_OFF, 							SM_Wait_For_Sim3g_Power_Off							},
+
+		{RESET_SIM3G, 										SM_Reset_Sim3g										},
+		{WAIT_FOR_SIM3G_RESET, 								SM_Wait_For_Sim3g_Reset		  						},
 		{SIM3G_START_UP, 									SM_Sim3g_Startup								},
 		{WAIT_FOR_SIM3G_STARTUP_RESPONSE, 					SM_Wait_For_Sim3g_Startup_Response					},
 		{SIM3G_SETTING, 									SM_Sim3g_Setting									},
@@ -167,7 +168,7 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 };
 uint8_t atCommandArrayIndex = 0;
 
-SIM3G_STATE sim3gState = POWER_ON_SIM3G;
+SIM3G_STATE sim3gState = POWER_OFF_SIM3G;
 SIM3G_STATE pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 void TestSendATcommand(void){
@@ -222,7 +223,7 @@ void Sim3g_State_Display(void){
 			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RESET_SIM3G\r"););
 			break;
 		case WAIT_FOR_SIM3G_RESET:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_RESET\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_RESET123\r"););
 			break;
 		default:
 			break;
@@ -244,11 +245,11 @@ void Sim3g_Init(void){
 	sim3g_TimeoutFlag = 0;
 	sim3g_Timeout_Task_Index = SCH_MAX_TASKS;
 	sim3g_Retry_Counter = 0;
-	sim3gState = SIM3G_START_UP;
 	pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
+	Set_Sim3G_State(POWER_OFF_SIM3G);
 	Sim3g_GPIO_Init();
-	Sim3g_Enable();
+	Sim3g_Disable();
 	Reset_Signal_High();
 
 }
@@ -309,7 +310,18 @@ void Sim3g_Command_Timeout(void){
 uint8_t is_Sim3g_Command_Timeout(void){
 	return sim3g_TimeoutFlag;
 }
-
+void SM_Power_Off_Sim3g(void){
+	Sim3g_Disable();
+	Sim3g_Clear_Timeout_Flag();
+	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G,0);
+	sim3gState = WAIT_FOR_SIM3G_POWER_OFF;
+}
+void SM_Wait_For_Sim3g_Power_Off(void){
+	if(is_Sim3g_Command_Timeout()){
+		Sim3g_Enable();
+		sim3gState = POWER_ON_SIM3G;
+	}
+}
 void SM_Power_On_Sim3g(void){
 	SCH_Add_Task(Power_Signal_Low, 0, 0);
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_ON_SIM3G, 0);
@@ -337,20 +349,7 @@ void SM_Wait_For_Sim3g_Reset(void){
 		sim3gState = SIM3G_START_UP;
 	}
 }
-void SM_Power_Off_Sim3g(void){
-//	SCH_Add_Task(Power_Signal_Low, 0, 0);
-//	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
-	Sim3g_Disable();
-	Sim3g_Clear_Timeout_Flag();
-	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G,0);
-	sim3gState = WAIT_FOR_SIM3G_POWER_OFF;
-}
-void SM_Wait_For_Sim3g_Power_Off(void){
-	if(is_Sim3g_Command_Timeout()){
-		Sim3g_Enable();
-		sim3gState = POWER_ON_SIM3G;
-	}
-}
+
 
 
 void Setting_Up_Timeout(void){
@@ -362,6 +361,8 @@ void Setting_Up_Timeout(void){
 
 void SM_Sim3g_Startup(void){
 	sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
+	isErrorFlag = RESET;
+	isPBDoneFlag = RESET;
 }
 
 void SM_Wait_For_Sim3g_Startup_Response(void){
@@ -435,8 +436,10 @@ void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID){
 	}
 	if(relayStatus == SET){
 		Set_Relay(relayIndex);
+//		Main.nodes[relayIndex].limitEnergy = 100000;
 	} else {
 		Reset_Relay(relayIndex);
+//		Main.nodes[relayIndex].limitEnergy = 0;
 	}
 }
 

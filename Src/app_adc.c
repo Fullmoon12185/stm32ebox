@@ -437,8 +437,9 @@ void PowerConsumption_FSM(void){
 //				Main.nodes[i].power = Main.nodes[i].current * 220 * Main.nodes[i].powerFactor/100;
 
 			}
-//			sprintf((char*) strtmp, "%d\t\t\t\t %d\t\t\t %d\t\t\t %d  \r\n", (int)Main.nodes[0].current/100, (int) Main.nodes[0].powerFactor,(int) Main.nodes[0].power,(int) Main.nodes[0].energy);
-//														UART3_SendToHost((uint8_t *)strtmp);
+//			sprintf((char*) strtmp, "%d\t\t\t\t %d\t\t\t %d\t\t\t %d  \r\n", (int)Main.nodes[0].current/100, (int) array_Of_Average_Vrms_ADC_Values[0],(int) Main.nodes[0].power,(int) Main.nodes[0].energy);
+//			UART3_SendToHost((uint8_t *)strtmp);
+
 
 
 //			sprintf((char*) strtmp, "i\t\t\t s\t\t\t I\t\t\t PF\t\t\t P\t\t\t E \r\n");

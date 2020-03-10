@@ -61,10 +61,10 @@ void node_setup(uint8_t position) {
 		Main.nodes[position].nodeStatus = NODENORMAL;
 
 		//for testing, enable first channel
-		if(position == 0) Main.nodes[0].limitEnergy = 100000;
-		Led_Display_Color(position, GREEN);
-		Led_Display_Show();
-		HAL_Delay(1000);
+//		if(position == 0) Main.nodes[0].limitEnergy = 300000;
+//		Led_Display_Color(position, GREEN);
+//		Led_Display_Show();
+//		HAL_Delay(1000);
 	}
 }
 
@@ -89,23 +89,39 @@ uint8_t node_check(uint8_t position) {
 		position -= 1;
 		PowerNode currentNode = Main.nodes[position];
 		uint8_t PCFValue = PCF_read(position);
+//		PCFValue = 0;
 		uint8_t currentStatus = currentNode.nodeStatus;
 		if ((PCFValue & 0x02) > 0) {	//return NOFUSE
-			if(position < 4) 	Main.nodes[position].nodeStatus = NOFUSE;
-		} else if ((PCFValue & 0x01) > 0 && (currentStatus == CHARGING || currentStatus == CHARGEFULL)) {	//relay not working MUST and is Working
-			Main.nodes[position].nodeStatus = NORELAY;
-		} else if (currentNode.current > 300000) {	// nodeValue from 0 to 1860
+			if (position < 4) {
+				Main.nodes[position].nodeStatus = NOFUSE;
+			}
+		}
+		else if ((PCFValue & 0x01) > 0 && (Get_Relay_Status(position) == SET)) {	//relay not working MUST and is Working
+			if (position < 4) {
+				Main.nodes[position].nodeStatus = NORELAY;
+			}
+		}
+		else if (currentNode.current > 300000) {	// nodeValue from 0 to 1860
 			Main.nodes[position].nodeStatus = NODEOVERCURRENT;
-		} else if (currentNode.limitEnergy > 0 && currentNode.energy >= currentNode.limitEnergy) {
-			Main.nodes[position].nodeStatus = NODEOVERMONEY;	//over time
-		} else if (currentNode.current >= 1000) {
+		}
+		else if (currentNode.limitEnergy > 0 && currentNode.energy >= currentNode.limitEnergy) {
+			Main.nodes[position].nodeStatus = NODEOVERMONEY;
+		}
+		else if (currentNode.limitEnergy == 0) {
+			Main.nodes[position].nodeStatus = NODENORMAL;
+		}
+		else if (currentNode.current >= 1000) {
 			Main.nodes[position].nodeStatus = CHARGING;
-		} else if (currentStatus == CHARGING) {
+		}
+		else if (currentStatus == CHARGING) {
 			if (currentNode.lastPower - currentNode.power > 20) {
 				Main.nodes[position].nodeStatus = UNPLUG;
-			} else Main.nodes[position].nodeStatus = CHARGEFULL;
+			} else {
+				Main.nodes[position].nodeStatus = CHARGEFULL;
+			}
 			Main.nodes[position].lastPower = currentNode.power;
-		} else {
+		}
+		else {
 			Main.nodes[position].nodeStatus = NODENORMAL;
 		}
 		return Main.nodes[position].nodeStatus;
@@ -123,7 +139,7 @@ uint8_t node_update(uint8_t position) {	//update and return energy ???
 //		Main.nodes[position].current = Main.nodes[position].nodeValue * CONSTANT_TO_CURRENT;	//comment if using rms
 //		Main.nodes[position].power = Main.nodes[position].current * Main.nodes[position].voltage * Main.nodes[position].powerFactor;//Main.nodes[position].nodeValue * CONSTANT_TO_POWER;
 //		if(Main.nodes[position].powerFactor >98 ) Main.nodes[position].powerFactor = 100;
-		Main.nodes[position].power = 220 * Main.nodes[position].current * Main.nodes[position].powerFactor / 100000;	// /100
+		Main.nodes[position].power = 220 * Main.nodes[position].current * Main.nodes[position].powerFactor / 100000;	//in mA	// /100
 //		Main.nodes[position].energy = Main.nodes[position].workingTime * Main.nodes[position].power;
 		if (Main.nodes[position].limitEnergy > 0) Main.nodes[position].energy += Main.nodes[position].power;
 		else Main.nodes[position].energy = 0;
@@ -202,46 +218,54 @@ void power_loop3() {
 			if (Main.nodes[channeli].nodeStatus == NODENORMAL) {
 				//if command then set_node_energy(1000);
 				if (Main.nodes[channeli].limitEnergy > Main.nodes[channeli].energy) {
-					if (Get_Relay_Status(channeli) == RESET) Set_Relay(channeli);
+//					if (Get_Relay_Status(channeli) == RESET)
+						Set_Relay(channeli);
 					Led_Display_Color(channeli, GREEN);
 //					UART3_SendToHost((uint8_t*) "Het tien\r\n");
+				} else {
+					Led_Display_Color(lastReport, GREEN);
+//					if (Get_Relay_Status(channeli) == SET)
+						Reset_Relay(channeli);
 				}
 			} else if (Main.nodes[channeli].nodeStatus == CHARGING) {
 				//if( receive command from server then close
-				//Led_Display_Color(channeli, YELLOW);
-				sprintf((char*) strtmpMain, "Charging %d\r\n", channeli);
-								UART3_SendToHost((uint8_t*) strtmpMain);
+				Led_Display_Color(channeli, YELLOW);
+//				sprintf((char*) strtmpMain, "Charging %d\r\n", channeli);
+//								UART3_SendToHost((uint8_t*) strtmpMain);
 			} else if (Main.nodes[channeli].nodeStatus == CHARGEFULL) {
 				if (HAL_GetTick() - lastReport > 5000) {
 					lastReport = HAL_GetTick();
 					//report chargefull
 				}
-//				//Led_Display_Color(channeli, GREEN);
-				sprintf((char*) strtmpMain, "Full Charge %d\r\n", channeli);
-								UART3_SendToHost((uint8_t*) strtmpMain);
+				Led_Display_Color(channeli, BLINK_GREEN_FAST);
+//				sprintf((char*) strtmpMain, "Full Charge %d\r\n", channeli);
+//								UART3_SendToHost((uint8_t*) strtmpMain);
 				//if first time then rport to server
 			} else if (Main.nodes[channeli].nodeStatus == UNPLUG) {
-//				//Led_Display_Color(channeli, RED);
+				//set time out then turn off relay
+				Led_Display_Color(channeli, BLINK_RED_FAST);
 //				UART3_SendToHost((uint8_t*) "Rut phich cam \r\n");
-				sprintf((char*) strtmpMain, "Unplug %d\r\n", channeli);
-				UART3_SendToHost((uint8_t*) strtmpMain);
+//				sprintf((char*) strtmpMain, "Unplug %d\r\n", channeli);
+//				UART3_SendToHost((uint8_t*) strtmpMain);
 
 				//if(first time then report to server
 			} else if (Main.nodes[channeli].nodeStatus == NOFUSE) {
-				Led_Display_Color(channeli, RED);
-				sprintf((char*) strtmpMain, "No Fuse %d\r\n", channeli);
-				UART3_SendToHost((uint8_t*) strtmpMain);
-
+				Led_Display_Color(channeli, BLINK_RED_FAST);
+//				sprintf((char*) strtmpMain, "No Fuse %d\r\n", channeli);
+//				UART3_SendToHost((uint8_t*) strtmpMain);
+//				Reset_Relay(channeli);
 				//if this is first time then report to server
 			} else if (Main.nodes[channeli].nodeStatus == NORELAY) {
-//				//Led_Display_Color(channeli, RED);
-				UART3_SendToHost((uint8_t*) "Relay khong hoat dong \r\n");
+				Led_Display_Color(channeli, BLINK_RED_SLOW);
+//				UART3_SendToHost((uint8_t*) "Relay khong hoat dong \r\n");
 				//if( this is first time then report to server
+//				Reset_Relay(channeli);
 			} else if (Main.nodes[channeli].nodeStatus == NODEOVERMONEY) {
 //				if (Get_Relay_Status(channeli) == SET)
-				if( Get_Relay_Status(channeli) == SET) Reset_Relay(channeli);
+				if (Get_Relay_Status(channeli) == SET) Reset_Relay(channeli);
 				Main.nodes[channeli].limitEnergy = 0;
-				Main.nodes[channeli].nodeStatus = NODENORMAL;
+//				Main.nodes[channeli].nodeStatus = NODENORMAL;
+				Led_Display_Color(channeli, BLINK_GREEN_FAST);
 //				for(uint8_t i = 0; i< 4; i++){ //blink
 //					//Led_Display_Color(channeli, RED);
 //					HAL_Delay(300);
@@ -249,8 +273,8 @@ void power_loop3() {
 //					HAL_Delay(500);
 //				}
 
-				sprintf((char*) strtmpMain, "Het tien, tat relay so %d \r\n", channeli);
-				UART3_SendToHost((uint8_t*) strtmpMain);
+//				sprintf((char*) strtmpMain, "Het tien, tat relay so %d \r\n", channeli);
+//				UART3_SendToHost((uint8_t*) strtmpMain);
 //				UART3_SendToHost((uint8_t*) "Het tien, tat relay \r\n");
 				//report to server
 			} else if (Main.nodes[channeli].nodeStatus == NODEOVERTIME) {
@@ -270,18 +294,18 @@ void power_loop3() {
 				channeli = 0;
 				mode = FSM_Main_FINISH;
 
-				Led_Display_Show();
-				sprintf((char*) strtmpMain, "i\t\t\t s\t\t\t I\t\t\t PF\t\t\t P\t\t\t E \r\n");
-				UART3_SendToHost((uint8_t*) strtmpMain);
+//				Led_Display_Show();
 
-				for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
-					sprintf((char*) strtmpMain, "%d\t\t\t %d\t\t\t %d\t\t\t\t %d\t\t\t %d\t\t\t %d  \r\n", (int) i, (int) Main.nodes[i].nodeStatus, (int) Main.nodes[i].current,
-							(int) Main.nodes[i].powerFactor, (int) Main.nodes[i].power, (int) Main.nodes[i].energy);
-					UART3_SendToHost((uint8_t*) strtmpMain);
-
-				}
-
-				UART3_SendToHost((uint8_t*) "\r\n");
+//				sprintf((char*) strtmpMain, "i\t\t\t s\t\t\t I\t\t\t PF\t\t\t P\t\t\t E \r\n");
+//				UART3_SendToHost((uint8_t*) strtmpMain);
+//
+//				for (uint8_t i = 0; i < 4; i++) {
+//					sprintf((char*) strtmpMain, "%d\t\t\t %d\t\t\t %d\t\t\t\t %d\t\t\t %d\t\t\t %d  \r\n", (int) i, (int) Main.nodes[i].nodeStatus, (int) Main.nodes[i].current,
+//							(int) Main.nodes[i].powerFactor, (int) Main.nodes[i].power, (int) Main.nodes[i].energy);
+//					UART3_SendToHost((uint8_t*) strtmpMain);
+//				}
+//
+//				UART3_SendToHost((uint8_t*) "\r\n");
 			}
 		}
 
@@ -308,28 +332,34 @@ void power_loop3() {
 }
 
 uint32_t lastTimeUpdateServer;
+uint32_t lastTimeUpdateLedDisplay;
 //Vinh add end
 
 int main(void) {
 	System_Initialization();
-	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*) "Start program \r\n");
-	Set_Relay(0);
-	power_setup();
-	SCH_Add_Task(node_update_task, 0, 100);
-	Set_Input_PCF_Pins();
+//	power_setup();
+//	SCH_Add_Task(node_update_task, 0, 100);
+//	Set_Input_PCF_Pins();
 	while (1) {
-//		main_fsm();
-//		FSM_Process_Data_Received_From_Sim3g();
+		SCH_Dispatch_Tasks();
 		Zero_Point_Detection();
 		PowerConsumption_FSM();
-		SCH_Dispatch_Tasks();
+
 		if (get_PowerConsumption_FSM_State() == REPORT_POWER_DATA) {
-			power_loop3();
-			if (HAL_GetTick() - lastTimeUpdateServer > 10000 || 0) {				//hoac co bat cu su thay doi status nao quan trong
-				lastTimeUpdateServer = HAL_GetTick();
-				//update to server here
-			}
+//			power_loop3();
+			main_fsm();
+			FSM_Process_Data_Received_From_Sim3g();
+//			if (HAL_GetTick() - lastTimeUpdateServer > 10000 || 0) {				//hoac co bat cu su thay doi status nao quan trong
+//				lastTimeUpdateServer = HAL_GetTick();
+//				//update to server here
+//			}
+
+//			if(HAL_GetTick() - lastTimeUpdateLedDisplay > 200){
+//				lastTimeUpdateLedDisplay = HAL_GetTick();
+//				LED_Display_fsm() ;
+//			}
+
 		}
 //		//Led_Display();
 //		power_loop3();

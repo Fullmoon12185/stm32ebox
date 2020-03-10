@@ -12,8 +12,8 @@
 #include "app_scheduler.h"
 #include "app_sim5320MQTT.h"
 
-#define		CLOUD_MQTT  	0
-#define		MOSQUITTO		1
+#define		CLOUD_MQTT  	1
+#define		MOSQUITTO		0
 
 
 #define		DEBUG_MQTT(X)	X
@@ -78,8 +78,11 @@ uint8_t subscribeTopicIndex = 0;
 uint8_t publishTopicIndex = 0;
 uint8_t mqtt_Timeout_Task_Index = SCH_MAX_TASKS;
 
+uint8_t mqtt_Timeout_Subscribe_Task_Index = SCH_MAX_TASKS;
+
 
 static uint8_t mqtt_TimeoutFlag = 0;
+static uint8_t mqtt_Subscribe_TimeoutFlag = 0;
 ///////////////////////////////////////////////////////////////////////////
 
 void MQTT_State_Display(void);
@@ -200,6 +203,15 @@ uint8_t is_Mqtt_Command_Timeout(void){
 	return mqtt_TimeoutFlag;
 }
 
+void Mqtt_Clear_Subscribe_Timeout_Flag(void){
+	mqtt_Subscribe_TimeoutFlag = 0;
+}
+void Mqtt_Subscribe_Timeout(void){
+	mqtt_Subscribe_TimeoutFlag = 1;
+}
+uint8_t is_Mqtt_Subscribe_Timeout(void){
+	return mqtt_Subscribe_TimeoutFlag;
+}
 void Set_Mqtt_State(MQTT_STATE newState){
 	mqttState = newState;
 }
@@ -326,6 +338,10 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Subscribe_State(void){
 		isErrorFlag = RESET;
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 		mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_SUBSCRIBE_STATE;
+
+		SCH_Delete_Task(mqtt_Timeout_Subscribe_Task_Index);
+		Mqtt_Clear_Subscribe_Timeout_Flag();
+		mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Subscribe_Timeout, 300, 0);
 	} else if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
@@ -333,12 +349,14 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Subscribe_State(void){
 
 void SM_Mqtt_Wait_For_Response_From_Subscribe_State(void){
 	if(isRecvFromFlag){
-		isRecvFromFlag = RESET;
-		subscribeTopicIndex ++;
-		if(subscribeTopicIndex < NUMBER_OF_SUBSCRIBE_TOPIC){
-			mqttState = MQTT_SUBSCRIBE_STATE;
-		} else {
-			mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
+		if(is_Mqtt_Subscribe_Timeout()){
+			isRecvFromFlag = RESET;
+			subscribeTopicIndex ++;
+			if(subscribeTopicIndex < NUMBER_OF_SUBSCRIBE_TOPIC){
+				mqttState = MQTT_SUBSCRIBE_STATE;
+			} else {
+				mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
+			}
 		}
 	} else if(isErrorFlag){
 		isErrorFlag = RESET;
