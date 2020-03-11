@@ -29,26 +29,51 @@
 #include "app_sim3g.h"
 #include "app_test.h"
 
+typedef enum {
+	POWER_CONSUMPTION_CALCULATION = 0,
+	POST_DATA_TO_SERVER,
+	MAX_MAIN_FSM_NUMBER_STATES
+} MAIN_FSM_STATE;
 
+MAIN_FSM_STATE mainState = POWER_CONSUMPTION_CALCULATION;
+
+void Main_FSM(void);
 
 int main(void)
 {
 	System_Initialization();
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
-	Set_Relay(0);
+//	Set_Relay(0);
 	while (1){
-//		main_fsm();
-//		FSM_Process_Data_Received_From_Sim3g();
-		Zero_Point_Detection();
-		PowerConsumption_FSM();
-		SCH_Dispatch_Tasks();
-//		Led_Display();
+		Main_FSM();
 	}
 	return 0;
 }
 
 
+
+void Main_FSM(void){
+	SCH_Dispatch_Tasks();
+	PowerConsumption_FSM();
+	FSM_Process_Data_Received_From_Sim3g();
+	switch(mainState){
+	case POWER_CONSUMPTION_CALCULATION:
+
+		if(Is_Done_Getting_ADC() == SET){
+			mainState = POST_DATA_TO_SERVER;
+		}
+		break;
+	case POST_DATA_TO_SERVER:
+		Server_Communication();
+		if(Is_Done_Getting_ADC() == RESET){
+			mainState = POWER_CONSUMPTION_CALCULATION;
+		}
+		break;
+	default:
+		break;
+	}
+}
 
 
 /**

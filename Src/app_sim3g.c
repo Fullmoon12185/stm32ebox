@@ -11,7 +11,7 @@
 #include "app_relay.h"
 #include "app_string.h"
 
-#define DEBUG_SIM3G(X)    						X
+#define DEBUG_SIM3G(X)    						//X
 
 #define DATA_TO_SEND_LENGTH						20
 
@@ -490,9 +490,6 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		} else if(isReceivedData((uint8_t *)Send_ok)){
 			isSendOKFlag = SET;
 		}
-//		else if(isReceivedDataFromServer(SUBSCRIBE_RECEIVE_MESSAGE_TYPE, LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE)){
-//			Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, BOX_ID);
-//		}
 		processDataState = CHECK_DATA_AVAILABLE_STATE;
 		break;
 	case PROCESSING_RECEIVED_DATA:

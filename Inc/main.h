@@ -162,7 +162,7 @@ void Error_Handler(void);
 /* Size of Trasmission buffer */
 #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
 /* Size of Reception buffer */
-#define RXBUFFERSIZE                      100
+#define RXBUFFERSIZE                      250
 
 
 
@@ -197,7 +197,7 @@ void Error_Handler(void);
 
 #define		SAMPLE_STEPS							2
 #define 	NUMBER_OF_SAMPLES_PER_AVERAGE			(1 << SAMPLE_STEPS)
-#define 	NUMBER_OF_SAMPLES_PER_SECOND			300
+#define 	NUMBER_OF_SAMPLES_PER_SECOND			200
 #define 	NUMBER_OF_ADC_CHANNELS					14
 
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_14

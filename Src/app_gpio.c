@@ -107,14 +107,14 @@ void ZeroPoint_Detection_Pin_Init(void){
 	/* GPIO Ports Clock Enable */
 
 	GPIO_InitStruct.Pin = ZERO_POINT_DETECTION_PIN;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(ZERO_POINT_DETECTION_PORT, &GPIO_InitStruct);
 
 
 	/* EXTI interrupt init*/
-//	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-//	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 

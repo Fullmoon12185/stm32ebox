@@ -9,13 +9,9 @@
 
 #define		NUMBER_OF_LEDS	20
 
-uint8_t ledPositions[NUMBER_OF_LEDS] = {
-		25, 24, 27, 26, 29, 28, 31, 30, 23, 22,
-		9, 8, 11, 10, 13, 12, 15, 14, 7, 6
-
-};
-uint32_t ledStatusBuffer = 0;
-
+uint32_t ledStatus;
+LED_COLOR ledStatusBuffer[NUMBER_OF_RELAYS] = { NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE };
+uint8_t ledStateBuffer[NUMBER_OF_RELAYS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
 static void Latch_Enable(int8_t count);
@@ -25,7 +21,9 @@ static void Output_Enable(void);
 static void Clock_On(int8_t count);
 static void Clock_Off(int8_t count);
 
-void Clear_Led_Display_Buffer(void);
+void Led_Display_Set_All(void);
+void Led_Display_Clear_All(void);
+
 
 void Led_Display_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -46,7 +44,7 @@ void Led_Display_Init(void){
 	Output_Enable();
 	Latch_Disable(1);
 	Clock_Off(1);
-	Clear_Led_Display_Buffer();
+	Led_Display_Clear_All();
 
 }
 
@@ -88,34 +86,87 @@ static void Data_Out(GPIO_PinState state){
 }
 
 
-void Led_Display_Update_Buffer(uint8_t ledpos, FlagStatus status){
-	if(ledpos >= NUMBER_OF_LEDS) return;
-	if(status == RESET){
-		ledStatusBuffer = ledStatusBuffer & (~ (1 << ledPositions[ledpos]));
-	} else {
-		ledStatusBuffer = ledStatusBuffer | (1 << ledPositions[ledpos]);
-	}
-}
 
-void Clear_Led_Display_Buffer(void){
-	uint8_t i = 0;
-	for(i = 0; i < NUMBER_OF_LEDS; i++){
-		Led_Display_Update_Buffer(i, RESET);
-	}
 
-}
-uint8_t ledCounter = 0;
-void Led_Display(void){
+void Led_Display(void) {
 	uint8_t i;
-
-	for (i = 0; i < 32; i ++){
-		Data_Out((ledStatusBuffer >> i) & 0x01);
-		Clock_Off(1);
-		Clock_On(1);
-	}
-	Latch_Enable(1);
+	uint32_t ledValue = ledStatus << 4;
 	Latch_Disable(1);
+	for (i = 0; i < 24; i++) {
+		Clock_Off(1);
+		Data_Out(ledValue & 0x00000001);
+		Clock_On(10);
+		ledValue = ledValue >> 1;
+	}
 
+	Latch_Enable(1);
 }
 
+void Led_Display_Color(uint8_t position, LED_COLOR color) {
+	uint32_t colorMask = color & 0x00000003;
+	ledStatus &= ~(0x00000003 << (position * 2));
+	ledStatus |= colorMask << (position * 2);
+}
+
+
+void Led_Display_Clear_All(void) {
+	ledStatus = 0;
+	Led_Display();
+}
+
+void Led_Display_Set_All(void) {
+	ledStatus = 0xffffffff;
+	Led_Display();
+}
+
+void LED_Display_FSM(void) { // call each 200ms
+	LED_COLOR tmp;
+	for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
+		tmp = ledStatusBuffer[i];
+		if (tmp == NONE || tmp == RED || tmp == GREEN || tmp == YELLOW) {
+			Led_Display_Color(i, tmp);
+		} else if (tmp == BLINK_RED_FAST) {
+			if (ledStatusBuffer[i] < 1) {
+				Led_Display_Color(i, RED);
+			} else if (ledStatusBuffer[i] < 2) {
+				Led_Display_Color(i, NONE);
+			}
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 2) {
+				ledStatusBuffer[i] = 0;
+			}
+		} else if (tmp == BLINK_RED_SLOW) {
+			if (ledStatusBuffer[i] < 2) {
+				Led_Display_Color(i, RED);
+			} else if (ledStatusBuffer[i] < 3){
+				Led_Display_Color(i, NONE);
+			}
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 3) {
+				ledStatusBuffer[i] = 0;
+			}
+		} else if (tmp == BLINK_GREEN_FAST) {
+			if (ledStatusBuffer[i] < 1){
+				Led_Display_Color(i, GREEN);
+			} else if (ledStatusBuffer[i] < 2) {
+				Led_Display_Color(i, NONE);
+			}
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 2) {
+				ledStatusBuffer[i] = 0;
+			}
+		} else if (tmp == BLINK_GREEN_SLOW) {
+			if (ledStatusBuffer[i] < 2){
+				Led_Display_Color(i, GREEN);
+			} else if (ledStatusBuffer[i] < 3){
+				Led_Display_Color(i, NONE);
+			}
+			ledStatusBuffer[i]++;
+			if (ledStatusBuffer[i] > 3){
+				ledStatusBuffer[i] = 0;
+			}
+		}
+	}
+	Led_Display();
+}
 
