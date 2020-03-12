@@ -28,6 +28,7 @@
 #include "app_led_display.h"
 #include "app_sim3g.h"
 #include "app_test.h"
+#include "app_pcf8574.h"
 
 typedef enum {
 	POWER_CONSUMPTION_CALCULATION = 0,
@@ -44,8 +45,14 @@ int main(void)
 	System_Initialization();
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
-//	Set_Relay(0);
+
+//	SCH_Add_Task(test3, 3, 100);
+	SCH_Add_Task(PCF_read, 7, 300);
+//	SCH_Add_Task(Led_Display, 5, 5);
+	SCH_Add_Task(LED_Display_FSM, 0, 20);
+	Set_Relay(0);
 	while (1){
+		SCH_Dispatch_Tasks();
 		Main_FSM();
 	}
 	return 0;
@@ -54,9 +61,10 @@ int main(void)
 
 
 void Main_FSM(void){
-	SCH_Dispatch_Tasks();
+
 	PowerConsumption_FSM();
 	FSM_Process_Data_Received_From_Sim3g();
+	Power_Loop();
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:
 
@@ -66,6 +74,7 @@ void Main_FSM(void){
 		break;
 	case POST_DATA_TO_SERVER:
 		Server_Communication();
+
 		if(Is_Done_Getting_ADC() == RESET){
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}

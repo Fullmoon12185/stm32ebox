@@ -207,6 +207,7 @@ void MQTTCommandSending(uint8_t * buffer, uint8_t buffer_len){
 
 
 ITStatus isSim3gReceiveReady(){
+
 	if(UartReceiveReady == SET){
 		UartReceiveReady = RESET;
 		return SET;
@@ -215,6 +216,7 @@ ITStatus isSim3gReceiveReady(){
 	}
 }
 ITStatus isSim3gTransmissionReady(void){
+
 	if(UartTransmitReady == SET){
 		UartTransmitReady = RESET;
 
@@ -225,39 +227,6 @@ ITStatus isSim3gTransmissionReady(void){
 
 }
 
-
-
-
-//FlagStatus isPBDone(void){
-//	return isPBDoneFlag;
-//}
-//
-//FlagStatus isOK(void){
-//	return isOKFlag;
-//}
-//
-//FlagStatus isERROR(void){
-//	if(Sim3gDataProcessingBuffer[0] == 'E' && Sim3gDataProcessingBuffer[1] == 'R' && Sim3gDataProcessingBuffer[2] == 'R' && Sim3gDataProcessingBuffer[3] == 'O' && Sim3gDataProcessingBuffer[4] == 'R'){
-//		return SET;
-//	}
-//	return RESET;
-//}
-//
-//FlagStatus isConnect_OK(void){
-//	if(Sim3gDataProcessingBuffer[0] == 'C' && Sim3gDataProcessingBuffer[1] == 'o' && Sim3gDataProcessingBuffer[2] == 'n' && Sim3gDataProcessingBuffer[3] == 'n' && aUART_RxBuffer[4] == 'e'
-//			&& Sim3gDataProcessingBuffer[5] == 'c' && Sim3gDataProcessingBuffer[6] == 't' && Sim3gDataProcessingBuffer[7] == ' ' && Sim3gDataProcessingBuffer[8] == 'o' && Sim3gDataProcessingBuffer[9] == 'k'){
-//		return SET;
-//	}
-//	return RESET;
-//}
-//
-//FlagStatus isGreaterThanSymbol(void){
-//	if(isGreaterThanSymbolReceived == SET){
-//		isGreaterThanSymbolReceived = RESET;
-//		return SET;
-//	}
-//	return RESET;
-//}
 
 
 

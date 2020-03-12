@@ -8,11 +8,13 @@
 #ifndef APP_PCF8574_H_
 #define APP_PCF8574_H_
 
-//void Read_All_PCF8574_Inputs(void);
-FlagStatus SAC_Status(uint8_t sacIndex);
 
-//void PCF_init();
-//uint8_t PCF_Scan();
-uint8_t PCF_read(uint8_t address);
-void Set_Input_PCF_Pins(void);
+
+void PCF_Init(void);
+uint32_t Get_All_Relay_Fuse_Statuses(void);
+uint8_t PCF_Scan();
+void PCF_read(void);
+
+
+
 #endif /* APP_PCF8574_H_ */

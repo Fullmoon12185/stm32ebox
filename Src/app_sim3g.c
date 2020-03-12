@@ -448,10 +448,12 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		if(Uart1_Received_Buffer_Available()){
 			Clear_Sim3gDataProcessingBuffer();
 			processDataState = DETECT_SPECIAL_CHARACTER;
+			isReceiveDataFromServer = SET;
 		}
 		break;
 	case DETECT_SPECIAL_CHARACTER:
 		if(Uart1_Received_Buffer_Available()){
+
 			preReadCharacter = readCharacter;
 			readCharacter = Uart1_Read_Received_Buffer();
 			if(readCharacter == '>'){
@@ -461,7 +463,6 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE && readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE){
 				processDataState = PROCESSING_RECEIVED_DATA;
 				Clear_Sim3gDataProcessingBuffer();
-				isReceiveDataFromServer = SET;
 			} else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
 			}

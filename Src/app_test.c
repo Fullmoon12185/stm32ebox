@@ -11,6 +11,7 @@
 #include "app_sim3g.h"
 #include "app_uart.h"
 #include "app_sim5320MQTT.h"
+#include "app_pcf8574.h"
 
 
 extern const uint8_t SUBSCRIBE_TOPIC_1[];
@@ -40,18 +41,7 @@ void test1(void){
 }
 void test3(void){
 
-	static uint8_t bool1 = 0;
-	static uint8_t index1 = 0;
-
-	if(bool1 == 0){
-	} else {
-	}
-	if(index1 == 9) {
-		bool1 = (bool1 + 1)%2;
-		index1 = 0;
-	} else {
-		index1 ++;
-	}
+	Test_Led_Display();
 
 
 }
@@ -76,9 +66,31 @@ void test5(void){
 }
 
 void test6(void){
+	uint8_t strtmp1[] = "Begin read ADcs \r\n";
 
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(0));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(1));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(2));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(3));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(4));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(5));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(6));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(7));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(8));
+	UART3_SendToHost((uint8_t *)strtmp1);
+	sprintf((char*) strtmp1, "%d\t", (int) PCF_read(9));
+	UART3_SendToHost((uint8_t *)strtmp1);
 }
 
 void test7(void){
 	TestSendATcommand();
 }
+

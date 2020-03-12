@@ -8,6 +8,7 @@
 #ifndef APP_LED_DISPLAY_H_
 #define APP_LED_DISPLAY_H_
 
+#include "app_power.h"
 
 typedef enum  {
 	NONE = 0,
@@ -17,7 +18,9 @@ typedef enum  {
 	BLINK_RED_SLOW = 4,
 	BLINK_RED_FAST = 5,
 	BLINK_GREEN_SLOW = 6,
-	BLINK_GREEN_FAST = 7
+	BLINK_GREEN_FAST = 7,
+	BLINK_YELLOW_SLOW = 8,
+	BLINK_YELLOW_FAST = 9
 }LED_COLOR;
 
 //Normal OFF
@@ -32,14 +35,15 @@ typedef enum  {
 //Over time 										= {4,4,5}
 
 void Led_Display_Init(void);
-//void Led_Display_Update_Buffer(uint8_t ledpos, FlagStatus status);
 void Led_Display_Color(uint8_t ledpos, LED_COLOR color);
-//void Led_Display(void);
-void Led_Display_Clear_All();
-void Led_Display_Set_All();
-void Led_Display();
+void Led_Update_Status_Buffer(uint8_t position, NodeStatus status);
 
-void LED_Display_FSM();
+void Led_Display_Set_All(LED_COLOR color);
+void Led_Display_Clear_All(void);
 
+void Led_Display(void);
+
+void LED_Display_FSM(void);
+void Test_Led_Display(void);
 
 #endif /* APP_LED_DISPLAY_H_ */

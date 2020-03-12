@@ -22,25 +22,12 @@
 #include "app_25LC512.h"
 #include "app_init.h"
 #include "app_relay.h"
+#include "app_power.h"
 
 
 
 enum InitState initState = HAL_INIT;
-void Sys_Init(void){
 
-	HAL_Init();
-	SystemClock_Config();
-
-	UART3_Init();
-	UART1_Init();
-	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
-	MX_GPIO_Init();
-	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
-
-	Timer_Init();
-   	DEBUG_INIT(UART3_SendToHost((uint8_t*)"TIMER_INIT - Done \r\n"));
-
-}
 void System_Initialization(void)
 {
     while(initState != MAX_INIT_STATE){
@@ -86,7 +73,7 @@ void System_Initialization(void)
         	break;
         case I2C_INIT:
         	I2C_Init();
-        	Set_Input_PCF_Pins();
+        	PCF_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"I2C_Init - Done \r\n"));
         	break;
         case ADC_INIT:
@@ -107,6 +94,11 @@ void System_Initialization(void)
         case SIM_3G_INIT:
         	Sim3g_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SIM_3G_INIT - Done \r\n"));
+        	break;
+        case POWER_SETUP_INIT:
+        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"POWER_SETUP_INIT - Done \r\n"));
+        	Power_Setup();
+
         	break;
         default:
             initState = HAL_INIT;

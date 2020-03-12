@@ -25,9 +25,9 @@ enum InitState {
     WATCH_DOG_INIT,
 	START_DMA_ADC,
 	SIM_3G_INIT,
+	POWER_SETUP_INIT,
     MAX_INIT_STATE
 };
-void Sys_Init(void);
 
 void System_Initialization(void);
 
