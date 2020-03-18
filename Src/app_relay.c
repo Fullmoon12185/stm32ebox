@@ -7,6 +7,7 @@
 
 #include "main.h"
 #include "app_pcf8574.h"
+#include "app_scheduler.h"
 
 FlagStatus array_Of_Relay_Statuses[NUMBER_OF_RELAYS];
 WorkingStatus array_Of_Relay_Physical_Statuses[NUMBER_OF_RELAYS];
@@ -42,12 +43,26 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 };
 
 
+uint8_t relay_TimeoutFlag_Index = SCH_MAX_TASKS;
+uint8_t set_Relay_TimeoutFlag = 1;
+
+void Clear_Relay_Timeout_Flag(void){
+	set_Relay_TimeoutFlag = 0;
+}
+void Set_Relay_Timeout_Flag(void){
+	set_Relay_TimeoutFlag = 1;
+}
+uint8_t is_Set_Relay_Timeout(void){
+	return set_Relay_TimeoutFlag;
+}
+
 void Relay_Init(void){
 	uint8_t i;
 	for (i = 0; i < NUMBER_OF_RELAYS; i ++){
 		array_Of_Relay_Statuses[i] = RESET;
 	}
 	Update_Relay_Physical_Status();
+	set_Relay_TimeoutFlag = 1;
 }
 void Set_Relay(uint8_t relayIndex){
 	if(relayIndex > 9) return;
@@ -56,6 +71,10 @@ void Set_Relay(uint8_t relayIndex){
 	}
 	array_Of_Relay_Statuses[relayIndex] = SET;
 	HAL_GPIO_WritePin(array_Of_Relay_Ports[relayIndex], array_Of_Relay_Pins[relayIndex], SET);
+
+	SCH_Delete_Task(relay_TimeoutFlag_Index);
+	Clear_Relay_Timeout_Flag();
+	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 200, 0);
 }
 
 void Reset_Relay(uint8_t relayIndex){
@@ -65,6 +84,10 @@ void Reset_Relay(uint8_t relayIndex){
 	}
 	array_Of_Relay_Statuses[relayIndex] = RESET;
 	HAL_GPIO_WritePin(array_Of_Relay_Ports[relayIndex], array_Of_Relay_Pins[relayIndex], RESET);
+
+	SCH_Delete_Task(relay_TimeoutFlag_Index);
+	Clear_Relay_Timeout_Flag();
+	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 200, 0);
 }
 
 void Update_Relay_Physical_Status(void){

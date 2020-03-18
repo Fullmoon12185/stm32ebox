@@ -42,6 +42,8 @@ PowerSystem Main;
 POWER_FSM_STATE powerFsmState = POWER_FINISH_STATE;
 uint32_t lastTimeErr, lastReport;
 
+uint8_t strtmpPower[] = "                                 ";
+
 void Node_Setup(void);
 void Node_Check(void);
 void Power_Setup(void);
@@ -74,7 +76,6 @@ void Node_Setup(void) {
 	//		Led_Display_Show();
 		}
 	}
-
 }
 
 void Node_Check(void) {
@@ -131,7 +132,11 @@ void Node_Check(void) {
 				}
 				Main.nodes[tempOutletID].lastPower = Main.nodes[tempOutletID].power;
 			} else {
-				Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
+				if(Get_Relay_Status(tempOutletID) == SET){
+					Main.nodes[tempOutletID].nodeStatus = NODE_READY;
+				} else {
+					Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
+				}
 			}
 		}
 	}
@@ -140,7 +145,14 @@ void Node_Check(void) {
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 	if(outletID < NUMBER_OF_RELAYS){
 		Main.nodes[outletID].limitEnergy = limit_energy;
+		Main.nodes[outletID].energy = 0;
 	}
+}
+uint32_t Get_Power_Consumption(uint8_t outletID){
+	if(outletID < NUMBER_OF_RELAYS){
+		return Main.nodes[outletID].energy;
+	}
+	return 0;
 }
 
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period) {	//update and return energy ???
@@ -155,11 +167,24 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.nodes[tempOutletID].powerFactor = power_factor;
 		Main.nodes[tempOutletID].power = Main.nodes[tempOutletID].voltage * Main.nodes[tempOutletID].current * Main.nodes[tempOutletID].powerFactor / 100000;	//in mA	// /100
 		if (Main.nodes[tempOutletID].limitEnergy > 0){
-			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period;
-		}
-		else {
+			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period/100;
+		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
+		if(tempOutletID == 3 || tempOutletID == 8){
+			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor);
+			UART3_SendToHost((uint8_t *)strtmpPower);
+			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current);
+			UART3_SendToHost((uint8_t *)strtmpPower);
+			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power);
+			UART3_SendToHost((uint8_t *)strtmpPower);
+
+			sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy);
+			UART3_SendToHost((uint8_t *)strtmpPower);
+			UART3_SendToHost((uint8_t *)"\r\n");
+		}
+
+
 	}
 }
 
@@ -202,11 +227,11 @@ void Power_Loop(void) {
 		} else if (Main.status == SYSTEM_NORMAL) {
 			if (Main.nodes[relayIndex].nodeStatus == NODE_NORMAL) {
 				//if command then set_node_energy(1000);
-				if (Main.nodes[relayIndex].limitEnergy > Main.nodes[relayIndex].energy) {
-					Set_Relay(relayIndex);
-				} else {
-					Reset_Relay(relayIndex);
-				}
+//				if (Main.nodes[relayIndex].limitEnergy > Main.nodes[relayIndex].energy) {
+//					Set_Relay(relayIndex);
+//				} else {
+//					Reset_Relay(relayIndex);
+//				}
 
 			} else if (Main.nodes[relayIndex].nodeStatus == CHARGING) {
 			} else if (Main.nodes[relayIndex].nodeStatus == CHARGEFULL) {
@@ -256,7 +281,6 @@ void Power_Loop(void) {
 			lastTimeErr = HAL_GetTick();
 			for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++)
 				Reset_Relay(i);
-
 			powerFsmState = POWER_FINISH_STATE;
 		}
 		break;

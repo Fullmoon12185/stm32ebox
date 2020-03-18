@@ -6,13 +6,16 @@
  */
 
 #include "main.h"
+#include "math.h"
 
 #include "app_scheduler.h"
 #include "app_uart.h"
 #include "app_fsm.h"
 #include "app_test.h"
-#include "math.h"
+#include "app_power.h"
 
+
+#define		DEBUG_ADC(X)								X
 #define 	NUMBER_OF_SAMPLES_FOR_SMA					3
 #define		REFERENCE_1V8_VOLTAGE_INDEX					12
 #define		DIFFERENCE_ADC_VALUE_THRESHOLD				10
@@ -50,28 +53,28 @@ uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_RELAYS];
 
 
 
-uint8_t AdcDmaFlag = 0, AdcDmaStoreFlag = 0;
+FlagStatus AdcDmaStoreFlag = RESET;
 #define ADC_READING_TIME_OUT	95
 
 typedef enum {
-	SETUP_TIMER_ONE_SECOND = 0,
-	FIND_ZERO_VOLTAGE_POINT,
-	START_GETTING_ADC,
-	WAIT_FOR_DATA_COMPLETE_TRANSMIT,
-	STOP_GETTING_ADC,
-	REPORT_POWER_DATA,
-	COMPUTE_ROOT_MEAN_SQUARE,
-	COMPUTE_PEAK_TO_PEAK_VOLTAGE,
-	COMPUTE_POWER_CONSUMPTION,
-	PREPARE_FOR_THE_NEXT_CONVERSION,
+	ADC_SETUP_TIMER_ONE_SECOND = 0,
+	ADC_FIND_ZERO_VOLTAGE_POINT,
+	ADC_START_GETTING,
+	ADC_WAIT_FOR_DATA_COMPLETE_TRANSMIT,
+	ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE,
+	ADC_REPORT_POWER_DATA,
 	MAX_NUMBER_OF_ADC_STATES
 }ADC_STATE;
 
 uint8_t adc_TimeoutFlag = 0;
 uint8_t adc_Timeout_Task_Index = SCH_MAX_TASKS;
 FlagStatus is_Ready_To_Find_Min_Max_Voltage = RESET;
-ADC_STATE adcState = SETUP_TIMER_ONE_SECOND;
+ADC_STATE adcState = ADC_SETUP_TIMER_ONE_SECOND;
+ADC_STATE pre_adcState = MAX_NUMBER_OF_ADC_STATES;
 
+
+
+void Adc_State_Display(void);
 
 /**
   * @brief  Conversion complete callback in non blocking mode
@@ -82,7 +85,7 @@ ADC_STATE adcState = SETUP_TIMER_ONE_SECOND;
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *AdcHandle)
 {
-	AdcDmaStoreFlag = 1;
+	AdcDmaStoreFlag = SET;
 }
 
 /**
@@ -291,12 +294,341 @@ void Zero_Point_Detection(void){
 }
 
 FlagStatus Is_Done_Getting_ADC(void){
-	if(adcState == REPORT_POWER_DATA)
+	if(adcState == ADC_REPORT_POWER_DATA)
 		return SET;
 	return RESET;
 }
 
+
+uint8_t filterNoiseState = 0;
+
 void PowerConsumption_FSM(void){
+	static uint8_t externalInterruptCounter = 0;
+	static uint8_t cycleCounter = 0;
+	Adc_State_Display();
+	switch(adcState){
+	case ADC_SETUP_TIMER_ONE_SECOND:
+		SCH_Delete_Task(adc_Timeout_Task_Index);
+		Adc_Clear_Timeout_Flag();
+		adc_Timeout_Task_Index = SCH_Add_Task(Adc_Reading_Timeout, 100, 0);
+		is_Ready_To_Find_Min_Max_Voltage = RESET;
+		externalInterruptCounter = 0;
+		AdcDmaBufferIndexFilter = 0;
+		cycleCounter = 0;
+		adcState = ADC_FIND_ZERO_VOLTAGE_POINT;
+		break;
+	case ADC_FIND_ZERO_VOLTAGE_POINT:
+		if(is_Ready_To_Find_Min_Max_Voltage == SET){
+			is_Ready_To_Find_Min_Max_Voltage = RESET;
+			externalInterruptCounter++;
+			AdcDmaBufferIndexFilter = 0;
+			adcState = ADC_START_GETTING;
+		}
+		break;
+
+	case ADC_START_GETTING:
+		if(is_Ready_To_Find_Min_Max_Voltage == SET){
+			is_Ready_To_Find_Min_Max_Voltage = RESET;
+			externalInterruptCounter++;
+		} else {
+			if(externalInterruptCounter < 3){
+				ADC_Start_Getting_Values();
+				adcState = ADC_WAIT_FOR_DATA_COMPLETE_TRANSMIT;
+			} else if(externalInterruptCounter >= 3) {
+				adcState = ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE;
+			}
+		}
+		break;
+
+	case ADC_WAIT_FOR_DATA_COMPLETE_TRANSMIT:
+		if(AdcDmaStoreFlag == SET){
+			ADC_Stop_Getting_Values();
+			AdcDmaStoreFlag = RESET;
+			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex++) {
+				AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] = AdcDmaBuffer[channelIndex] - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
+//				if(AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] < 10 && AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] > -10){
+//					AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] = 0;
+//				}
+			}
+			AdcDmaBufferIndexFilter++;
+			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
+				AdcDmaBufferIndexFilter = 0;
+			}
+			adcState = ADC_START_GETTING;
+		}
+		break;
+	case ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE:
+		for(uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex ++){
+			for(uint8_t sampleIndex = 0; sampleIndex < AdcDmaBufferIndexFilter; sampleIndex ++){
+//				if(channelIndex == 3){
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBuffer[channelIndex][sampleIndex]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//				}
+				if(sampleIndex == 0){
+					AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+				} else {
+					if(AdcBufferPeakMax[channelIndex] < AdcBuffer[channelIndex][sampleIndex]){
+						AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					}
+					if(AdcBufferPeakMin[channelIndex] > AdcBuffer[channelIndex][sampleIndex]){
+						AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					}
+				}
+				int32_t tempRealADCValue = AdcBuffer[channelIndex][sampleIndex];
+				array_Of_Vrms_ADC_Values[channelIndex] += tempRealADCValue * tempRealADCValue;
+
+				if(sampleIndex == AdcDmaBufferIndexFilter - 1){
+					int32_t tempPeakPeak = AdcBufferPeakMax[channelIndex] - AdcBufferPeakMin[channelIndex];
+
+					if(AdcBufferPeakMax[channelIndex] <= 10 || AdcBufferPeakMin[channelIndex] >= -10){
+						tempPeakPeak = 0;
+					} else if(tempPeakPeak < 60){
+						tempPeakPeak = 0;
+					}
+					if(cycleCounter == 0){
+						AdcBufferPeakPeak[channelIndex] = tempPeakPeak;
+					} else {
+						AdcBufferPeakPeak[channelIndex] = AdcBufferPeakPeak[channelIndex] + tempPeakPeak;
+					}
+					array_Of_Vrms_ADC_Values[channelIndex] = (array_Of_Vrms_ADC_Values[channelIndex])/AdcDmaBufferIndexFilter;
+					if(cycleCounter == 0){
+						array_Of_Average_Vrms_ADC_Values[channelIndex] = sqrt(array_Of_Vrms_ADC_Values[channelIndex]);
+					} else {
+						array_Of_Average_Vrms_ADC_Values[channelIndex] = array_Of_Average_Vrms_ADC_Values[channelIndex] + sqrt(array_Of_Vrms_ADC_Values[channelIndex]);
+					}
+				}
+
+			}
+		}
+		cycleCounter++;
+		if(cycleCounter >= NUMBER_OF_SAMPLES_PER_AVERAGE){
+			cycleCounter = 0;
+			for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++){
+				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
+				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
+//				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
+				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*283) / (AdcBufferPeakPeak[i]);
+				if(PowerFactor[i] > 98){
+					PowerFactor[i] = 100;
+				}
+				Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 237, 225, PowerFactor[i], 1);
+			}
+
+			adcState = ADC_REPORT_POWER_DATA;
+			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
+		} else {
+			externalInterruptCounter = 0;
+			adcState = ADC_FIND_ZERO_VOLTAGE_POINT;
+		}
+		break;
+
+	case ADC_REPORT_POWER_DATA:
+		if(is_Adc_Reading_Timeout()){
+			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
+			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex++) {
+				array_Of_Vrms_ADC_Values[channelIndex]  = 0;
+				array_Of_Average_Vrms_ADC_Values[channelIndex] = 0;
+				AdcBufferPeakMax[channelIndex] = 0;
+				AdcBufferPeakMin[channelIndex] = 0;
+			}
+			adcState = ADC_SETUP_TIMER_ONE_SECOND;
+		}
+		break;
+
+	default:
+		adcState = ADC_SETUP_TIMER_ONE_SECOND;
+		break;
+	}
+}
+
+
+/*
+void PowerConsumption_FSM_1(void){
+	static uint8_t externalInterruptCounter = 0;
+	static uint8_t cycleCounter = 0;
+
+	switch(adcState){
+	case SETUP_TIMER_ONE_SECOND:
+		SCH_Delete_Task(adc_Timeout_Task_Index);
+		Adc_Clear_Timeout_Flag();
+		adc_Timeout_Task_Index = SCH_Add_Task(Adc_Reading_Timeout, 100, 0);
+		is_Ready_To_Find_Min_Max_Voltage = RESET;
+		externalInterruptCounter = 0;
+		AdcDmaBufferIndexFilter = 0;
+		cycleCounter = 0;
+		adcState = FIND_ZERO_VOLTAGE_POINT;
+		break;
+	case FIND_ZERO_VOLTAGE_POINT:
+		if(is_Ready_To_Find_Min_Max_Voltage){
+			is_Ready_To_Find_Min_Max_Voltage = RESET;
+			externalInterruptCounter++;
+			AdcDmaBufferIndexFilter = 0;
+			adcState = START_GETTING_ADC;
+		}
+		break;
+
+	case START_GETTING_ADC:
+		if(is_Ready_To_Find_Min_Max_Voltage){
+			is_Ready_To_Find_Min_Max_Voltage = RESET;
+			externalInterruptCounter++;
+		} else {
+			if(externalInterruptCounter < 3){
+				ADC_Start_Getting_Values();
+				adcState = WAIT_FOR_DATA_COMPLETE_TRANSMIT;
+
+			} else if(externalInterruptCounter == 3) {
+				adcState = COMPUTE_PEAK_TO_PEAK_VOLTAGE;
+			}
+		}
+		break;
+
+	case WAIT_FOR_DATA_COMPLETE_TRANSMIT:
+		if(AdcDmaStoreFlag){
+			ADC_Stop_Getting_Values();
+			AdcDmaStoreFlag = 0;
+			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex++) {
+				AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] = AdcDmaBuffer[channelIndex] - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
+//				if(AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] < 10 && AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] > -10){
+//					AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] = 0;
+//				}
+
+//					if(AdcDmaBufferIndexFilter == 0){
+//						AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][AdcDmaBufferIndexFilter];
+//						AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][AdcDmaBufferIndexFilter];
+//					} else {
+//						if(AdcBufferPeakMax[channelIndex] < AdcBuffer[channelIndex][AdcDmaBufferIndexFilter]){
+//							AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][AdcDmaBufferIndexFilter];
+//						}
+//						if(AdcBufferPeakMin[channelIndex] > AdcBuffer[channelIndex][AdcDmaBufferIndexFilter]){
+//							AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][AdcDmaBufferIndexFilter];
+//						}
+//					}
+			}
+			AdcDmaBufferIndexFilter++;
+			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
+				AdcDmaBufferIndexFilter = 0;
+			}
+
+			adcState = START_GETTING_ADC;
+		}
+		break;
+	case COMPUTE_PEAK_TO_PEAK_VOLTAGE:
+//		for(uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex ++){
+//			for(uint8_t sampleIndex = 0; sampleIndex < AdcDmaBufferIndexFilter; sampleIndex ++){
+//
+//				sample1[channelIndex] = sample2[channelIndex];
+//				sample2[channelIndex] = sample3[channelIndex];
+//				sample3[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+//				if(sampleIndex >= 3){
+//					if((sample1[channelIndex] < sample2[channelIndex] && sample3[channelIndex] < sample2[channelIndex])
+//							|| (sample1[channelIndex] > sample2[channelIndex] && sample3[channelIndex] > sample2[channelIndex])){
+//						AdcBuffer[channelIndex][sampleIndex - 1] = (sample1[channelIndex] + sample3[channelIndex])/2;
+//					}
+//				}
+//			}
+//		}
+		UART3_SendToHost((uint8_t *)"n3\r\n");
+		for(uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex ++){
+			for(uint8_t sampleIndex = 0; sampleIndex < AdcDmaBufferIndexFilter; sampleIndex ++){
+
+				if(channelIndex == 3){
+					sprintf((char*) strtmp, "%d\r\n", (int) AdcBuffer[channelIndex][sampleIndex]);
+					UART3_SendToHost((uint8_t *)strtmp);
+				}
+				if(sampleIndex == 0){
+					AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+				} else {
+					if(AdcBufferPeakMax[channelIndex] < AdcBuffer[channelIndex][sampleIndex]){
+						AdcBufferPeakMax[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					}
+					if(AdcBufferPeakMin[channelIndex] > AdcBuffer[channelIndex][sampleIndex]){
+						AdcBufferPeakMin[channelIndex] = AdcBuffer[channelIndex][sampleIndex];
+					}
+				}
+				int32_t tempRealADCValue = AdcBuffer[channelIndex][sampleIndex];
+				array_Of_Vrms_ADC_Values[channelIndex] += tempRealADCValue * tempRealADCValue;
+
+				if(sampleIndex == AdcDmaBufferIndexFilter - 1){
+					int32_t tempPeakPeak = AdcBufferPeakMax[channelIndex] - AdcBufferPeakMin[channelIndex];
+
+					if(AdcBufferPeakMax[channelIndex] <= 10 || AdcBufferPeakMin[channelIndex] >= -10){
+						tempPeakPeak = 0;
+					} else if(tempPeakPeak < 60){
+						tempPeakPeak = 0;
+					}
+
+					if(cycleCounter == 0){
+						AdcBufferPeakPeak[channelIndex] = tempPeakPeak;
+					} else {
+						AdcBufferPeakPeak[channelIndex] = AdcBufferPeakPeak[channelIndex] + tempPeakPeak;
+					}
+
+					array_Of_Vrms_ADC_Values[channelIndex] = (array_Of_Vrms_ADC_Values[channelIndex])/AdcDmaBufferIndexFilter;
+					if(cycleCounter == 0){
+						array_Of_Average_Vrms_ADC_Values[channelIndex] = sqrt(array_Of_Vrms_ADC_Values[channelIndex]);
+					} else {
+						array_Of_Average_Vrms_ADC_Values[channelIndex] = array_Of_Average_Vrms_ADC_Values[channelIndex] + sqrt(array_Of_Vrms_ADC_Values[channelIndex]);
+					}
+				}
+
+			}
+		}
+		UART3_SendToHost((uint8_t *)"n1\r\n");
+		cycleCounter++;
+		if(cycleCounter == NUMBER_OF_SAMPLES_PER_AVERAGE){
+			cycleCounter = 0;
+			for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++){
+				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
+				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
+				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
+			}
+			sprintf((char*) strtmp, "%d\t", (int) PowerFactor[3]);
+			UART3_SendToHost((uint8_t *)strtmp);
+			sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[3] * 2371);
+			UART3_SendToHost((uint8_t *)strtmp);
+			sprintf((char*) strtmp, "%d\t", (int) AdcBufferPeakPeak[3]);
+			UART3_SendToHost((uint8_t *)strtmp);
+			UART3_SendToHost((uint8_t *)"\r\n");
+			sprintf((char*) strtmp, "%d\t", (int) PowerFactor[8]);
+			UART3_SendToHost((uint8_t *)strtmp);
+			sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[8] * 493);
+			UART3_SendToHost((uint8_t *)strtmp);
+			sprintf((char*) strtmp, "%d\t", (int) AdcBufferPeakPeak[8]);
+			UART3_SendToHost((uint8_t *)strtmp);
+			UART3_SendToHost((uint8_t *)"\r\n");
+
+			UART3_SendToHost((uint8_t *)"\r\n");
+			adcState = REPORT_POWER_DATA;
+			test2();
+		} else {
+			externalInterruptCounter = 0;
+			adcState = FIND_ZERO_VOLTAGE_POINT;
+		}
+		break;
+
+	case REPORT_POWER_DATA:
+		if(is_Adc_Reading_Timeout()){
+			test2();
+			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_RELAYS; channelIndex++) {
+				array_Of_Vrms_ADC_Values[channelIndex]  = 0;
+				array_Of_Average_Vrms_ADC_Values[channelIndex] = 0;
+				AdcBufferPeakMax[channelIndex] = 0;
+				AdcBufferPeakMin[channelIndex] = 0;
+				AdcBufferSUM[channelIndex] = 0;
+			}
+			adcState = SETUP_TIMER_ONE_SECOND;
+		}
+		break;
+
+	default:
+		break;
+	}
+}
+
+
+void PowerConsumption_FSM_SVA(void){
 	static uint8_t externalInterruptCounter = 0;
 	static uint8_t cycleCounter = 0;
 
@@ -327,6 +659,7 @@ void PowerConsumption_FSM(void){
 		} else {
 			if(externalInterruptCounter < 3){
 				adcState = WAIT_FOR_DATA_COMPLETE_TRANSMIT;
+				ADC_Start_Getting_Values();
 			} else if(externalInterruptCounter == 3) {
 				adcState = COMPUTE_PEAK_TO_PEAK_VOLTAGE;
 			}
@@ -359,7 +692,7 @@ void PowerConsumption_FSM(void){
 			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
 				AdcDmaBufferIndexFilter = 0;
 			}
-			ADC_Start_Getting_Values();
+
 			adcState = START_GETTING_ADC;
 		}
 		break;
@@ -428,14 +761,14 @@ void PowerConsumption_FSM(void){
 			}
 			sprintf((char*) strtmp, "%d\t", (int) PowerFactor[0]);
 			UART3_SendToHost((uint8_t *)strtmp);
-			sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[0] * 237);
+			sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[0] * 239);
 			UART3_SendToHost((uint8_t *)strtmp);
 			sprintf((char*) strtmp, "%d\t", (int) AdcBufferPeakPeak[0]);
 			UART3_SendToHost((uint8_t *)strtmp);
 			UART3_SendToHost((uint8_t *)"\r\n");
 			sprintf((char*) strtmp, "%d\t", (int) PowerFactor[8]);
 			UART3_SendToHost((uint8_t *)strtmp);
-			sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[8] * 500);
+			sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[8] * 493);
 			UART3_SendToHost((uint8_t *)strtmp);
 			sprintf((char*) strtmp, "%d\t", (int) AdcBufferPeakPeak[8]);
 			UART3_SendToHost((uint8_t *)strtmp);
@@ -469,7 +802,43 @@ void PowerConsumption_FSM(void){
 	}
 }
 
+*/
 
 
 
+void Adc_State_Display(void){
+	if(pre_adcState != adcState){
+		pre_adcState = adcState;
+		switch(adcState){
+//		case ADC_SETUP_TIMER_ONE_SECOND:
+//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_SETUP_TIMER_ONE_SECOND"););
+//
+//			break;
+//		case ADC_FIND_ZERO_VOLTAGE_POINT:
+//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_FIND_ZERO_VOLTAGE_POINT"););
+//			break;
+//		case ADC_START_GETTING:
+//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_START_GETTING\r"););
+//			break;
+//		case ADC_WAIT_FOR_DATA_COMPLETE_TRANSMIT:
+//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_WAIT_FOR_DATA_COMPLETE_TRANSMIT\r"););
+//
+//			break;
+//		case ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE:
+//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE\r"););
+//			break;
+
+		case ADC_REPORT_POWER_DATA:
+			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_REPORT_POWER_DATA\r"););
+			break;
+
+		case MAX_NUMBER_OF_ADC_STATES:
+			DEBUG_ADC(UART3_SendToHost((uint8_t*)"MAX_NUMBER_OF_ADC_STATES\r"););
+			break;
+		default:
+			break;
+		}
+	}
+
+}
 

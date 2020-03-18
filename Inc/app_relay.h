@@ -11,6 +11,13 @@
 
 void Relay_Init(void);
 
+void Clear_Relay_Timeout_Flag(void);
+void Set_Relay_Timeout_Flag(void);
+uint8_t is_Set_Relay_Timeout(void);
+
+
+
+
 void Set_Relay(uint8_t relayIndex);
 void Reset_Relay(uint8_t relayIndex);
 void Update_Relay_Physical_Status(void);

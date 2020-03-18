@@ -18,7 +18,7 @@ typedef struct {
 	uint8_t RunMe;
 } sTask;
 
-#define SCH_MAX_TASKS (30)
+#define SCH_MAX_TASKS (50)
 // The array of tasks
 sTask SCH_tasks_G[SCH_MAX_TASKS];
 

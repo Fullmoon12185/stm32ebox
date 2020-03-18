@@ -6,6 +6,7 @@
  */
 #include "main.h"
 #include "app_led_display.h"
+#include "app_uart.h"
 
 #define		NUMBER_OF_LEDS					20
 #define		TIME_FOR_FAST_BLINK_ON			1
@@ -117,9 +118,14 @@ void Led_Display(void) {
 
 
 void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
+	uint8_t strtmpLED[] = "                                     ";
 	if(position < NUMBER_OF_RELAYS){
+//		sprintf((char*) strtmpLED, "p = %d\t s = %d\r\n", (int) position, (int) status);
+//		UART3_SendToHost((uint8_t *)strtmpLED);
 		if(status == NODE_NORMAL) {
 			ledStatusBuffer[position] = (LED_COLOR)GREEN;
+		} else if(status == NODE_READY) {
+			ledStatusBuffer[position] = (LED_COLOR)BLINK_GREEN_SLOW;
 		} else if(status == CHARGING) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_YELLOW_SLOW;
 		} else if(status == CHARGEFULL) {
@@ -127,7 +133,7 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 		} else if(status == UNPLUG) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_YELLOW_FAST;
 		} else if(status == NO_POWER) {
-			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_SLOW;
+			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
 		} else if(status == NO_FUSE) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
 		} else if(status == NO_RELAY) {

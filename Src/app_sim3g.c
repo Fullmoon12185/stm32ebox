@@ -10,6 +10,7 @@
 #include "app_scheduler.h"
 #include "app_relay.h"
 #include "app_string.h"
+#include "app_power.h"
 
 #define DEBUG_SIM3G(X)    						//X
 
@@ -21,8 +22,8 @@
 #define TIMER_TO_POWER_OFF_SIM3G_TIMEOUT		1000
 
 
-#define TIMER_TO_RESET_SIM3G					500
-#define TIMER_TO_RESET_SIM3G_TIMEOUT			2000
+#define TIMER_TO_RESET_SIM3G					50
+#define TIMER_TO_RESET_SIM3G_TIMEOUT			200
 #define COMMAND_TIME_OUT						2000
 
 #define MAX_RETRY_NUMBER						3
@@ -142,14 +143,15 @@ void Clear_Sim3gDataProcessingBuffer(void);
 Sim3g_Machine_Type Sim3G_State_Machine [] = {
 		{POWER_ON_SIM3G, 									SM_Power_On_Sim3g									},
 		{WAIT_FOR_SIM3G_POWER_ON, 							SM_Wait_For_Sim3g_Power_On							},
-		{RESET_SIM3G, 										SM_Reset_Sim3g										},
-		{WAIT_FOR_SIM3G_RESET, 								SM_Wait_For_Sim3g_Reset		  						},
 		{POWER_OFF_SIM3G, 									SM_Power_Off_Sim3g									},
 		{WAIT_FOR_SIM3G_POWER_OFF, 							SM_Wait_For_Sim3g_Power_Off							},
-		{SIM3G_START_UP, 									SM_Sim3g_Startup								},
+		{RESET_SIM3G, 										SM_Reset_Sim3g										},
+		{WAIT_FOR_SIM3G_RESET, 								SM_Wait_For_Sim3g_Reset		  						},
+		{SIM3G_START_UP, 									SM_Sim3g_Startup									},
 		{WAIT_FOR_SIM3G_STARTUP_RESPONSE, 					SM_Wait_For_Sim3g_Startup_Response					},
 		{SIM3G_SETTING, 									SM_Sim3g_Setting									},
 		{WAIT_FOR_SIM3G_SETTING_RESPONSE, 					SM_Wait_For_Sim3g_Setting_Response					},
+
 
 };
 
@@ -201,7 +203,6 @@ void Sim3g_State_Display(void){
 			break;
 		case WAIT_FOR_SIM3G_STARTUP_RESPONSE:
 			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_STARTUP_RESPONSE"););
-			Set_Relay(1);
 			break;
 		case POWER_ON_SIM3G:
 			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_ON_SIM3G\r"););
@@ -434,7 +435,9 @@ void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID){
 	}
 	if(relayStatus == SET){
 		Set_Relay(relayIndex);
+		Set_Limit_Energy(relayIndex, 1000000);
 	} else {
+		Set_Limit_Energy(relayIndex, 0);
 		Reset_Relay(relayIndex);
 	}
 }

@@ -321,6 +321,7 @@ void SM_Mqtt_Wait_For_Response_From_Connect_State(void){
 	if(isRecvFromFlag){
 		isRecvFromFlag = RESET;
 		mqttState = MQTT_SUBSCRIBE_STATE;
+
 	} else if(isErrorFlag){
 		isErrorFlag = 0;
 		mqttState = MAX_MQTT_NUMBER_STATES;
@@ -368,6 +369,7 @@ void SM_Mqtt_Wait_For_Response_From_Subscribe_State(void){
 			if(subscribeTopicIndex < NUMBER_OF_SUBSCRIBE_TOPIC){
 				mqttState = MQTT_SUBSCRIBE_STATE;
 			} else {
+				subscribeTopicIndex = 0;
 				mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
 			}
 		}
@@ -405,6 +407,7 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Publish_State(void){
 		isReadyToSendDataToServer = RESET;
 		isSendOKFlag = RESET;
 		isErrorFlag = RESET;
+		isIPCloseFlag = RESET;
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 		mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_PUBLISH_STATE;
 	} else if(is_Mqtt_Command_Timeout()){
@@ -419,6 +422,9 @@ void SM_Mqtt_Wait_For_Response_From_Publish_State(void){
 		isErrorFlag = RESET;
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	} else if(is_Mqtt_Command_Timeout()){
+		mqttState = MAX_MQTT_NUMBER_STATES;
+	} else if(isIPCloseFlag){
+		isIPCloseFlag = RESET;
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
 }

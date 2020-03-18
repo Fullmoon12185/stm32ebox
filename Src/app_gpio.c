@@ -121,5 +121,15 @@ void ZeroPoint_Detection_Pin_Init(void){
 
 
 
+void Turn_On_Buzzer(void){
+	HAL_GPIO_WritePin(BUZZER_PORT, BUZZER_PIN, SET);
+}
+
+void Turn_Off_Buzzer(void){
+	HAL_GPIO_WritePin(BUZZER_PORT, BUZZER_PIN, RESET);
+}
+
+
+
 
 

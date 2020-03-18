@@ -8,7 +8,8 @@
 #define APP_GPIO_H_
 
 
-
+void Turn_On_Buzzer(void);
+void Turn_Off_Buzzer(void);
 
 void MX_GPIO_Init(void);
 
