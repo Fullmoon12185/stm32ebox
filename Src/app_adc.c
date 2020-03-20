@@ -408,11 +408,16 @@ void PowerConsumption_FSM(void){
 				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
 				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
 //				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
-				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*283) / (AdcBufferPeakPeak[i]);
+				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i] * 283) / (AdcBufferPeakPeak[i]);
 				if(PowerFactor[i] > 98){
 					PowerFactor[i] = 100;
 				}
-				Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 237, 225, PowerFactor[i], 1);
+				if(i >= 8){
+					Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 530, 230, PowerFactor[i], 1);
+				} else {
+					Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 237, 230, PowerFactor[i], 1);
+				}
+
 			}
 
 			adcState = ADC_REPORT_POWER_DATA;

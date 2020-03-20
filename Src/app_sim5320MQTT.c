@@ -50,9 +50,13 @@ const uint8_t CLIENT_ID[] 			= "ABCDEF";
 
 //Vinh cloudmqtt
 #if(CLOUD_MQTT == 1)
-const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"tailor.cloudmqtt.com\",13204\r";
-const uint8_t USERNAME[] 			= "lyooeovx";
-const uint8_t PASSWORD[] 			= "7Pq6P2PWLqME";
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"tailor.cloudmqtt.com\",13204\r";
+//const uint8_t USERNAME[] 			= "lyooeovx";
+//const uint8_t PASSWORD[] 			= "7Pq6P2PWLqME";
+
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt-dev.demo-application.net\",8083\r";
+const uint8_t USERNAME[] 			= "eboost-k2";
+const uint8_t PASSWORD[] 			= "ZbHzPb5W";
 
 #elif(MOSQUITTO == 1)
 const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"broker.hivemq.com\",1883\r";

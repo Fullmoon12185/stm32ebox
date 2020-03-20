@@ -44,12 +44,11 @@ uint32_t lastTimeErr, lastReport;
 
 uint8_t strtmpPower[] = "                                 ";
 
-void Node_Setup(void);
-void Node_Check(void);
-void Power_Setup(void);
+static void Node_Setup(void);
+static void Node_Check(void);
 
 
-void Node_Setup(void) {
+static void Node_Setup(void) {
 	for(uint8_t outletID = 0; outletID <= NUMBER_OF_RELAYS; outletID ++){
 		if (outletID == MAIN_INPUT) {	//setup for Main node
 			Main.currentTotal = 0;
@@ -78,7 +77,7 @@ void Node_Setup(void) {
 	}
 }
 
-void Node_Check(void) {
+static void Node_Check(void) {
 
 	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
 
@@ -107,12 +106,12 @@ void Node_Check(void) {
 			uint8_t tempOutletID = outletID - 1;
 
 			if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x02) > 0) {	//return NOFUSE
-				if (outletID < 4) {
+				if (outletID != 7) {
 					Main.nodes[outletID].nodeStatus = NO_FUSE;
 				}
 			} else if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x01) > 0
 					&& (Get_Relay_Status(tempOutletID) == SET)) {	//relay not working MUST and is Working
-				if (tempOutletID < 4) {
+				if (tempOutletID != 7) {
 					Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
 				}
 			} else if (Main.nodes[tempOutletID].current > 300000) {	// nodeValue from 0 to 1860
@@ -122,7 +121,7 @@ void Node_Check(void) {
 				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_MONEY;
 			} else if (Main.nodes[tempOutletID].limitEnergy == 0) {
 				Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
-			} else if (Main.nodes[tempOutletID].current >= 1000) {
+			} else if (Main.nodes[tempOutletID].current >= 10000) {
 				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 			} else if (Main.nodes[tempOutletID].nodeStatus == CHARGING) {
 				if (Main.nodes[tempOutletID].lastPower - Main.nodes[tempOutletID].power > 20) {
@@ -155,6 +154,13 @@ uint32_t Get_Power_Consumption(uint8_t outletID){
 	return 0;
 }
 
+NodeStatus Get_Node_Status(uint8_t outletID){
+	if(outletID < NUMBER_OF_RELAYS){
+		return Main.nodes[outletID].nodeStatus;
+	}
+	return 9;
+}
+
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period) {	//update and return energy ???
 	if (outletID == 0) {	//setup for Main node
 //		Main.ambientTemp = AdcDmaBuffer[10] * 0.08056641;	//chua tinh, LM35 10mV/C => C = V/10mV = ADC*3.3/4096 *100 = adc*0.08056641
@@ -162,7 +168,11 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 //		Main.valueRef =
 	} else if (outletID <= NUMBER_OF_RELAYS) {
 		uint8_t tempOutletID = outletID - 1;
-		Main.nodes[tempOutletID].current = current;
+		if (current <= 10000){
+			Main.nodes[tempOutletID].current = 0;
+		} else	{
+			Main.nodes[tempOutletID].current = current;
+		}
 		Main.nodes[tempOutletID].voltage = voltage;
 		Main.nodes[tempOutletID].powerFactor = power_factor;
 		Main.nodes[tempOutletID].power = Main.nodes[tempOutletID].voltage * Main.nodes[tempOutletID].current * Main.nodes[tempOutletID].powerFactor / 100000;	//in mA	// /100

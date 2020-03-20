@@ -235,7 +235,6 @@ void Update_Publish_Power_Message_All_Outlets(void){
 
 
 void Update_Publish_Status_Message(void){
-	static uint8_t chargingStatus = 1;
 	uint8_t publishMessageIndex = 0;
 	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
 		publish_message[publishMessageIndex] = 0;
@@ -247,12 +246,17 @@ void Update_Publish_Status_Message(void){
 		publish_message[publishMessageIndex++] = outletID + 0x30;
 		publish_message[publishMessageIndex++] = '-';
 		if(Get_Relay_Status(outletID)){
-			if(array_Of_Power_Consumption_In_WattHour[outletID] < 1000){
-				chargingStatus = 1;
+//			if(array_Of_Power_Consumption_In_WattHour[outletID] < 1000){
+//				chargingStatus = 1;
+//			} else {
+//				chargingStatus = 2;
+//			}
+			if((uint8_t)Get_Node_Status(outletID) <= 9){
+				publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID) + 0x30;
 			} else {
-				chargingStatus = 2;
+				publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)/10 + 0x30;
+				publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)%10 + 0x30;
 			}
-			publish_message[publishMessageIndex++] = chargingStatus + 0x30;
 		} else {
 			publish_message[publishMessageIndex++] = 0x30;
 		}
