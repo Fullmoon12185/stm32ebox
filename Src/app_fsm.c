@@ -17,7 +17,7 @@
 
 #define		BOX_ID	1
 #define		TIME_FOR_PING_REQUEST		6000 //5s
-#define		TIME_FOR_PUBLISH_MESSAGE	1000 //5s
+#define		TIME_FOR_PUBLISH_MESSAGE	500 //5s
 
 
 #define 	TIME_FOR_BUZZER				15

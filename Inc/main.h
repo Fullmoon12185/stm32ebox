@@ -58,7 +58,8 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 
-#define		BOX_ID		1
+#define		VERSION_EBOX		2
+#define		BOX_ID				1
 
 
 //#define B1_Pin 							GPIO_PIN_13
@@ -106,8 +107,11 @@ void Error_Handler(void);
 
 
 //3G control signals pins ports
+#if(VERSION_EBOX != 2)
 #define PC7_3G_WAKEUP					GPIO_PIN_7
 #define PC7_3G_WAKEUP_PORT				GPIOC
+#endif
+
 #define PC8_3G_PWRON					GPIO_PIN_8
 #define PC8_3G_PWRON_PORT				GPIOC
 #define PC9_3G_PERST					GPIO_PIN_9
@@ -115,8 +119,10 @@ void Error_Handler(void);
 #define PA8_3G_REG_EN					GPIO_PIN_8
 #define PA8_3G_REG_EN_PORT				GPIOA
 
+#if(VERSION_EBOX != 2)
 #define SIM5320_3G_WAKEUP					PC7_3G_WAKEUP
 #define SIM5320_3G_WAKEUP_PORT				PC7_3G_WAKEUP_PORT
+#endif
 #define SIM5320_3G_PWRON					PC8_3G_PWRON
 #define SIM5320_3G_PWRON_PORT				PC8_3G_PWRON_PORT
 #define SIM5320_3G_PERST					PC9_3G_PERST
@@ -200,9 +206,13 @@ void Error_Handler(void);
 #define 	NUMBER_OF_SAMPLES_PER_SECOND			200
 #define 	NUMBER_OF_ADC_CHANNELS					14
 
+#if(VERSION_EBOX == 2)
+#define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
+#define 	ZERO_POINT_DETECTION_PORT				GPIOC
+#else
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_14
 #define 	ZERO_POINT_DETECTION_PORT				GPIOC
-
+#endif
 
 //SPI2
 #define MASTER_BOARD
@@ -332,6 +342,10 @@ void Error_Handler(void);
 #define RELAY_PORT_9						PB4_OUT9_PORT
 
 
+#if(VERSION_EBOX == 2)
+#define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
+#define PD2_RELAY_ENABLE_PORT						GPIOD
+#endif
 
 
 #define		NUMBER_OF_SUBSCRIBE_TOPIC	2

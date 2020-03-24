@@ -176,23 +176,23 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.nodes[tempOutletID].voltage = voltage;
 		Main.nodes[tempOutletID].powerFactor = power_factor;
 		Main.nodes[tempOutletID].power = Main.nodes[tempOutletID].voltage * Main.nodes[tempOutletID].current * Main.nodes[tempOutletID].powerFactor / 100000;	//in mA	// /100
-		if (Main.nodes[tempOutletID].limitEnergy > 0){
+		if (Main.nodes[tempOutletID].limitEnergy > 0 || Get_Relay_Status(tempOutletID) == SET){
 			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period/100;
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID == 3 || tempOutletID == 8){
-			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor);
-			UART3_SendToHost((uint8_t *)strtmpPower);
-			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current);
-			UART3_SendToHost((uint8_t *)strtmpPower);
-			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power);
-			UART3_SendToHost((uint8_t *)strtmpPower);
-
-			sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy);
-			UART3_SendToHost((uint8_t *)strtmpPower);
-			UART3_SendToHost((uint8_t *)"\r\n");
-		}
+//		if(tempOutletID == 3 || tempOutletID == 0){
+//			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor);
+//			UART3_SendToHost((uint8_t *)strtmpPower);
+//			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current);
+//			UART3_SendToHost((uint8_t *)strtmpPower);
+//			sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power);
+//			UART3_SendToHost((uint8_t *)strtmpPower);
+//
+//			sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy);
+//			UART3_SendToHost((uint8_t *)strtmpPower);
+//			UART3_SendToHost((uint8_t *)"\r\n");
+//		}
 
 
 	}

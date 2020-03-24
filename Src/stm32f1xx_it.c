@@ -150,7 +150,13 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
+#if(VERSION_EBOX == 2)
+void EXTI9_5_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(ZERO_POINT_DETECTION_PIN);
+}
 
+#else
 /**
   * @brief This function handles EXTI line[15:10] interrupts.
   */
@@ -159,6 +165,7 @@ void EXTI15_10_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(ZERO_POINT_DETECTION_PIN);
 //  test2();
 }
+#endif
 /**
   * @brief  This function handles TIM interrupt request.
   * @param  None
@@ -174,6 +181,8 @@ void USART1_IRQHandler(void)
 {
 	HAL_UART_IRQHandler(&Uart1Handle);
  }
+
+
 
 
 /**

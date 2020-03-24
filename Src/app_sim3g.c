@@ -258,10 +258,10 @@ void Sim3g_GPIO_Init(void){
 	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull  = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-
+#if(VERSION_EBOX != 2)
 	GPIO_InitStruct.Pin = SIM5320_3G_WAKEUP;
 	HAL_GPIO_Init(SIM5320_3G_WAKEUP_PORT, &GPIO_InitStruct);
-
+#endif
 	GPIO_InitStruct.Pin = SIM5320_3G_PWRON;
 	HAL_GPIO_Init(SIM5320_3G_PWRON_PORT, &GPIO_InitStruct);
 	GPIO_InitStruct.Pin = SIM5320_3G_PERST;
@@ -269,9 +269,9 @@ void Sim3g_GPIO_Init(void){
 	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
 	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
 
-
+#if(VERSION_EBOX != 2)
 	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
-
+#endif
 }
 
 void Sim3g_Disable(void){
@@ -282,11 +282,14 @@ void Sim3g_Enable(void){
 
 }
 
+#if(VERSION_EBOX != 2)
 void Sim3g_WakeUp(void){
 	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
 	HAL_Delay(500);
 	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_RESET);
 }
+#endif
+
 void Power_Signal_Low(void){
 	HAL_GPIO_WritePin(PC8_3G_PWRON_PORT, PC8_3G_PWRON, GPIO_PIN_RESET);
 }
@@ -361,6 +364,7 @@ void Setting_Up_Timeout(void){
 }
 
 void SM_Sim3g_Startup(void){
+	isPBDoneFlag = RESET;
 	sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
 }
 
@@ -371,6 +375,7 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 		atCommandArrayIndex = 0;
 		sim3g_Retry_Counter = 0;
 	} else if(isErrorFlag){
+		isErrorFlag = RESET;
 		sim3gState = POWER_OFF_SIM3G;
 	} else {
 		sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
@@ -380,6 +385,8 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 
 void SM_Sim3g_Setting(void){
 	Setting_Up_Timeout();
+	isOKFlag = RESET;
+	isErrorFlag = RESET;
 	ATcommandSending((uint8_t *)atCommandArrayForSetupSim3g[atCommandArrayIndex].ATCommand);
 	sim3gState = WAIT_FOR_SIM3G_SETTING_RESPONSE;
 }

@@ -52,7 +52,10 @@ uint32_t array_Of_Power_Consumption[NUMBER_OF_RELAYS];
 uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_RELAYS];
 
 
-
+/* Variable to report ADC analog watchdog status:   */
+/*   RESET <=> voltage into AWD window   */
+/*   SET   <=> voltage out of AWD window */
+FlagStatus         ubAnalogWatchdogStatus = RESET;  /* Set into analog watchdog interrupt callback */
 FlagStatus AdcDmaStoreFlag = RESET;
 #define ADC_READING_TIME_OUT	95
 
@@ -231,8 +234,16 @@ void ADC1_Init(void)
   {
     Error_Handler();
   }
-}
 
+  /* Set analog watchdog thresholds in order to be between steps of DAC       */
+    /* voltage.                                                                 */
+    /*  - High threshold: between DAC steps 1/2 and 3/4 of full range:          */
+    /*                    5/8 of full range (4095 <=> Vdda=3.3V): 2559<=> 2.06V */
+    /*  - Low threshold:  between DAC steps 0 and 1/4 of full range:            */
+    /*                    1/8 of full range (4095 <=> Vdda=3.3V): 512 <=> 0.41V */
+
+
+}
 
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
@@ -324,6 +335,9 @@ void PowerConsumption_FSM(void){
 			AdcDmaBufferIndexFilter = 0;
 			adcState = ADC_START_GETTING;
 		}
+		if(is_Adc_Reading_Timeout()){
+			adcState = ADC_REPORT_POWER_DATA;
+		}
 		break;
 
 	case ADC_START_GETTING:
@@ -337,6 +351,9 @@ void PowerConsumption_FSM(void){
 			} else if(externalInterruptCounter >= 3) {
 				adcState = ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE;
 			}
+		}
+		if(is_Adc_Reading_Timeout()){
+			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
 
@@ -355,6 +372,9 @@ void PowerConsumption_FSM(void){
 				AdcDmaBufferIndexFilter = 0;
 			}
 			adcState = ADC_START_GETTING;
+		}
+		if(is_Adc_Reading_Timeout()){
+			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
 	case ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE:
@@ -409,22 +429,42 @@ void PowerConsumption_FSM(void){
 				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
 //				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
 				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i] * 283) / (AdcBufferPeakPeak[i]);
-				if(PowerFactor[i] > 98){
+				if(PowerFactor[i] >= 98){
 					PowerFactor[i] = 100;
 				}
+				if(i == 3 || i == 0){
+					sprintf((char*) strtmp, "%d\t", (int) PowerFactor[i]);
+					UART3_SendToHost((uint8_t *)strtmp);
+					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i] * 237);
+					UART3_SendToHost((uint8_t *)strtmp);
+					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferPeakPeak[i]);
+					UART3_SendToHost((uint8_t *)strtmp);
+					UART3_SendToHost((uint8_t *)"\r\n");
+				}
+
+
+#if(VERSION_EBOX == 2)
+				Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 237, 230, PowerFactor[i], 1);
+#else
+
 				if(i >= 8){
 					Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 530, 230, PowerFactor[i], 1);
 				} else {
-					Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 237, 230, PowerFactor[i], 1);
+					Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 236, 230, PowerFactor[i], 1);
 				}
-
+#endif
 			}
+
 
 			adcState = ADC_REPORT_POWER_DATA;
 			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
 		} else {
 			externalInterruptCounter = 0;
 			adcState = ADC_FIND_ZERO_VOLTAGE_POINT;
+		}
+
+		if(is_Adc_Reading_Timeout()){
+			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
 
@@ -442,7 +482,7 @@ void PowerConsumption_FSM(void){
 		break;
 
 	default:
-		adcState = ADC_SETUP_TIMER_ONE_SECOND;
+		adcState = ADC_REPORT_POWER_DATA;
 		break;
 	}
 }

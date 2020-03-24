@@ -23,7 +23,7 @@
 #include "app_init.h"
 #include "app_relay.h"
 #include "app_power.h"
-
+#include "app_iwatchdog.h"
 
 
 enum InitState initState = HAL_INIT;
@@ -84,7 +84,7 @@ void System_Initialization(void)
         case ACCELERATOR_INIT:
         	break;
         case WATCH_DOG_INIT:
-
+//        	MX_IWDG_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
             break;
         case START_DMA_ADC:

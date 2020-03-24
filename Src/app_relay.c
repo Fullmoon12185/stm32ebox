@@ -56,6 +56,10 @@ uint8_t is_Set_Relay_Timeout(void){
 	return set_Relay_TimeoutFlag;
 }
 
+static void Relay_Output_Control_Enable(void){
+	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);
+}
+
 void Relay_Init(void){
 	uint8_t i;
 	for (i = 0; i < NUMBER_OF_RELAYS; i ++){
@@ -63,7 +67,10 @@ void Relay_Init(void){
 	}
 	Update_Relay_Physical_Status();
 	set_Relay_TimeoutFlag = 1;
+	Relay_Output_Control_Enable();
 }
+
+
 void Set_Relay(uint8_t relayIndex){
 	if(relayIndex > 9) return;
 	if(array_Of_Relay_Statuses[relayIndex] == RESET){

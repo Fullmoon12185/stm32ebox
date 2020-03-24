@@ -30,6 +30,8 @@
 #include "app_test.h"
 #include "app_pcf8574.h"
 #include "app_gpio.h"
+#include "app_iwatchdog.h"
+
 
 typedef enum {
 	POWER_CONSUMPTION_CALCULATION = 0,
@@ -54,14 +56,14 @@ int main(void)
 	Turn_On_Buzzer();
 	HAL_Delay(100);
 	Turn_Off_Buzzer();
-	//	SCH_Add_Task(test3, 3, 100);
-	SCH_Add_Task(PCF_read, 7, 100);
-//	SCH_Add_Task(Led_Display, 5, 5);
-	SCH_Add_Task(LED_Display_FSM, 0, 20);
+//	SCH_Add_Task(test2, 3, 100);
+//	SCH_Add_Task(PCF_read, 7, 100);
+//	SCH_Add_Task(LED_Display_FSM, 0, 20);
 //	Set_Relay(0);
 //	Set_Relay(3);
 //	Set_Relay(8);
 	while (1){
+//		Watchdog_Refresh();
 		SCH_Dispatch_Tasks();
 		Main_FSM();
 	}
@@ -72,9 +74,10 @@ int main(void)
 
 void Main_FSM(void){
 
+//	Zero_Point_Detection();
 	PowerConsumption_FSM();
 	FSM_Process_Data_Received_From_Sim3g();
-
+//	Server_Communication();
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:
 
@@ -102,8 +105,8 @@ void Main_FSM(void){
 void Error_Handler(void)
 {
 	while(1){
-//		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
-		HAL_Delay(100);
+		HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+		HAL_Delay(50);
 	}
 }
 
