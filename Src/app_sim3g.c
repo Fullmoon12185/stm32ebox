@@ -83,7 +83,7 @@ FlagStatus isReceiveDataFromServer = RESET;
 
 
 static uint8_t sim3g_TimeoutFlag = 0;
-static uint8_t sim3g_Timeout_Task_Index = SCH_MAX_TASKS;
+static uint32_t sim3g_Timeout_Task_Index = NO_TASK_ID;
 static uint8_t sim3g_Retry_Counter = 0;
 
 

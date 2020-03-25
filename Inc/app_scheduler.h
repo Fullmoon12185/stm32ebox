@@ -7,6 +7,14 @@
 
 #ifndef APP_SCHEDULER_H_
 #define APP_SCHEDULER_H_
+
+#define	NO_TASK_ID				0
+
+#define SCH_MAX_TASKS 			10
+
+
+
+
 typedef struct {
 // Pointer to the task (must be a 'void (void)' function)
 	void ( * pTask)(void);
@@ -16,17 +24,23 @@ typedef struct {
 	uint32_t Period;
 // Incremented (by scheduler) when task is due to execute
 	uint8_t RunMe;
+	uint8_t TaskID;
 } sTask;
 
-#define SCH_MAX_TASKS (50)
-// The array of tasks
-sTask SCH_tasks_G[SCH_MAX_TASKS];
 
 
+
+
+
+void Scheduler_Init(void);
+void Insert_Task_ID_To_Queue(uint8_t taskID);
+uint8_t Get_Task_ID_From_Queue(void);
+
+uint8_t Find_Available_Task_Index(void);
 void SCH_Update(void);
-uint8_t SCH_Add_Task(void (* pFunction)(), const uint32_t DELAY, const uint32_t PERIOD);
+uint8_t SCH_Add_Task(void (* pFunction)(), uint32_t DELAY, uint32_t PERIOD);
 void SCH_Dispatch_Tasks(void);
-uint8_t SCH_Delete_Task(uint8_t TASK_INDEX);
+uint8_t SCH_Delete_Task(uint8_t TASK_ID);
 FlagStatus isTaskDone(uint8_t taskIndex);
 
 

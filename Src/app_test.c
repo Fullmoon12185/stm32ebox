@@ -12,6 +12,8 @@
 #include "app_uart.h"
 #include "app_sim5320MQTT.h"
 #include "app_pcf8574.h"
+#include "app_scheduler.h"
+#include "app_gpio.h"
 
 
 extern const uint8_t SUBSCRIBE_TOPIC_1[];
@@ -19,12 +21,15 @@ extern const uint8_t SUBSCRIBE_TOPIC_2[];
 
 extern const uint8_t PUBLISH_TOPIC_STATUS[];
 extern const uint8_t PUBLISH_TOPIC_POWER[];
-
+uint8_t strTest[] = "                                   ";
 void test1(void){
 
 
 	static uint8_t bool2 = 0;
 	static uint8_t index2 = 0;
+
+	sprintf((char*) strTest, "test1 %d\r\n", (int) index2);
+	UART3_SendToHost((uint8_t *)strTest);
 	if(bool2 == 0){
 		Set_Relay(index2);
 	} else {
@@ -41,6 +46,9 @@ void test1(void){
 }
 void test3(void){
 
+	static int test3Counter = 0;
+	sprintf((char*) strTest, "seconds = %d\r\n", (int) test3Counter++);
+	UART3_SendToHost((uint8_t *)strTest);
 	Test_Led_Display();
 
 
@@ -66,9 +74,21 @@ void test5(void){
 }
 
 void test6(void){
+
+	SCH_Add_Task(test1, 0, 1000);
+	HAL_Delay(10);
+	SCH_Add_Task(test3, 2, 100);
+	HAL_Delay(10);
+	SCH_Add_Task(test2, 3, 200);
+	HAL_Delay(10);
+
 }
 
 void test7(void){
 	TestSendATcommand();
 }
 
+
+void test8(void){
+
+}

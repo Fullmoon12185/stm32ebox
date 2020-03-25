@@ -82,9 +82,9 @@ uint8_t commandBufferIndex = 0;
 uint8_t mqttMessageIndex = 0;
 uint8_t subscribeTopicIndex = 0;
 uint8_t publishTopicIndex = 0;
-uint8_t mqtt_Timeout_Task_Index = SCH_MAX_TASKS;
+uint32_t mqtt_Timeout_Task_Index = NO_TASK_ID;
 
-uint8_t mqtt_Timeout_Subscribe_Task_Index = SCH_MAX_TASKS;
+uint32_t mqtt_Timeout_Subscribe_Task_Index = NO_TASK_ID;
 
 
 static uint8_t mqtt_TimeoutFlag = 0;

@@ -45,6 +45,7 @@ void Main_FSM(void);
 
 int main(void)
 {
+
 	System_Initialization();
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
@@ -56,9 +57,8 @@ int main(void)
 	Turn_On_Buzzer();
 	HAL_Delay(100);
 	Turn_Off_Buzzer();
-//	SCH_Add_Task(test2, 3, 100);
-//	SCH_Add_Task(PCF_read, 7, 100);
-//	SCH_Add_Task(LED_Display_FSM, 0, 20);
+
+	SCH_Add_Task(PCF_read, 7, 100);
 //	Set_Relay(0);
 //	Set_Relay(3);
 //	Set_Relay(8);
@@ -86,8 +86,8 @@ void Main_FSM(void){
 		}
 		break;
 	case POST_DATA_TO_SERVER:
-		Server_Communication();
-		Power_Loop();
+//		Server_Communication();
+//		Power_Loop();
 		if(Is_Done_Getting_ADC() == RESET){
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}
@@ -104,10 +104,10 @@ void Main_FSM(void){
   */
 void Error_Handler(void)
 {
-	while(1){
-		HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
-		HAL_Delay(50);
-	}
+//	while(1){
+//		HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+//		HAL_Delay(50);
+//	}
 }
 
 #ifdef  USE_FULL_ASSERT

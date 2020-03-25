@@ -24,6 +24,11 @@
 #include "app_relay.h"
 #include "app_power.h"
 #include "app_iwatchdog.h"
+#include "app_scheduler.h"
+
+
+#include "app_test.h"
+
 
 
 enum InitState initState = HAL_INIT;
@@ -37,7 +42,13 @@ void System_Initialization(void)
             break;
         case SYSTEM_CLOCK_INIT:
         	SystemClock_Config();
+
             break;
+        case SCHEDULER_INIT:
+        	Scheduler_Init();
+//        	test6();
+
+        	break;
         case UART_INIT:
         	UART3_Init();
         	UART1_Init();

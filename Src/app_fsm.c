@@ -35,10 +35,10 @@ extern int32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
 extern FlagStatus array_Of_Outlet_Status[NUMBER_OF_ADC_CHANNELS];
 
 uint8_t ping_Request_TimeoutFlag = 0;
-uint8_t ping_Request_TimeoutIndex = SCH_MAX_TASKS;
+uint32_t ping_Request_TimeoutIndex = NO_TASK_ID;
 
 uint8_t publish_message_TimeoutFlag = 0;
-uint8_t publish_message_TimeoutIndex = SCH_MAX_TASKS;
+uint32_t publish_message_TimeoutIndex = NO_TASK_ID;
 
 
 typedef enum {

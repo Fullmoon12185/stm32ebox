@@ -70,7 +70,7 @@ typedef enum {
 }ADC_STATE;
 
 uint8_t adc_TimeoutFlag = 0;
-uint8_t adc_Timeout_Task_Index = SCH_MAX_TASKS;
+uint8_t adc_Timeout_Task_Index = 0;
 FlagStatus is_Ready_To_Find_Min_Max_Voltage = RESET;
 ADC_STATE adcState = ADC_SETUP_TIMER_ONE_SECOND;
 ADC_STATE pre_adcState = MAX_NUMBER_OF_ADC_STATES;
@@ -316,7 +316,7 @@ uint8_t filterNoiseState = 0;
 void PowerConsumption_FSM(void){
 	static uint8_t externalInterruptCounter = 0;
 	static uint8_t cycleCounter = 0;
-	Adc_State_Display();
+//	Adc_State_Display();
 	switch(adcState){
 	case ADC_SETUP_TIMER_ONE_SECOND:
 		SCH_Delete_Task(adc_Timeout_Task_Index);

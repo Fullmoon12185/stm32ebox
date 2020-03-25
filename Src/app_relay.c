@@ -43,7 +43,7 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 };
 
 
-uint8_t relay_TimeoutFlag_Index = SCH_MAX_TASKS;
+uint32_t relay_TimeoutFlag_Index = NO_TASK_ID;
 uint8_t set_Relay_TimeoutFlag = 1;
 
 void Clear_Relay_Timeout_Flag(void){
