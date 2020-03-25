@@ -9,6 +9,7 @@
 void LED_Init(void);
 void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
+void SPI_CS_Init(void);
 void ZeroPoint_Detection_Pin_Init(void);
 
 
@@ -35,6 +36,7 @@ void MX_GPIO_Init(void)
 	LED_Init();
 	GPIO_Relay_Init();
 	Buzzer_Init();
+	SPI_CS_Init();
 	ZeroPoint_Detection_Pin_Init();
 }
 
@@ -85,9 +87,10 @@ void GPIO_Relay_Init(void){
 	GPIO_InitStruct.Pin = RELAY_PIN_9;
 	HAL_GPIO_Init(RELAY_PORT_9, &GPIO_InitStruct);
 
+#if (VERSION_EBOX == 2)
 	GPIO_InitStruct.Pin = PD2_RELAY_ENABLE_PIN;
 	HAL_GPIO_Init(PD2_RELAY_ENABLE_PORT, &GPIO_InitStruct);
-
+#endif
 }
 
 
@@ -103,7 +106,16 @@ void Buzzer_Init(void){
 	HAL_GPIO_Init(BUZZER_PORT, &GPIO_InitStruct);
 }
 
+void SPI_CS_Init(void){
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+
+	GPIO_InitStruct.Pin = SPI_CS_PIN;
+	HAL_GPIO_Init(SPI_CS_PORT, &GPIO_InitStruct);
+}
 
 void ZeroPoint_Detection_Pin_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};

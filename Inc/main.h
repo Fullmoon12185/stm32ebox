@@ -58,7 +58,7 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 
-#define		VERSION_EBOX		2
+#define		VERSION_EBOX		1
 #define		BOX_ID				1
 
 
@@ -105,7 +105,9 @@ void Error_Handler(void);
 #define BUZZER_PIN						PB5_BUZZER_PIN
 #define BUZZER_PORT						PB5_BUZZER_PORT
 
-
+//SPI CS pin
+#define SPI_CS_PIN						GPIO_PIN_12
+#define SPI_CS_PORT						GPIOB
 //3G control signals pins ports
 #if(VERSION_EBOX != 2)
 #define PC7_3G_WAKEUP					GPIO_PIN_7
