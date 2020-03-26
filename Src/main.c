@@ -100,8 +100,11 @@ int main(void)
 // 		UART3_SendToHost((uint8_t *)strtmp1);
 
 	while (1){
-		Watchdog_Refresh();
+//		UART3_SendToHost(".");
+//		Watchdog_Refresh();
+//		UART3_SendToHost(",");
 		SCH_Dispatch_Tasks();
+//		UART3_SendToHost("-");
 		Main_FSM();
 	}
 	return 0;

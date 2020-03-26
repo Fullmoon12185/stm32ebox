@@ -15,7 +15,7 @@
 #include "app_power.h"
 
 
-#define		DEBUG_ADC(X)								X
+#define		DEBUG_ADC(X)								//X
 #define 	NUMBER_OF_SAMPLES_FOR_SMA					3
 
 #define		REFERENCE_1V8_VOLTAGE_INDEX					12
@@ -47,7 +47,7 @@ int32_t AdcBufferPeakMax[NUMBER_OF_RELAYS],
 int32_t AdcDmaBufferIndex = 0, AdcDmaBufferIndexFilter = 0;
 int32_t AdcBufferCurrent[NUMBER_OF_RELAYS];
 
-uint8_t strtmp[] = "Begin read ADcs \r\n";
+uint8_t strtmp[] = "Begin read ADcs                                 \r\n";
 uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_RELAYS];
 uint32_t array_Of_Average_Vrms_ADC_Values[NUMBER_OF_RELAYS];
 //
@@ -55,6 +55,7 @@ uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_RELAYS];
 uint32_t array_Of_Power_Consumption[NUMBER_OF_RELAYS];
 uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_RELAYS];
 
+uint32_t tmpLastTimePrintTemp;
 float val_Of_Temperature_LM35, val_Of_Temperature_Internal;
 
 /* Variable to report ADC analog watchdog status:   */
@@ -219,6 +220,7 @@ void ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = ADC_REGULAR_RANK_12;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -438,15 +440,15 @@ void PowerConsumption_FSM(void){
 				if(PowerFactor[i] >= 98){
 					PowerFactor[i] = 100;
 				}
-				if(i == 3 || i == 0){
-					sprintf((char*) strtmp, "%d\t", (int) PowerFactor[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i] * 237);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferPeakPeak[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					UART3_SendToHost((uint8_t *)"\r\n");
-				}
+//				if(i == 3 || i == 0){
+//					sprintf((char*) strtmp, "%d\t", (int) PowerFactor[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i] * 237);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferPeakPeak[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					UART3_SendToHost((uint8_t *)"\r\n");
+//				}
 
 
 #if(VERSION_EBOX == 2)
@@ -461,16 +463,22 @@ void PowerConsumption_FSM(void){
 #endif
 			}
 //report adc of temperature
-			val_Of_Temperature_LM35 = AdcDmaBuffer[TEMPERATURE_LM35_INDEX] * 0.08;//  / 4096 * 3.3 *1000/10;//10mV/oC
-//			val_Of_Temperature_Internal = AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX];//temp = (V25 - vSense) / AVG_SLOPE + 25.0f;
-//			const float         AVG_SLOPE   = 4.3E-03;      // slope (gradient) of temperature line function  [V/°C]
-//			const float         V25         = 1.43;         // sensor's voltage at 25°C [V]
-//			const float         ADC_TO_VOLT = 3.3 / 4096;   // conversion coefficient of digital value to voltage [V]
-//			                                                // when using 3.3V ref. voltage at 12-bit resolution (2^12 = 4096)
-//			 vSense = adcValue * ADC_TO_VOLT;
-			val_Of_Temperature_Internal = (1.43 - (AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX] * 3.3 / 4096))/ 4.3E-03 + 25.0f ;//AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX];//temp = (V25 - vSense) / AVG_SLOPE + 25.0f;
+			tmpLastTimePrintTemp ++;
+			if(tmpLastTimePrintTemp > 5){
+				tmpLastTimePrintTemp = 0;
+				val_Of_Temperature_LM35 = AdcDmaBuffer[TEMPERATURE_LM35_INDEX] * 0.0805664;//0.1245;//0.0805664;// 0.322;// 0.08;//  / 4096 * 3.3 *1000/10;//10mV/oC
+	//			val_Of_Temperature_Internal = AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX];//temp = (V25 - vSense) / AVG_SLOPE + 25.0f;
+	//			const float         AVG_SLOPE   = 4.3E-03;      // slope (gradient) of temperature line function  [V/°C]
+	//			const float         V25         = 1.43;         // sensor's voltage at 25°C [V]
+	//			const float         ADC_TO_VOLT = 3.3 / 4096;   // conversion coefficient of digital value to voltage [V]
+	//			                                                // when using 3.3V ref. voltage at 12-bit resolution (2^12 = 4096)
+	//			 vSense = adcValue * ADC_TO_VOLT;
+				val_Of_Temperature_Internal = (AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX] * 0.1873 - 332.558 + 25000) /1000;// ( (AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX] * 3.3 / 4096.0) - 1.43)/ 4.3 + 25.0 ;//AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX];//temp = (V25 - vSense) / AVG_SLOPE + 25.0f;
 
-			Temperature_Update( val_Of_Temperature_LM35,  val_Of_Temperature_Internal);
+				Temperature_Update( val_Of_Temperature_LM35, val_Of_Temperature_Internal );// val_Of_Temperature_Internal);
+				sprintf((char*) strtmp, "app_adc: lm:%d \t int:%d \r\n",  (int)val_Of_Temperature_LM35, (int)val_Of_Temperature_Internal);
+						 		UART3_SendToHost((uint8_t *)strtmp);
+			}
 			adcState = ADC_REPORT_POWER_DATA;
 			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
 		} else {

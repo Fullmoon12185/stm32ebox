@@ -217,9 +217,6 @@ void Power_Loop(void) {
 		powerFsmState = POWER_BEGIN_STATE;
 		break;
 	case POWER_BEGIN_STATE:
-		sprintf((char*) strtmpPower, "lm:%d \t int:%d \r\n", (int) Main.ambientTemp, (int)Main.internalTemp);
-		 		UART3_SendToHost((uint8_t *)strtmpPower);
-
 		powerFsmState = POWER_CHECK_STATUS_STATE;
 		break;
 	case POWER_CHECK_STATUS_STATE:
@@ -232,7 +229,7 @@ void Power_Loop(void) {
 			powerFsmState = POWER_ERROR_HANDLER_STATE;
 			Led_Display_Set_All(RED);
 		} else if (Main.status == SYSTEM_OVER_TEMP) {
-			UART3_SendToHost((uint8_t*) "System over temp \r\n");
+//			UART3_SendToHost((uint8_t*) "System over temp \r\n");
 			powerFsmState = POWER_WARNING_HANDLER_STATE;
 			Led_Display_Set_All(YELLOW);
 		} else if (Main.status == NODE_OVER_TOTAL || Main.status == NODE_UNDER_TOTAL) {
