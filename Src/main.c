@@ -36,6 +36,21 @@
 #include "app_25LC512.h"
 
 
+
+#define UNSIGNED_INT_FIRST_EEPROM_DATA_ADDRESS 0x00C9
+
+typedef enum {
+	POWER_CONSUMPTION_CALCULATION = 0,
+	POST_DATA_TO_SERVER,
+	MAX_MAIN_FSM_NUMBER_STATES
+} MAIN_FSM_STATE;
+
+MAIN_FSM_STATE mainState = POWER_CONSUMPTION_CALCULATION;
+
+void Main_FSM(void);
+
+
+
 //#define UNSIGNED_CHAR_FIRST_EEPROM_DATA_ADDRESS 0x0001
 //#define UNSIGNED_CHAR_SECOND_EEPROM_DATA_ADDRESS 0x0100
 //#define UNSIGNED_INT_FIRST_EEPROM_DATA_ADDRESS 0x00C9
@@ -68,15 +83,26 @@ int main(void)
 	System_Initialization();
  	MX_GPIO_Init();
 
+ 	Turn_On_Buzzer();
+	HAL_Delay(100);
+	Turn_Off_Buzzer();
+	HAL_Delay(100);
+	Turn_On_Buzzer();
+	HAL_Delay(100);
+	Turn_Off_Buzzer();
+
  	eeprom_read_outlet  (&i, &s, &e, &l);
- 	 s ++;
- 	 e++;
- 	 l++;
- 	eeprom_write_outlet (i, s, e, l);
- 	sprintf((char*) strtmp1, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
- 		UART3_SendToHost((uint8_t *)strtmp1);
+// 	 s ++;
+// 	 e++;
+// 	 l++;
+// 	eeprom_write_outlet (i, s, e, l);
+// 	sprintf((char*) strtmp1, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
+// 		UART3_SendToHost((uint8_t *)strtmp1);
 
 	while (1){
+		Watchdog_Refresh();
+		SCH_Dispatch_Tasks();
+		Main_FSM();
 	}
 	return 0;
 }
@@ -146,33 +172,33 @@ int main(void)
 //	}
 //	return 0;
 //}
-//
-//
-//
-//void Main_FSM(void){
-//
-////	Zero_Point_Detection();
-//	PowerConsumption_FSM();
-//	FSM_Process_Data_Received_From_Sim3g();
-////	Server_Communication();
-//	switch(mainState){
-//	case POWER_CONSUMPTION_CALCULATION:
-//
-//		if(Is_Done_Getting_ADC() == SET){
-//			mainState = POST_DATA_TO_SERVER;
-//		}
-//		break;
-//	case POST_DATA_TO_SERVER:
-//		Server_Communication();
-//		Power_Loop();
-//		if(Is_Done_Getting_ADC() == RESET){
-//			mainState = POWER_CONSUMPTION_CALCULATION;
-//		}
-//		break;
-//	default:
-//		break;
-//	}
-//}
+
+
+
+void Main_FSM(void){
+
+//	Zero_Point_Detection();
+	PowerConsumption_FSM();
+	FSM_Process_Data_Received_From_Sim3g();
+//	Server_Communication();
+	switch(mainState){
+	case POWER_CONSUMPTION_CALCULATION:
+
+		if(Is_Done_Getting_ADC() == SET){
+			mainState = POST_DATA_TO_SERVER;
+		}
+		break;
+	case POST_DATA_TO_SERVER:
+		Server_Communication();
+		Power_Loop();
+		if(Is_Done_Getting_ADC() == RESET){
+			mainState = POWER_CONSUMPTION_CALCULATION;
+		}
+		break;
+	default:
+		break;
+	}
+}
 
 
 /**

@@ -17,7 +17,11 @@
 
 #define		DEBUG_ADC(X)								X
 #define 	NUMBER_OF_SAMPLES_FOR_SMA					3
+
 #define		REFERENCE_1V8_VOLTAGE_INDEX					12
+#define 	TEMPERATURE_LM35_INDEX						11
+#define 	TEMPERATURE_INTERNAL_INDEX					13
+
 #define		DIFFERENCE_ADC_VALUE_THRESHOLD				10
 
 ADC_HandleTypeDef ADC1Handle;
@@ -51,6 +55,7 @@ uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_RELAYS];
 uint32_t array_Of_Power_Consumption[NUMBER_OF_RELAYS];
 uint32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_RELAYS];
 
+float val_Of_Temperature_LM35, val_Of_Temperature_Internal;
 
 /* Variable to report ADC analog watchdog status:   */
 /*   RESET <=> voltage into AWD window   */
@@ -371,6 +376,7 @@ void PowerConsumption_FSM(void){
 			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
 				AdcDmaBufferIndexFilter = 0;
 			}
+
 			adcState = ADC_START_GETTING;
 		}
 		if(is_Adc_Reading_Timeout()){
@@ -454,8 +460,17 @@ void PowerConsumption_FSM(void){
 				}
 #endif
 			}
+//report adc of temperature
+			val_Of_Temperature_LM35 = AdcDmaBuffer[TEMPERATURE_LM35_INDEX] * 0.08;//  / 4096 * 3.3 *1000/10;//10mV/oC
+//			val_Of_Temperature_Internal = AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX];//temp = (V25 - vSense) / AVG_SLOPE + 25.0f;
+//			const float         AVG_SLOPE   = 4.3E-03;      // slope (gradient) of temperature line function  [V/°C]
+//			const float         V25         = 1.43;         // sensor's voltage at 25°C [V]
+//			const float         ADC_TO_VOLT = 3.3 / 4096;   // conversion coefficient of digital value to voltage [V]
+//			                                                // when using 3.3V ref. voltage at 12-bit resolution (2^12 = 4096)
+//			 vSense = adcValue * ADC_TO_VOLT;
+			val_Of_Temperature_Internal = (1.43 - (AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX] * 3.3 / 4096))/ 4.3E-03 + 25.0f ;//AdcDmaBuffer[TEMPERATURE_INTERNAL_INDEX];//temp = (V25 - vSense) / AVG_SLOPE + 25.0f;
 
-
+			Temperature_Update( val_Of_Temperature_LM35,  val_Of_Temperature_Internal);
 			adcState = ADC_REPORT_POWER_DATA;
 			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
 		} else {

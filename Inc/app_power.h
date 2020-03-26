@@ -76,6 +76,7 @@ typedef struct Commands {
 } Command;
 
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period);
+void Temperature_Update(float temp_LM35, float temp_Internal);
 uint32_t Get_Power_Consumption(uint8_t outletID);
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy);
 NodeStatus Get_Node_Status(uint8_t outletID);

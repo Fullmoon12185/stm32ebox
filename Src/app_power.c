@@ -198,7 +198,10 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 	}
 }
 
-
+void Temperature_Update(float temp_LM35, float temp_Internal){
+	Main.internalTemp = temp_Internal;
+	Main.ambientTemp = temp_LM35;
+}
 
 
 void Power_Setup(void) {
@@ -214,6 +217,9 @@ void Power_Loop(void) {
 		powerFsmState = POWER_BEGIN_STATE;
 		break;
 	case POWER_BEGIN_STATE:
+		sprintf((char*) strtmpPower, "lm:%d \t int:%d \r\n", (int) Main.ambientTemp, (int)Main.internalTemp);
+		 		UART3_SendToHost((uint8_t *)strtmpPower);
+
 		powerFsmState = POWER_CHECK_STATUS_STATE;
 		break;
 	case POWER_CHECK_STATUS_STATE:
