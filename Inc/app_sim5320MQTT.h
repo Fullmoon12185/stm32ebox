@@ -12,11 +12,16 @@
 
 #include "app_uart.h"
 #include "app_sim5320MQTT.h"
+#include "app_pcf8574.h"
 
 
+
+#define 	MAX_TOPIC_LENGTH			14
 #define		MQTT_MESSAGE_BUFFER_LENGTH	128
 
 
+#define	RETAIN_MESSAGE			0x01
+#define	QoS_MESSAGE				0x02
 
 #define MQTT_MSG_CONNECT        0x10
 #define MQTT_MSG_CONNACK        0x20
@@ -55,13 +60,13 @@ typedef struct {
 	void (*func)(void);
 }MQTT_Machine_Type;
 
-
+void Set_Up_Topic_Names(void);
 uint8_t MQTT_Run(void);
 void Set_Mqtt_State(MQTT_STATE newState);
 MQTT_STATE Get_Mqtt_State(void);
 
 void Setup_Mqtt_Connect_Message(void);
-void Setup_Mqtt_Subscribe_Message(const uint8_t * topic);
-void Setup_Mqtt_Publish_Message(const uint8_t * topic, uint8_t * message, uint8_t lenOfMessage);
+void Setup_Mqtt_Subscribe_Message(uint8_t * topic);
+void Setup_Mqtt_Publish_Message(uint8_t * topic, uint8_t * message, uint8_t lenOfMessage);
 
 #endif /* APP_SIM5320MQTT_H_ */

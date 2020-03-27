@@ -59,7 +59,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 #define		VERSION_EBOX		2
-#define		BOX_ID				1
 
 
 //#define B1_Pin 							GPIO_PIN_13
@@ -352,7 +351,7 @@ void Error_Handler(void);
 #define		NUMBER_OF_PUBLISH_TOPIC		2
 
 #define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 		48
-#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE 	16
+#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE 	15
 
 
 

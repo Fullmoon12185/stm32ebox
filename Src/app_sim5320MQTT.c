@@ -23,8 +23,6 @@
 
 
 
-
-
 extern const uint8_t OK[];
 extern const uint8_t CONNECT_OK[];
 extern const uint8_t ERROR_1[];
@@ -64,12 +62,20 @@ const uint8_t USERNAME[] 			= "";
 const uint8_t PASSWORD[] 			= "";
 
 #endif
-//subscribe topin khong nen co len la 10
-const uint8_t SUBSCRIBE_TOPIC_1[] 	= "eBox/switch";
-const uint8_t SUBSCRIBE_TOPIC_2[] 	= "eBox/saves1";
 
-const uint8_t PUBLISH_TOPIC_STATUS[] 		= "eBox/status";
-const uint8_t PUBLISH_TOPIC_POWER[] 		= "eBox/power";
+//const uint8_t SUBSCRIBE_TOPIC_1[] 	= "eBox/switch";
+//const uint8_t SUBSCRIBE_TOPIC_2[] 	= "eBox/saves1";
+
+uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH];
+uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
+
+//const uint8_t PUBLISH_TOPIC_STATUS[] 		= "eBox/status";
+//const uint8_t PUBLISH_TOPIC_POWER[] 		= "eBox/power";
+
+
+uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
+uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
+
 
 uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
 uint8_t publish_message_length = 0;
@@ -153,6 +159,69 @@ MQTT_Machine_Type MQTT_State_Machine [] = {
 
 MQTT_STATE mqttState = MQTT_OPEN_STATE;
 MQTT_STATE pre_mqttState = MAX_MQTT_NUMBER_STATES;
+
+void Set_Up_Topic_Names(void){
+
+	uint16_t boxID = Get_Box_ID();
+	SUBSCRIBE_TOPIC_1[0] = 'C';
+	SUBSCRIBE_TOPIC_1[1] = 'E';
+	SUBSCRIBE_TOPIC_1[2] = 'b';
+	SUBSCRIBE_TOPIC_1[3] = 'o';
+	SUBSCRIBE_TOPIC_1[4] = 'x';
+	SUBSCRIBE_TOPIC_1[5] = '_';
+
+	SUBSCRIBE_TOPIC_1[6] = boxID / 1000 + 0x30;
+	boxID = boxID%1000;
+	SUBSCRIBE_TOPIC_1[7] = boxID / 100 + 0x30;
+	boxID = boxID%100;
+	SUBSCRIBE_TOPIC_1[8] = boxID / 10 + 0x30;
+	boxID = boxID%10;
+	SUBSCRIBE_TOPIC_1[9] = boxID + 0x30;
+	SUBSCRIBE_TOPIC_1[10] = 0;
+
+	SUBSCRIBE_TOPIC_2[0] = 'A';
+	SUBSCRIBE_TOPIC_2[1] = 'E';
+	SUBSCRIBE_TOPIC_2[2] = 'b';
+	SUBSCRIBE_TOPIC_2[3] = 'o';
+	SUBSCRIBE_TOPIC_2[4] = 'x';
+	SUBSCRIBE_TOPIC_2[5] = '_';
+
+	SUBSCRIBE_TOPIC_2[6] = SUBSCRIBE_TOPIC_1[6];
+	SUBSCRIBE_TOPIC_2[7] = SUBSCRIBE_TOPIC_1[7];
+	SUBSCRIBE_TOPIC_2[8] = SUBSCRIBE_TOPIC_1[8];
+	SUBSCRIBE_TOPIC_2[9] = SUBSCRIBE_TOPIC_1[9];
+	SUBSCRIBE_TOPIC_2[10] = 0;
+
+
+	PUBLISH_TOPIC_STATUS[0] = 'S';
+	PUBLISH_TOPIC_STATUS[1] = 'E';
+	PUBLISH_TOPIC_STATUS[2] = 'b';
+	PUBLISH_TOPIC_STATUS[3] = 'o';
+	PUBLISH_TOPIC_STATUS[4] = 'x';
+	PUBLISH_TOPIC_STATUS[5] = '_';
+
+	PUBLISH_TOPIC_STATUS[6] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_STATUS[7] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_STATUS[8] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_STATUS[9] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_STATUS[10] = 0;
+
+	PUBLISH_TOPIC_POWER[0] = 'P';
+	PUBLISH_TOPIC_POWER[1] = 'E';
+	PUBLISH_TOPIC_POWER[2] = 'b';
+	PUBLISH_TOPIC_POWER[3] = 'o';
+	PUBLISH_TOPIC_POWER[4] = 'x';
+	PUBLISH_TOPIC_POWER[5] = '_';
+
+	PUBLISH_TOPIC_POWER[6] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_POWER[7] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_POWER[8] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_POWER[9] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_POWER[10] = 0;
+}
+
+
+
 uint8_t MQTT_Run(void){
 //	MQTT_State_Display();
 	if(mqttState < MAX_MQTT_NUMBER_STATES){
@@ -513,7 +582,7 @@ void Setup_Mqtt_Connect_Message(void){
 
 	// Connection flags   2 for clean session
  //   mqttMessage[9] = 2;
-	mqttMessage[mqttMessageIndex++] = 0b11000010;  //enable username, password, clean session
+	mqttMessage[mqttMessageIndex++] = 0b11000010;  //enable username, password, will retain, will-qos (2), will flag, clean session
 
 	// Keep-alive (maximum duration)
 //	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
@@ -579,7 +648,7 @@ void Setup_Mqtt_Connect_Message(void){
 
 	// Connection flags   2 for clean session
  //   mqttMessage[9] = 2;
-	mqttMessage[mqttMessageIndex++] = 0b00000010;  //enable username, password, clean session
+	mqttMessage[mqttMessageIndex++] = 0b00100110;  //enable username, password, clean session
 
 	// Keep-alive (maximum duration)
 	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
@@ -670,7 +739,7 @@ void Setup_Mqtt_Connect_Message(void){
 //	SM_Send_Data(mqttMessageLength);
 //}
 //////////////////////////////////////////////////////////////////////////
-void Setup_Mqtt_Subscribe_Message(const uint8_t * topic){
+void Setup_Mqtt_Subscribe_Message(uint8_t * topic){
 	uint8_t i = 0;
 	uint8_t lenTopic = GetStringLength((uint8_t*)topic);
 
@@ -700,14 +769,14 @@ void Setup_Mqtt_Subscribe_Message(const uint8_t * topic){
 }
 
 ///////////////////////////////////////////////////////////////////////////
-void Setup_Mqtt_Publish_Message(const uint8_t * topic, uint8_t * message, uint8_t lenOfMessage){
+void Setup_Mqtt_Publish_Message(uint8_t * topic, uint8_t * message, uint8_t lenOfMessage){
 	uint8_t i;
 	uint8_t lenOfTopic = GetStringLength((uint8_t*)topic);
 
 //	mqttMessageLength = 4 + lenTopic + lenMsg;
 	Clear_Mqtt_Message_Buffer();
 	// Write fixed header
-	mqttMessage[mqttMessageIndex++] = MQTT_MSG_PUBLISH;
+	mqttMessage[mqttMessageIndex++] = MQTT_MSG_PUBLISH | RETAIN_MESSAGE;
 	mqttMessage[mqttMessageIndex++] = 2 + lenOfTopic + lenOfMessage;
 
 	// Write topic

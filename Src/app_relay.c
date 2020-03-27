@@ -43,7 +43,7 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 };
 
 
-uint32_t relay_TimeoutFlag_Index = NO_TASK_ID;
+static uint32_t relay_TimeoutFlag_Index = NO_TASK_ID;
 uint8_t set_Relay_TimeoutFlag = 1;
 
 void Clear_Relay_Timeout_Flag(void){
@@ -81,7 +81,7 @@ void Set_Relay(uint8_t relayIndex){
 
 	SCH_Delete_Task(relay_TimeoutFlag_Index);
 	Clear_Relay_Timeout_Flag();
-	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 200, 0);
+	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 100, 0);
 }
 
 void Reset_Relay(uint8_t relayIndex){
@@ -94,7 +94,7 @@ void Reset_Relay(uint8_t relayIndex){
 
 	SCH_Delete_Task(relay_TimeoutFlag_Index);
 	Clear_Relay_Timeout_Flag();
-	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 200, 0);
+	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 100, 0);
 }
 
 void Update_Relay_Physical_Status(void){

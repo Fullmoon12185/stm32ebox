@@ -41,18 +41,14 @@ void test1(void){
 	} else {
 		index2 ++;
 	}
-
-
 }
 void test3(void){
-
 	static int test3Counter = 0;
 	sprintf((char*) strTest, "seconds = %d\r\n", (int) test3Counter++);
 	UART3_SendToHost((uint8_t *)strTest);
 	Test_Led_Display();
-
-
 }
+
 void test2(void){
 	HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
 }
@@ -69,26 +65,26 @@ void test4(void){
 }
 
 void test5(void){
-//	testSendcommand();
-	Sim3g_Run();
-}
 
+	UART3_SendToHost((uint8_t *)"test5\r\n");
+}
+void test8(void){
+	UART3_SendToHost((uint8_t *)"test8\r\n");
+}
 void test6(void){
 
 	SCH_Add_Task(test1, 0, 1000);
 	HAL_Delay(10);
 	SCH_Add_Task(test3, 2, 100);
 	HAL_Delay(10);
-	SCH_Add_Task(test2, 3, 200);
+	SCH_Add_Task(test2, 3, 20);
 	HAL_Delay(10);
+	SCH_Add_Task(test5, 3, 200);
 
+	HAL_Delay(10);
+	SCH_Add_Task(test8, 7, 21);
 }
 
 void test7(void){
 	TestSendATcommand();
-}
-
-
-void test8(void){
-
 }

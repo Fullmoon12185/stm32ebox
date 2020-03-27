@@ -319,7 +319,7 @@ void PowerConsumption_FSM(void){
 //	Adc_State_Display();
 	switch(adcState){
 	case ADC_SETUP_TIMER_ONE_SECOND:
-		SCH_Delete_Task(adc_Timeout_Task_Index);
+//		SCH_Delete_Task(adc_Timeout_Task_Index);
 		Adc_Clear_Timeout_Flag();
 		adc_Timeout_Task_Index = SCH_Add_Task(Adc_Reading_Timeout, 100, 0);
 		is_Ready_To_Find_Min_Max_Voltage = RESET;
@@ -366,6 +366,7 @@ void PowerConsumption_FSM(void){
 //				if(AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] < 10 && AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] > -10){
 //					AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] = 0;
 //				}
+
 			}
 			AdcDmaBufferIndexFilter++;
 			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
@@ -427,20 +428,23 @@ void PowerConsumption_FSM(void){
 			for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++){
 				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
 				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
+				if(array_Of_Average_Vrms_ADC_Values[i] < 5){
+					array_Of_Average_Vrms_ADC_Values[i] = 0;
+				}
 //				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
 				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i] * 283) / (AdcBufferPeakPeak[i]);
 				if(PowerFactor[i] >= 98){
 					PowerFactor[i] = 100;
 				}
-				if(i == 3 || i == 0){
-					sprintf((char*) strtmp, "%d\t", (int) PowerFactor[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i] * 237);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferPeakPeak[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					UART3_SendToHost((uint8_t *)"\r\n");
-				}
+//				if(i <= 3 && i >= 0){
+//					sprintf((char*) strtmp, "%d\t", (int) PowerFactor[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i] * 237);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferPeakPeak[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					UART3_SendToHost((uint8_t *)"\r\n");
+//				}
 
 
 #if(VERSION_EBOX == 2)

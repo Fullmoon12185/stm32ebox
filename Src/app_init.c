@@ -11,6 +11,7 @@
 #include "app_gpio.h"
 #include "app_led_display.h"
 #include "app_sim3g.h"
+#include "app_sim5320MQTT.h"
 #include "app_temperature.h"
 #include "app_timer.h"
 #include "app_uart.h"
@@ -45,7 +46,6 @@ void System_Initialization(void)
 
             break;
         case SCHEDULER_INIT:
-        	Scheduler_Init();
 //        	test6();
 
         	break;
@@ -104,6 +104,7 @@ void System_Initialization(void)
         	break;
         case SIM_3G_INIT:
         	Sim3g_Init();
+        	Set_Up_Topic_Names();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SIM_3G_INIT - Done \r\n"));
         	break;
         case POWER_SETUP_INIT:

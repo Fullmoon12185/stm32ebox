@@ -11,6 +11,7 @@
 #include "app_relay.h"
 #include "app_string.h"
 #include "app_power.h"
+#include "app_pcf8574.h"
 
 #define DEBUG_SIM3G(X)    						//X
 
@@ -104,7 +105,7 @@ PROCESS_DATA_RECEIVED_FROM_SIM3G processDataState = CHECK_DATA_AVAILABLE_STATE;
 
 
 FlagStatus isReceivedData(const uint8_t * str);
-void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID);
+void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID);
 FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message);
 
 
@@ -387,6 +388,7 @@ void SM_Sim3g_Setting(void){
 	Setting_Up_Timeout();
 	isOKFlag = RESET;
 	isErrorFlag = RESET;
+	isIPCloseFlag = RESET;
 	ATcommandSending((uint8_t *)atCommandArrayForSetupSim3g[atCommandArrayIndex].ATCommand);
 	sim3gState = WAIT_FOR_SIM3G_SETTING_RESPONSE;
 }
@@ -407,7 +409,8 @@ void SM_Wait_For_Sim3g_Setting_Response(void){
 			sim3gState = SIM3G_SETTING;
 		}
 	}
-	if(is_Sim3g_Command_Timeout()){
+	if(is_Sim3g_Command_Timeout() || isIPCloseFlag){
+		isIPCloseFlag = RESET;
 		sim3g_Retry_Counter = 0;
 		sim3gState = POWER_OFF_SIM3G;
 	}
@@ -432,21 +435,28 @@ FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message
 	return RESET;
 }
 
-void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID){
+void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 	uint8_t lentopic = GetStringLength(sub_topic);
 	uint8_t relayIndex;
 	uint8_t relayStatus;
-	if(boxID == Sim3gDataProcessingBuffer[2 + lentopic] - 0x30){
+	uint16_t tempBoxID;
+	tempBoxID = (Sim3gDataProcessingBuffer[8+0] - 0x30)*1000;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+1] - 0x30)*100;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+2] - 0x30)*10;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+3] - 0x30);
+
+	if(boxID == tempBoxID){
 			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
 			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
+			if(relayStatus == SET){
+				Set_Relay(relayIndex);
+				Set_Limit_Energy(relayIndex, 1000000);
+			} else {
+				Set_Limit_Energy(relayIndex, 0);
+				Reset_Relay(relayIndex);
+			}
 	}
-	if(relayStatus == SET){
-		Set_Relay(relayIndex);
-		Set_Limit_Energy(relayIndex, 1000000);
-	} else {
-		Set_Limit_Energy(relayIndex, 0);
-		Reset_Relay(relayIndex);
-	}
+
 }
 
 void FSM_Process_Data_Received_From_Sim3g(void){
@@ -508,11 +518,11 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			preReadCharacter = readCharacter;
 			readCharacter = Uart1_Read_Received_Buffer();
 			if(preReadCharacter == '\r' && readCharacter == '\n'){
-				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, BOX_ID);
+				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
 				processDataState = CHECK_DATA_AVAILABLE_STATE;
 			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE && readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE){
 				processDataState = PROCESSING_RECEIVED_DATA;
-				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, BOX_ID);
+				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1,  Get_Box_ID());
 				Clear_Sim3gDataProcessingBuffer();
 			} else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;

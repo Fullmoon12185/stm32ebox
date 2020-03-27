@@ -68,7 +68,6 @@ uint8_t is_Sim3g_Command_Timeout(void);
 
 
 FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message);
-void Processing_Received_Data(uint8_t * sub_topic, uint8_t boxID);
 FlagStatus isReceivedData(const uint8_t * str);
 
 void FSM_Process_Data_Received_From_Sim3g(void);

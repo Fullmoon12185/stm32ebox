@@ -15,16 +15,15 @@
 #include "app_gpio.h"
 #include "app_power.h"
 
-#define		BOX_ID	1
 #define		TIME_FOR_PING_REQUEST		6000 //5s
-#define		TIME_FOR_PUBLISH_MESSAGE	500 //5s
+#define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
 
 
-#define 	TIME_FOR_BUZZER				15
+#define 	TIME_FOR_BUZZER				1
 
 
-extern const uint8_t PUBLISH_TOPIC_STATUS[];
-extern const uint8_t PUBLISH_TOPIC_POWER[];
+extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
 
 extern uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
 extern uint8_t publishTopicIndex;
@@ -367,7 +366,7 @@ void Server_Communication(void){
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER, publish_message, publish_message_length);
 						Set_Mqtt_State(MQTT_PUBLISH_STATE);
 
-						SCH_Delete_Task(publish_message_TimeoutIndex);
+//						SCH_Delete_Task(publish_message_TimeoutIndex);
 						Clear_Publish_Message_Timeout_Flag();
 						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
 
@@ -380,7 +379,7 @@ void Server_Communication(void){
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
 						Set_Mqtt_State(MQTT_PUBLISH_STATE);
 
-						SCH_Delete_Task(publish_message_TimeoutIndex);
+//						SCH_Delete_Task(publish_message_TimeoutIndex);
 						Clear_Publish_Message_Timeout_Flag();
 						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
 

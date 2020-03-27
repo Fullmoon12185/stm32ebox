@@ -6,6 +6,8 @@
  */
 #include "main.h"
 #include "app_uart.h"
+#include "app_pcf8574.h"
+
 
 #define PCF_WRITE_ADDRESS_1		64
 #define PCF_WRITE_ADDRESS_2		72
@@ -30,6 +32,7 @@ uint8_t strpcf[] = "                           ";
 
 typedef union {
 	uint8_t bytePCFData[4];
+	uint16_t wordPCFData[2];
 	uint32_t Relay_and_Fuse_Statuses;
 }Union_PCF_Data;
 
@@ -40,9 +43,12 @@ void Set_Input_PCF_Pins(void);
 
 
 
-
 void PCF_Init(void){
 	Set_Input_PCF_Pins();
+	for(uint8_t i = 0; i < 4; i++){
+		PCF_read();
+		HAL_Delay(100);
+	}
 }
 
 uint8_t PCF_Scan(){
@@ -70,6 +76,10 @@ uint32_t Get_All_Relay_Fuse_Statuses(void){
 	return pcfData.Relay_and_Fuse_Statuses;
 }
 
+uint16_t Get_Box_ID(void){
+	return pcfData.wordPCFData[1] >> 4;
+}
+
 void PCF_read(void){
 	static uint8_t pcfReadState = 0;
 	switch(pcfReadState){
@@ -92,13 +102,14 @@ void PCF_read(void){
 		HAL_I2C_Master_Receive(&I2cHandle, PCF_READ_ADDRESS_4, (uint8_t*) I2CReceiveBuffer, 2, 0xffff);
 		pcfData.bytePCFData[pcfReadState] = I2CReceiveBuffer[0];
 		pcfReadState = 0;
+//		sprintf((char*) strpcf, "%08X\r\n", (int) pcfData.Relay_and_Fuse_Statuses);
+//		UART3_SendToHost((uint8_t *)strpcf);
 		break;
 	default:
 		pcfReadState = 0;
 		break;
 	}
-	sprintf((char*) strpcf, "%08X\r\n", (int) pcfData.Relay_and_Fuse_Statuses);
-	UART3_SendToHost((uint8_t *)strpcf);
+
 
 }
 

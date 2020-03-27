@@ -58,13 +58,15 @@ int main(void)
 	HAL_Delay(100);
 	Turn_Off_Buzzer();
 
-	SCH_Add_Task(PCF_read, 7, 100);
+	SCH_Add_Task(PCF_read, 7, 21);
+	SCH_Add_Task(LED_Display_FSM, 11, 20);
 //	Set_Relay(0);
 //	Set_Relay(3);
 //	Set_Relay(8);
 	while (1){
 //		Watchdog_Refresh();
 		SCH_Dispatch_Tasks();
+//		Show_Delay_Values();
 		Main_FSM();
 	}
 	return 0;
@@ -74,20 +76,17 @@ int main(void)
 
 void Main_FSM(void){
 
-//	Zero_Point_Detection();
 	PowerConsumption_FSM();
 	FSM_Process_Data_Received_From_Sim3g();
-//	Server_Communication();
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:
-
 		if(Is_Done_Getting_ADC() == SET){
 			mainState = POST_DATA_TO_SERVER;
 		}
 		break;
 	case POST_DATA_TO_SERVER:
-//		Server_Communication();
-//		Power_Loop();
+		Server_Communication();
+		Power_Loop();
 		if(Is_Done_Getting_ADC() == RESET){
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}
