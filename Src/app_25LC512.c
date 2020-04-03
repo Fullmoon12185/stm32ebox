@@ -71,7 +71,7 @@ uint8_t MC25LC512_ReleaseDeepPowerDownMode(void)
 
 }
 
-void MC25LC512_Initilize(void)
+void MC25LC512_Initialize(void)
 {
 
 	MC25LC512_CS(EEPROM_CS_PIN_SET);// Reset The spi Chip //Reset means Enable

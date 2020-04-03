@@ -156,12 +156,12 @@ void Update_Publish_Power_Message_All_Outlets(void){
 		publish_message[publishMessageIndex++] = outletID + 0x30;
 		publish_message[publishMessageIndex++] = '-';
 		tempValue = Get_Power_Consumption(outletID);
-		if(outletID == 3){
-			uint8_t strtmpfsm[] = "                                               ";
-			sprintf((char*) strtmpfsm, "%d\r\n", (int) tempValue);
-			UART3_SendToHost((uint8_t *)strtmpfsm);
-
-		}
+//		if(outletID == 3){
+//			uint8_t strtmpfsm[] = "                                               ";
+//			sprintf((char*) strtmpfsm, "%d\r\n", (int) tempValue);
+//			UART3_SendToHost((uint8_t *)strtmpfsm);
+//
+//		}
 		if(tempValue >= 1000000){
 			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
 			tempValue = tempValue % 1000000;

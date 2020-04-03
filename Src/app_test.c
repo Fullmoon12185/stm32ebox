@@ -14,13 +14,13 @@
 #include "app_pcf8574.h"
 #include "app_scheduler.h"
 #include "app_gpio.h"
+#include "app_eeprom.h"
 
+extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH];
+extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
 
-extern const uint8_t SUBSCRIBE_TOPIC_1[];
-extern const uint8_t SUBSCRIBE_TOPIC_2[];
-
-extern const uint8_t PUBLISH_TOPIC_STATUS[];
-extern const uint8_t PUBLISH_TOPIC_POWER[];
+extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
 uint8_t strTest[] = "                                   ";
 void test1(void){
 
@@ -87,4 +87,22 @@ void test6(void){
 
 void test7(void){
 	TestSendATcommand();
+}
+
+void test9(void){
+	static uint8_t rw = 0;
+	static uint8_t counterWrite = 0;
+	if(rw == 0){
+		sprintf((char*) strTest, "readfirst = %d\r\n", (int) Read_First_Byte());
+		UART3_SendToHost((uint8_t *)strTest);
+		rw = 1;
+	} else if (rw == 1){
+		Write_First_Byte(counterWrite++);
+		rw = 2;
+	} else {
+		sprintf((char*) strTest, "readsecond = %d\r\n", (int) Read_First_Byte());
+		UART3_SendToHost((uint8_t *)strTest);
+
+		rw = 0;
+	}
 }

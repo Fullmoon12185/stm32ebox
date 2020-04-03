@@ -81,5 +81,5 @@ void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy);
 NodeStatus Get_Node_Status(uint8_t outletID);
 void Power_Setup(void);
 void Power_Loop(void);
-
+void Process_System_Power(void);
 #endif /* APP_POWER_H_ */

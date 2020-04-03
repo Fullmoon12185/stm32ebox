@@ -10,7 +10,7 @@ void LED_Init(void);
 void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
 void ZeroPoint_Detection_Pin_Init(void);
-
+void SPI_CS_Init(void);
 
 /**
   * @brief GPIO Initialization Function
@@ -35,6 +35,7 @@ void MX_GPIO_Init(void)
 	LED_Init();
 	GPIO_Relay_Init();
 	Buzzer_Init();
+	SPI_CS_Init();
 	ZeroPoint_Detection_Pin_Init();
 }
 
@@ -125,6 +126,16 @@ void ZeroPoint_Detection_Pin_Init(void){
 
 
 
+void SPI_CS_Init(void){
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+
+	GPIO_InitStruct.Pin = SPI_CS_PIN;
+	HAL_GPIO_Init(SPI_CS_PORT, &GPIO_InitStruct);
+}
 
 
 void Turn_On_Buzzer(void){

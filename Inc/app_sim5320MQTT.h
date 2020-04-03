@@ -16,7 +16,7 @@
 
 
 
-#define 	MAX_TOPIC_LENGTH			14
+
 #define		MQTT_MESSAGE_BUFFER_LENGTH	128
 
 

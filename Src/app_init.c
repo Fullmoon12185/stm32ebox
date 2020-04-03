@@ -26,7 +26,7 @@
 #include "app_power.h"
 #include "app_iwatchdog.h"
 #include "app_scheduler.h"
-
+#include "app_eeprom.h"
 
 #include "app_test.h"
 
@@ -79,7 +79,7 @@ void System_Initialization(void)
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_INIT - Done \r\n"));
         	break;
         case SPI_25LCXXX_INIT:
-        	MC25LC512_Initilize();
+        	Eeprom_Initialize();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_25LCXXX_INIT - Done \r\n"));
         	break;
         case I2C_INIT:
@@ -95,7 +95,9 @@ void System_Initialization(void)
         case ACCELERATOR_INIT:
         	break;
         case WATCH_DOG_INIT:
-//        	MX_IWDG_Init();
+#if(WATCHDOG_ENABLE == 1)
+        	MX_IWDG_Init();
+#endif
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
             break;
         case START_DMA_ADC:

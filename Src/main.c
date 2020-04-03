@@ -31,6 +31,7 @@
 #include "app_pcf8574.h"
 #include "app_gpio.h"
 #include "app_iwatchdog.h"
+#include "app_eeprom.h"
 
 
 typedef enum {
@@ -59,14 +60,13 @@ int main(void)
 	Turn_Off_Buzzer();
 
 	SCH_Add_Task(PCF_read, 7, 21);
+//	SCH_Add_Task(test9, 7, 200);
 	SCH_Add_Task(LED_Display_FSM, 11, 20);
-//	Set_Relay(0);
-//	Set_Relay(3);
-//	Set_Relay(8);
 	while (1){
-//		Watchdog_Refresh();
+#if(WATCHDOG_ENABLE == 1)
+		Watchdog_Refresh();
+#endif
 		SCH_Dispatch_Tasks();
-//		Show_Delay_Values();
 		Main_FSM();
 	}
 	return 0;
@@ -86,7 +86,7 @@ void Main_FSM(void){
 		break;
 	case POST_DATA_TO_SERVER:
 		Server_Communication();
-		Power_Loop();
+		Process_System_Power();
 		if(Is_Done_Getting_ADC() == RESET){
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}

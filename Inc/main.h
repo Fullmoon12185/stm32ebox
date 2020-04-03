@@ -58,8 +58,9 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 
-#define		VERSION_EBOX		2
-
+#define		VERSION_EBOX				2
+#define		INTERRUPT_TIMER_PERIOD		10 //ms
+#define		WATCHDOG_ENABLE 			1
 
 //#define B1_Pin 							GPIO_PIN_13
 //#define B1_GPIO_Port 					GPIOC
@@ -104,6 +105,9 @@ void Error_Handler(void);
 #define BUZZER_PIN						PB5_BUZZER_PIN
 #define BUZZER_PORT						PB5_BUZZER_PORT
 
+//SPI CS pin
+#define SPI_CS_PIN						GPIO_PIN_12
+#define SPI_CS_PORT						GPIOB
 
 //3G control signals pins ports
 #if(VERSION_EBOX != 2)
@@ -202,7 +206,7 @@ void Error_Handler(void);
 
 #define		SAMPLE_STEPS							2
 #define 	NUMBER_OF_SAMPLES_PER_AVERAGE			(1 << SAMPLE_STEPS)
-#define 	NUMBER_OF_SAMPLES_PER_SECOND			200
+#define 	NUMBER_OF_SAMPLES_PER_SECOND			280
 #define 	NUMBER_OF_ADC_CHANNELS					14
 
 #if(VERSION_EBOX == 2)
@@ -349,6 +353,7 @@ void Error_Handler(void);
 
 #define		NUMBER_OF_SUBSCRIBE_TOPIC	2
 #define		NUMBER_OF_PUBLISH_TOPIC		2
+#define 	MAX_TOPIC_LENGTH			14
 
 #define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 		48
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE 	15

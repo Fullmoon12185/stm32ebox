@@ -17,9 +17,9 @@
 
 
 #define		DEBUG_MQTT(X)	X
-#define 	MQTT_COMMAND_TIME_OUT		5000
+#define 	MQTT_COMMAND_TIME_OUT		(50000/INTERRUPT_TIMER_PERIOD)
 
-#define 	MQTT_SUBSCRIBE_TIME_OUT		300
+#define 	MQTT_SUBSCRIBE_TIME_OUT		(3000/INTERRUPT_TIMER_PERIOD)
 
 
 
@@ -393,8 +393,8 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Connect_State(void){
 void SM_Mqtt_Wait_For_Response_From_Connect_State(void){
 	if(isRecvFromFlag){
 		isRecvFromFlag = RESET;
+		subscribeTopicIndex = 0;
 		mqttState = MQTT_SUBSCRIBE_STATE;
-
 	} else if(isErrorFlag){
 		isErrorFlag = 0;
 		mqttState = MAX_MQTT_NUMBER_STATES;

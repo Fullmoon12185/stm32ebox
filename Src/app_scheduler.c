@@ -165,8 +165,8 @@ void Show_Delay_Values(void){
 
 void SCH_Dispatch_Tasks(void){
 	if(SCH_tasks_G[0].RunMe > 0) {
-		sprintf((char*) strScheduler, "count=%d\r\n", (int) count_SCH_Update);
-		UART3_SendToHost((uint8_t *)strScheduler);
+//		sprintf((char*) strScheduler, "count=%d\r\n", (int) count_SCH_Update);
+//		UART3_SendToHost((uint8_t *)strScheduler);
 		(*SCH_tasks_G[0].pTask)(); // Run the task
 		SCH_tasks_G[0].RunMe = 0; // Reset / reduce RunMe flag
 		sTask temtask = SCH_tasks_G[0];
