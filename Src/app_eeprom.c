@@ -8,11 +8,14 @@
 
 #include "app_eeprom.h"
 #include "app_25LC512.h"
+#include "app_uart.h"
+
+#define		TIME_INTERVAL_TO_UPDATE_FLASH		1 //IN SECOND
 
 #define	FIRST_TIME_READING_FLASH				0
-#define	FIRST_TIME_READING_FLASH_SIZE			1
+#define	FIRST_TIME_READING_FLASH_SIZE			2
 #define FIRST_EEPROM_ADDR 						(FIRST_TIME_READING_FLASH_SIZE)
-#define EEPROM_BLOCK_SIZE						11
+#define EEPROM_BLOCK_SIZE						15
 
 uint8_t strtmp2[] = "                                     ";
 uint8_t rxBuffer[1], txBuffer[1];
@@ -22,7 +25,7 @@ union EEPROM_BLOCKS_ARRAY{
 		uint8_t status;			//save when have change
 		uint32_t energy;		//save when have change and status is working
 	//	uint32_t altEnergy;		//alternative storage for energy
-
+		uint32_t workingTime;
 		uint32_t limitEnergy;	//save at first set command to outlet
 		uint8_t checksum;
 	}block_element;
@@ -30,7 +33,7 @@ union EEPROM_BLOCKS_ARRAY{
 }block[NUMBER_OF_RELAYS] ;
 
 void Eeprom_Initialize(){
-	MC25LC512_Initialize();
+//	MC25LC512_Initialize();
 	for(uint8_t j = 0; j < NUMBER_OF_RELAYS; j ++){
 		for(uint8_t i = 0; i< EEPROM_BLOCK_SIZE; i++) {
 			block[j].eepromBuffer[i] = 0;
@@ -39,21 +42,23 @@ void Eeprom_Initialize(){
 }
 
 uint8_t Read_First_Byte(void){
-	uint8_t tempBuffer[1];
+	uint8_t tempBuffer[2];
 	MC25LC512_Read_Bytes(FIRST_TIME_READING_FLASH, tempBuffer, FIRST_TIME_READING_FLASH_SIZE);
-	return tempBuffer[0];
+	return tempBuffer[1];
 }
 void Write_First_Byte(uint8_t value){
-	uint8_t tempBuffer[1];
+	uint8_t tempBuffer[2];
 	tempBuffer[0] = value;
+	tempBuffer[1] = value;
 	MC25LC512_Write_Bytes(FIRST_TIME_READING_FLASH, tempBuffer, FIRST_TIME_READING_FLASH_SIZE);
 }
 
-void Eeprom_Write_Outlet(uint8_t outletID, uint8_t status, uint32_t energy, uint32_t limitEnergy) {
+void Eeprom_Write_Outlet(uint8_t outletID, uint8_t status, uint32_t energy, uint32_t limitEnergy, uint32_t workingTime) {
 	block[outletID].block_element.outletID = outletID;
 	block[outletID].block_element.status = status;
 	block[outletID].block_element.energy = energy;
 	block[outletID].block_element.limitEnergy = limitEnergy;
+	block[outletID].block_element.workingTime = workingTime;
 	block[outletID].block_element.checksum = 0;
 	for(uint8_t i = 0; i < EEPROM_BLOCK_SIZE - 1; i ++){
 		block[outletID].block_element.checksum = block[outletID].block_element.checksum ^ block[outletID].eepromBuffer[i];
@@ -62,7 +67,8 @@ void Eeprom_Write_Outlet(uint8_t outletID, uint8_t status, uint32_t energy, uint
 }
 
 
-uint8_t Eeprom_Read_Outlet(uint8_t outletID, uint8_t *status, uint32_t *energy, uint32_t *limitEnergy) {
+
+uint8_t Eeprom_Read_Outlet(uint8_t outletID, uint8_t *status, uint32_t *energy, uint32_t *limitEnergy, uint32_t *workingTime) {
 	uint8_t checksum = 0;
 	MC25LC512_Read_Bytes(FIRST_EEPROM_ADDR + (EEPROM_BLOCK_SIZE * outletID), block[outletID].eepromBuffer, EEPROM_BLOCK_SIZE);
 	for(uint8_t i = 0; i < EEPROM_BLOCK_SIZE - 1; i ++){
@@ -74,8 +80,10 @@ uint8_t Eeprom_Read_Outlet(uint8_t outletID, uint8_t *status, uint32_t *energy, 
 		*status = block[outletID].block_element.status;
 		*energy = block[outletID].block_element.energy;
 		*limitEnergy = block[outletID].block_element.limitEnergy;
+		*workingTime = block[outletID].block_element.workingTime;
 		return 1;
 	}
+
 	return 0;
 }
 
@@ -99,10 +107,17 @@ void Eeprom_Update_LimitEnergy(uint8_t outletID, uint32_t limitEnergy){
 		Eeprom_Save(outletID);
 	}
 }
-void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy){
-	if(block[outletID].block_element.energy != energy){
-		block[outletID].block_element.energy = energy;
-		Eeprom_Save(outletID);
+void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy, uint32_t workingTime){
+
+	static uint8_t countUpdateFlash[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	countUpdateFlash[outletID] = (countUpdateFlash[outletID] + 1)%TIME_INTERVAL_TO_UPDATE_FLASH;
+	if(countUpdateFlash[outletID] == 0){
+		if(block[outletID].block_element.energy != energy){
+			block[outletID].block_element.energy = energy;
+			block[outletID].block_element.workingTime = workingTime;
+			Eeprom_Save(outletID);
+		}
 	}
+
 }
 

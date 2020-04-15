@@ -47,6 +47,8 @@ void Main_FSM(void);
 int main(void)
 {
 
+
+
 	System_Initialization();
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
@@ -59,6 +61,14 @@ int main(void)
 	HAL_Delay(100);
 	Turn_Off_Buzzer();
 
+
+	for(uint8_t relayIndex = 0; relayIndex < NUMBER_OF_RELAYS; relayIndex ++){
+		Set_Relay1(relayIndex);
+		Set_Limit_Energy(relayIndex, 0xfffffff);
+		HAL_Delay(1000);
+		Watchdog_Refresh();
+	}
+	PCF_Init();
 	SCH_Add_Task(PCF_read, 7, 21);
 //	SCH_Add_Task(test9, 7, 200);
 	SCH_Add_Task(LED_Display_FSM, 11, 20);
@@ -77,7 +87,7 @@ int main(void)
 void Main_FSM(void){
 
 	PowerConsumption_FSM();
-	FSM_Process_Data_Received_From_Sim3g();
+//	FSM_Process_Data_Received_From_Sim3g();
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:
 		if(Is_Done_Getting_ADC() == SET){
@@ -85,7 +95,7 @@ void Main_FSM(void){
 		}
 		break;
 	case POST_DATA_TO_SERVER:
-		Server_Communication();
+//		Server_Communication();
 		Process_System_Power();
 		if(Is_Done_Getting_ADC() == RESET){
 			mainState = POWER_CONSUMPTION_CALCULATION;

@@ -70,7 +70,15 @@ void Relay_Init(void){
 	Relay_Output_Control_Enable();
 }
 
+void Set_Relay1(uint8_t relayIndex){
+	if(relayIndex > 9) return;
+	if(array_Of_Relay_Statuses[relayIndex] == RESET){
+		isUpdateRelayStatus = SET;
+	}
+	array_Of_Relay_Statuses[relayIndex] = SET;
+	HAL_GPIO_WritePin(array_Of_Relay_Ports[relayIndex], array_Of_Relay_Pins[relayIndex], SET);
 
+}
 void Set_Relay(uint8_t relayIndex){
 	if(relayIndex > 9) return;
 	if(array_Of_Relay_Statuses[relayIndex] == RESET){

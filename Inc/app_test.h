@@ -17,4 +17,6 @@ void test6(void);
 void test7(void);
 void test8(void);
 void test9(void);
+
+void Test10(void);
 #endif /* APP_TEST_H_ */

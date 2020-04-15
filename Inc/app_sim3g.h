@@ -79,7 +79,7 @@ FlagStatus isSendOK(void);
 
 void Set_Is_Receive_Data_From_Server(FlagStatus status);
 FlagStatus Get_Is_Receive_Data_From_Server(void);
-
+void Clear_All_Uart_Receive_Flags(void);
 #endif /* APP_SIM3G_H_ */
 
 

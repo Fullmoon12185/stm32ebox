@@ -5,12 +5,11 @@
  *      Author: VAIO
  */
 #include "main.h"
-
+#include "app_gpio.h"
 void LED_Init(void);
 void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
 void ZeroPoint_Detection_Pin_Init(void);
-void SPI_CS_Init(void);
 
 /**
   * @brief GPIO Initialization Function

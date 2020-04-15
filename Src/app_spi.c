@@ -34,7 +34,8 @@ void SPI2_Init(void){
 		  Spi2Handle.Init.TIMode            = SPI_TIMODE_DISABLE;
 		  Spi2Handle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
 		  Spi2Handle.Init.CRCPolynomial     = 7;
-		  Spi2Handle.Init.NSS               = SPI_NSS_SOFT;
+//		  Spi2Handle.Init.NSS               = SPI_NSS_SOFT;
+		  Spi2Handle.Init.NSS               = SPI_NSS_HARD_OUTPUT;
 
 		#ifdef MASTER_BOARD
 		  Spi2Handle.Init.Mode = SPI_MODE_MASTER;

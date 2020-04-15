@@ -92,17 +92,47 @@ void test7(void){
 void test9(void){
 	static uint8_t rw = 0;
 	static uint8_t counterWrite = 0;
+	uint8_t i = 0,s;
+	uint32_t e, l,w;
 	if(rw == 0){
 		sprintf((char*) strTest, "readfirst = %d\r\n", (int) Read_First_Byte());
 		UART3_SendToHost((uint8_t *)strTest);
 		rw = 1;
 	} else if (rw == 1){
 		Write_First_Byte(counterWrite++);
-		rw = 2;
-	} else {
 		sprintf((char*) strTest, "readsecond = %d\r\n", (int) Read_First_Byte());
 		UART3_SendToHost((uint8_t *)strTest);
-
+		rw = 3;
+	} else {
+		Eeprom_Read_Outlet(i, &s, &e, &l, &w);
+		s ++;
+		e++;
+		l++;
+		Eeprom_Write_Outlet (i, s, e, l, w);
+		s = 0;
+		e = 0;
+		l = 0;
+		Eeprom_Read_Outlet(i, &s, &e, &l, &w);
+		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
+		UART3_SendToHost((uint8_t *)strTest);
 		rw = 0;
 	}
+}
+
+void Test10(void){
+	uint8_t i = 0,s;
+	uint32_t e, l, w;
+	Eeprom_Read_Outlet(i, &s, &e, &l, &w);
+	sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
+	UART3_SendToHost((uint8_t *)strTest);
+	s ++;
+	e++;
+	l++;
+	Eeprom_Write_Outlet (i, s, e, l, w);
+	s = 0;
+	e = 0;
+	l = 0;
+	Eeprom_Read_Outlet(i, &s, &e, &l, &w);
+	sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
+	UART3_SendToHost((uint8_t *)strTest);
 }

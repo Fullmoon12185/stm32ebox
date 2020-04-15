@@ -29,7 +29,8 @@
 
 #define MAX_RETRY_NUMBER						3
 
-
+#define		COMMAND_ONLY						'1'
+#define		COMMAND_WITH_MAX_ENERGY				'2'
 
 extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH];
 extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
@@ -103,7 +104,7 @@ typedef enum{
 PROCESS_DATA_RECEIVED_FROM_SIM3G processDataState = CHECK_DATA_AVAILABLE_STATE;
 
 
-
+void Clear_All_Flags(void);
 FlagStatus isReceivedData(const uint8_t * str);
 void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID);
 FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message);
@@ -249,7 +250,7 @@ void Sim3g_Init(void){
 	pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 	Sim3g_GPIO_Init();
-	Sim3g_Enable();
+	Sim3g_Disable();
 	Reset_Signal_High();
 
 }
@@ -314,6 +315,17 @@ uint8_t is_Sim3g_Command_Timeout(void){
 	return sim3g_TimeoutFlag;
 }
 
+void Clear_All_Uart_Receive_Flags(void){
+	isOKFlag = RESET;
+	isPBDoneFlag = RESET;
+	isErrorFlag = RESET;
+	isIPCloseFlag = RESET;
+	isRecvFromFlag = RESET;
+	isReadyToSendDataToServer = RESET;
+	isSendOKFlag = RESET;
+	isReceiveDataFromServer = RESET;
+
+}
 void SM_Power_On_Sim3g(void){
 	SCH_Add_Task(Power_Signal_Low, 0, 0);
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_ON_SIM3G, 0);
@@ -365,7 +377,7 @@ void Setting_Up_Timeout(void){
 }
 
 void SM_Sim3g_Startup(void){
-	isPBDoneFlag = RESET;
+	Clear_All_Uart_Receive_Flags();
 	sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
 }
 
@@ -440,21 +452,43 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 	uint8_t relayIndex;
 	uint8_t relayStatus;
 	uint16_t tempBoxID;
+	uint32_t maxEnergy;
+
+	UART3_SendToHost((uint8_t*)"a");
+	UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer);
 	tempBoxID = (Sim3gDataProcessingBuffer[8+0] - 0x30)*1000;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+1] - 0x30)*100;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+2] - 0x30)*10;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+3] - 0x30);
 
 	if(boxID == tempBoxID){
-			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
-			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
-			if(relayStatus == SET){
-				Set_Relay(relayIndex);
-				Set_Limit_Energy(relayIndex, 1000000);
-			} else {
-				Set_Limit_Energy(relayIndex, 0);
-				Reset_Relay(relayIndex);
+			if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_ONLY){
+				relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
+				relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
+				if(relayStatus == SET){
+					Set_Relay(relayIndex);
+					Set_Limit_Energy(relayIndex, 0xffffffff);
+				} else {
+					Set_Limit_Energy(relayIndex, 0);
+					Reset_Relay(relayIndex);
+				}
+			} else if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_WITH_MAX_ENERGY){
+				relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
+				relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
+				maxEnergy = (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 0] - 0x30)*1000;
+				maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 1] - 0x30)*100;
+				maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 2] - 0x30)*10;
+				maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 3] - 0x30);
+
+				if(relayStatus == SET){
+					Set_Relay(relayIndex);
+					Set_Limit_Energy(relayIndex, maxEnergy);
+				} else {
+					Set_Limit_Energy(relayIndex, 0);
+					Reset_Relay(relayIndex);
+				}
 			}
+
 	}
 
 }

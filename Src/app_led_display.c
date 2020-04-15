@@ -122,7 +122,7 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 		if(status == NODE_NORMAL) {
 			ledStatusBuffer[position] = (LED_COLOR)GREEN;
 		} else if(status == NODE_READY) {
-			ledStatusBuffer[position] = (LED_COLOR)BLINK_GREEN_SLOW;
+			ledStatusBuffer[position] = (LED_COLOR)GREEN;
 		} else if(status == CHARGING) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_YELLOW_SLOW;
 		} else if(status == CHARGEFULL) {

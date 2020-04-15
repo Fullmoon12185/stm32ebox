@@ -76,7 +76,18 @@ typedef struct Commands {
 } Command;
 
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period);
+
+uint32_t Get_Main_Power_Consumption(void);
+uint8_t Get_Main_Power_Factor(void);
+uint32_t Get_Main_Current(void);
+SystemStatus Get_Main_Status(void);
+
 uint32_t Get_Power_Consumption(uint8_t outletID);
+uint8_t Get_Power_Factor(uint8_t outletID);
+uint8_t Get_Voltage(uint8_t outletID);
+uint32_t Get_Current(uint8_t outletID);
+
+
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy);
 NodeStatus Get_Node_Status(uint8_t outletID);
 void Power_Setup(void);

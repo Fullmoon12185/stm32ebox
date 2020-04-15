@@ -38,7 +38,7 @@ extern FlagStatus isReadyToSendDataToServer;
 extern FlagStatus isReceiveDataFromServer;
 
 const uint8_t MQTTCLOSE_COMMAND[]   = "AT+CIPCLOSE\r\n";
-const uint8_t CLIENT_ID[] 			= "ABCDEF";
+uint8_t CLIENT_ID[MAX_TOPIC_LENGTH];
 
 //nguyen cloudmqtt
 
@@ -75,6 +75,9 @@ uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
 
 uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
+uint8_t PUBLISH_TOPIC_VOLTAGE[MAX_TOPIC_LENGTH];
+uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
+uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
 
 
 uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
@@ -116,6 +119,7 @@ void SM_Mqtt_Wait_For_Response_From_Connect_State(void);
 void SM_Mqtt_Subscribe(void);
 void SM_Mqtt_Receive_Greater_Than_Symbol_Subscribe_State(void);
 void SM_Mqtt_Wait_For_Response_From_Subscribe_State(void);
+
 
 void SM_Mqtt_Publish(void);
 void SM_Mqtt_Receive_Greater_Than_Symbol_Publish_State(void);
@@ -163,61 +167,120 @@ MQTT_STATE pre_mqttState = MAX_MQTT_NUMBER_STATES;
 void Set_Up_Topic_Names(void){
 
 	uint16_t boxID = Get_Box_ID();
-	SUBSCRIBE_TOPIC_1[0] = 'C';
-	SUBSCRIBE_TOPIC_1[1] = 'E';
-	SUBSCRIBE_TOPIC_1[2] = 'b';
-	SUBSCRIBE_TOPIC_1[3] = 'o';
-	SUBSCRIBE_TOPIC_1[4] = 'x';
-	SUBSCRIBE_TOPIC_1[5] = '_';
+	uint8_t indexTopicCharacter = 0;
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 'C';
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 'E';
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 'b';
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 'o';
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 'x';
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = '_';
 
-	SUBSCRIBE_TOPIC_1[6] = boxID / 1000 + 0x30;
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = boxID / 1000 + 0x30;
 	boxID = boxID%1000;
-	SUBSCRIBE_TOPIC_1[7] = boxID / 100 + 0x30;
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = boxID / 100 + 0x30;
 	boxID = boxID%100;
-	SUBSCRIBE_TOPIC_1[8] = boxID / 10 + 0x30;
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = boxID / 10 + 0x30;
 	boxID = boxID%10;
-	SUBSCRIBE_TOPIC_1[9] = boxID + 0x30;
-	SUBSCRIBE_TOPIC_1[10] = 0;
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = boxID + 0x30;
+	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 0;
 
-	SUBSCRIBE_TOPIC_2[0] = 'A';
-	SUBSCRIBE_TOPIC_2[1] = 'E';
-	SUBSCRIBE_TOPIC_2[2] = 'b';
-	SUBSCRIBE_TOPIC_2[3] = 'o';
-	SUBSCRIBE_TOPIC_2[4] = 'x';
-	SUBSCRIBE_TOPIC_2[5] = '_';
+	indexTopicCharacter = 0;
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'Z';
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'E';
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'b';
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'o';
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'x';
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = '_';
 
-	SUBSCRIBE_TOPIC_2[6] = SUBSCRIBE_TOPIC_1[6];
-	SUBSCRIBE_TOPIC_2[7] = SUBSCRIBE_TOPIC_1[7];
-	SUBSCRIBE_TOPIC_2[8] = SUBSCRIBE_TOPIC_1[8];
-	SUBSCRIBE_TOPIC_2[9] = SUBSCRIBE_TOPIC_1[9];
-	SUBSCRIBE_TOPIC_2[10] = 0;
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 0;
 
 
-	PUBLISH_TOPIC_STATUS[0] = 'S';
-	PUBLISH_TOPIC_STATUS[1] = 'E';
-	PUBLISH_TOPIC_STATUS[2] = 'b';
-	PUBLISH_TOPIC_STATUS[3] = 'o';
-	PUBLISH_TOPIC_STATUS[4] = 'x';
-	PUBLISH_TOPIC_STATUS[5] = '_';
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 'S';
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 'E';
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 'x';
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = '_';
 
-	PUBLISH_TOPIC_STATUS[6] = SUBSCRIBE_TOPIC_1[6];
-	PUBLISH_TOPIC_STATUS[7] = SUBSCRIBE_TOPIC_1[7];
-	PUBLISH_TOPIC_STATUS[8] = SUBSCRIBE_TOPIC_1[8];
-	PUBLISH_TOPIC_STATUS[9] = SUBSCRIBE_TOPIC_1[9];
-	PUBLISH_TOPIC_STATUS[10] = 0;
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 0;
 
-	PUBLISH_TOPIC_POWER[0] = 'P';
-	PUBLISH_TOPIC_POWER[1] = 'E';
-	PUBLISH_TOPIC_POWER[2] = 'b';
-	PUBLISH_TOPIC_POWER[3] = 'o';
-	PUBLISH_TOPIC_POWER[4] = 'x';
-	PUBLISH_TOPIC_POWER[5] = '_';
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = 'P';
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = 'E';
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = 'x';
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = '_';
 
-	PUBLISH_TOPIC_POWER[6] = SUBSCRIBE_TOPIC_1[6];
-	PUBLISH_TOPIC_POWER[7] = SUBSCRIBE_TOPIC_1[7];
-	PUBLISH_TOPIC_POWER[8] = SUBSCRIBE_TOPIC_1[8];
-	PUBLISH_TOPIC_POWER[9] = SUBSCRIBE_TOPIC_1[9];
-	PUBLISH_TOPIC_POWER[10] = 0;
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = 0;
+
+
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = 'V';
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = 'E';
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = 'x';
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = '_';
+
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_VOLTAGE[indexTopicCharacter++] = 0;
+
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = 'A';
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = 'E';
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = 'x';
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = '_';
+
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_CURRENT[indexTopicCharacter++] = 0;
+
+
+
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 'P';
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 'F';
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 'E';
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 'x';
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = '_';
+
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 0;
+
+	indexTopicCharacter = 0;
+	CLIENT_ID[indexTopicCharacter++] = 'E';
+	CLIENT_ID[indexTopicCharacter++] = 'b';
+	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	CLIENT_ID[indexTopicCharacter++] = 0;
 }
 
 
@@ -238,7 +301,6 @@ void MQTT_State_Display(void){
 		switch(mqttState){
 		case MQTT_OPEN_STATE:
 			DEBUG_MQTT(UART3_SendToHost((uint8_t*)"MQTT_OPEN_STATE"););
-
 			break;
 		case MQTT_WAIT_FOR_RESPONSE_FROM_OPEN_STATE:
 			DEBUG_MQTT(UART3_SendToHost((uint8_t*)"MQTT_WAIT_FOR_RESPONSE_FROM_OPEN_STATE"););
@@ -346,6 +408,7 @@ void SM_Send_Data(uint8_t mesageLength){
 	}
 	commandBuffer[commandBufferIndex++] = CR;
 
+	isReadyToSendDataToServer = RESET;
 	MQTTCommandSending((uint8_t *)commandBuffer, commandBufferIndex);
 }
 
@@ -353,8 +416,7 @@ void SM_Mqtt_Open(void){
 	SCH_Delete_Task(mqtt_Timeout_Task_Index);
 	Mqtt_Clear_Timeout_Flag();
 	mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_COMMAND_TIME_OUT,0);
-	isOKFlag = RESET;
-	isErrorFlag = RESET;
+	Clear_All_Uart_Receive_Flags();
 	ATcommandSending((uint8_t *)MQTTOPEN_COMMAND);
 	mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_OPEN_STATE;
 }
@@ -375,6 +437,7 @@ void SM_Mqtt_Connect(void){
 	SCH_Delete_Task(mqtt_Timeout_Task_Index);
 	Mqtt_Clear_Timeout_Flag();
 	mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_COMMAND_TIME_OUT,0);
+	isReadyToSendDataToServer = RESET;
 	Setup_Mqtt_Connect_Message();
 	mqttState = MQTT_RECEIVE_GREATER_THAN_SYMBOL_CONNECT_STATE;
 }
@@ -414,6 +477,8 @@ void SM_Mqtt_Subscribe (void) {
 			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_TOPIC_2);
 		}
 	}
+	isErrorFlag = RESET;
+	isIPCloseFlag = RESET;
 	mqttState = MQTT_RECEIVE_GREATER_THAN_SYMBOL_SUBSCRIBE_STATE;
 }
 
@@ -423,12 +488,19 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Subscribe_State(void){
 		isRecvFromFlag = RESET;
 		isSendOKFlag = RESET;
 		isErrorFlag = RESET;
+		isIPCloseFlag = RESET;
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 		mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_SUBSCRIBE_STATE;
 
 		SCH_Delete_Task(mqtt_Timeout_Subscribe_Task_Index);
 		Mqtt_Clear_Subscribe_Timeout_Flag();
 		mqtt_Timeout_Subscribe_Task_Index = SCH_Add_Task(Mqtt_Subscribe_Timeout, MQTT_SUBSCRIBE_TIME_OUT, 0);
+	} else if(isErrorFlag){
+		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
+	} else if(isIPCloseFlag){
+		isIPCloseFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	} else if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
@@ -446,9 +518,11 @@ void SM_Mqtt_Wait_For_Response_From_Subscribe_State(void){
 				mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
 			}
 		}
-
 	} else if(isErrorFlag){
 		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
+	} else if(isIPCloseFlag){
+		isIPCloseFlag = RESET;
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	} else if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
@@ -469,6 +543,8 @@ void SM_Wait_For_New_Command(void){
 
 
 void SM_Mqtt_Publish(void){
+	isErrorFlag = RESET;
+	isIPCloseFlag = RESET;
 	SCH_Delete_Task(mqtt_Timeout_Task_Index);
 	Mqtt_Clear_Timeout_Flag();
 	mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_COMMAND_TIME_OUT,0);
@@ -483,6 +559,12 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Publish_State(void){
 		isIPCloseFlag = RESET;
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 		mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_PUBLISH_STATE;
+	} else if(isErrorFlag){
+		isErrorFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
+	} else if(isIPCloseFlag){
+		isIPCloseFlag = RESET;
+		mqttState = MAX_MQTT_NUMBER_STATES;
 	} else if(is_Mqtt_Command_Timeout()){
 		mqttState = MAX_MQTT_NUMBER_STATES;
 	}
