@@ -250,7 +250,7 @@ void Sim3g_Init(void){
 	pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 	Sim3g_GPIO_Init();
-	Sim3g_Disable();
+	Sim3g_Enable();
 	Reset_Signal_High();
 
 }

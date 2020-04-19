@@ -19,7 +19,7 @@
 
 uint8_t strtmp2[] = "                                     ";
 uint8_t rxBuffer[1], txBuffer[1];
-union EEPROM_BLOCKS_ARRAY{
+volatile  union EEPROM_BLOCKS_ARRAY{
 	struct EEPROM_BLOCK{
 		uint8_t outletID;		//remove
 		uint8_t status;			//save when have change
@@ -33,7 +33,7 @@ union EEPROM_BLOCKS_ARRAY{
 }block[NUMBER_OF_RELAYS] ;
 
 void Eeprom_Initialize(){
-//	MC25LC512_Initialize();
+	MC25LC512_Initialize();
 	for(uint8_t j = 0; j < NUMBER_OF_RELAYS; j ++){
 		for(uint8_t i = 0; i< EEPROM_BLOCK_SIZE; i++) {
 			block[j].eepromBuffer[i] = 0;
@@ -74,8 +74,10 @@ uint8_t Eeprom_Read_Outlet(uint8_t outletID, uint8_t *status, uint32_t *energy, 
 	for(uint8_t i = 0; i < EEPROM_BLOCK_SIZE - 1; i ++){
 		checksum = checksum ^ block[outletID].eepromBuffer[i];
 	}
-	if(outletID == block[outletID].block_element.outletID
-			&& checksum == block[outletID].block_element.checksum){
+//	uint8_t tempChecksum = block[outletID].block_element.checksum;
+//	uint8_t tempoutletID = block[outletID].block_element.outletID;
+//	if( tempoutletID == outletID && checksum == tempChecksum)
+	{
 
 		*status = block[outletID].block_element.status;
 		*energy = block[outletID].block_element.energy;
