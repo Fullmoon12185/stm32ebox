@@ -34,7 +34,7 @@ void MX_GPIO_Init(void)
 	LED_Init();
 	GPIO_Relay_Init();
 	Buzzer_Init();
-	SPI_CS_Init();
+//	SPI_CS_Init();
 	ZeroPoint_Detection_Pin_Init();
 }
 

@@ -215,17 +215,18 @@ static void Node_Setup(void) {
 		} else {
 			Main.nodes[outletID].voltage = 230;
 			Main.nodes[outletID].powerFactor = 100;
-			if(Eeprom_Read_Outlet(outletID,
-					&Main.nodes[outletID].nodeStatus,
-					&Main.nodes[outletID].energy,
-					&Main.nodes[outletID].limitEnergy,
-					&Main.nodes[outletID].workingTime)){
-				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
-						Main.nodes[outletID].nodeStatus == CHARGING){
-					Set_Relay(outletID);
-				}
-
-			} else {
+//			if(Eeprom_Read_Outlet(outletID,
+//					&Main.nodes[outletID].nodeStatus,
+//					&Main.nodes[outletID].energy,
+//					&Main.nodes[outletID].limitEnergy,
+//					&Main.nodes[outletID].workingTime)){
+//				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
+//						Main.nodes[outletID].nodeStatus == CHARGING){
+//					Set_Relay(outletID);
+//				}
+//
+//			} else
+			{
 				Main.nodes[outletID].limitEnergy = 0;
 				Main.nodes[outletID].energy = 0;
 				Main.nodes[outletID].nodeStatus = NODE_NORMAL;

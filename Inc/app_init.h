@@ -16,7 +16,6 @@ enum InitState {
     UART_INIT,
 
 	LED_DISPLAY_INIT,
-	RELAY_INIT,
 	FLASH_INIT,
     TIMER_INIT,
 	ADC_INIT,
@@ -28,6 +27,7 @@ enum InitState {
 	START_DMA_ADC,
 	SIM_3G_INIT,
 	POWER_SETUP_INIT,
+	RELAY_INIT,
     MAX_INIT_STATE
 };
 

@@ -81,7 +81,6 @@ void System_Initialization(void)
         	break;
         case SPI_25LCXXX_INIT:
         	Eeprom_Initialize();
-        	SPI_CS_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_25LCXXX_INIT - Done \r\n"));
         	break;
         case I2C_INIT:
