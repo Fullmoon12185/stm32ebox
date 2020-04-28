@@ -61,11 +61,11 @@ const uint8_t PASSWORD[] 			= "";
 
 #endif
 //subscribe topin khong nen co len la 10
-const uint8_t SUBSCRIBE_TOPIC_1[] 	= "eBox/switch";
+const uint8_t SUBSCRIBE_TOPIC_1[] 	= "CEbox_0001";
 const uint8_t SUBSCRIBE_TOPIC_2[] 	= "eBox/saves1";
 
-const uint8_t PUBLISH_TOPIC_STATUS[] 		= "eBox/status";
-const uint8_t PUBLISH_TOPIC_POWER[] 		= "eBox/power";
+const uint8_t PUBLISH_TOPIC_STATUS[] 		= "SEbox_0001";
+const uint8_t PUBLISH_TOPIC_POWER[] 		= "PEbox_0001";
 
 uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
 uint8_t publish_message_length = 0;
