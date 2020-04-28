@@ -97,7 +97,7 @@ void Eeprom_Save(uint8_t outletID){
 //		block[outletID].block_element.checksum = block[outletID].block_element.checksum ^ block[outletID].eepromBuffer[i];
 //	}
 
-	MC25LC512_Write_Bytes(FIRST_EEPROM_ADDR + (PAGE_LENGTH * outletID), block[outletID].eepromBuffer, EEPROM_BLOCK_SIZE);
+//	MC25LC512_Write_Bytes(FIRST_EEPROM_ADDR + (PAGE_LENGTH * outletID), block[outletID].eepromBuffer, EEPROM_BLOCK_SIZE);
 }
 
 void Eeprom_Update_Status(uint8_t outletID, uint8_t status){

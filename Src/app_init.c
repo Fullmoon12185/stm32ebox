@@ -45,10 +45,6 @@ void System_Initialization(void)
         	SystemClock_Config();
 
             break;
-        case SCHEDULER_INIT:
-//        	test6();
-
-        	break;
         case UART_INIT:
         	UART3_Init();
         	UART1_Init();
@@ -56,13 +52,6 @@ void System_Initialization(void)
         	break;
         case GPIO_INIT:
         	MX_GPIO_Init();
-//			Turn_On_Buzzer();
-//			HAL_Delay(100);
-//			Turn_Off_Buzzer();
-//			HAL_Delay(100);
-//			Turn_On_Buzzer();
-//			HAL_Delay(100);
-//			Turn_Off_Buzzer();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
         case LED_DISPLAY_INIT:

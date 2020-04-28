@@ -64,6 +64,7 @@ __IO ITStatus isGreaterThanSymbolReceived = RESET;
 
 const uint8_t SMS_DONE[] = "SMS DONE";
 const uint8_t PB_DONE[] = "PB DONE\r";
+const uint8_t STIN25[] = "+STIN: 25\r";
 
 const uint8_t OK[] = "OK\r";
 const uint8_t CONNECT_OK[] = "CONNECT OK\r";
@@ -75,6 +76,7 @@ const uint8_t RECV_FROM[] = "RECV FROM";
 const uint8_t IP_CLOSE[] = "+IPCLOSE";
 
 FlagStatus isPBDoneFlag = RESET;
+FlagStatus isStin25 = RESET;
 FlagStatus isOKFlag = RESET;
 FlagStatus isErrorFlag = RESET;
 FlagStatus isIPCloseFlag = RESET;
@@ -317,6 +319,7 @@ uint8_t is_Sim3g_Command_Timeout(void){
 
 void Clear_All_Uart_Receive_Flags(void){
 	isOKFlag = RESET;
+	isStin25 = RESET;
 	isPBDoneFlag = RESET;
 	isErrorFlag = RESET;
 	isIPCloseFlag = RESET;
@@ -382,8 +385,9 @@ void SM_Sim3g_Startup(void){
 }
 
 void SM_Wait_For_Sim3g_Startup_Response(void){
-	if(isPBDoneFlag == SET){
+	if(isPBDoneFlag == SET && isStin25 == SET){
 		isPBDoneFlag = RESET;
+		isStin25 = RESET;
 		sim3gState = SIM3G_SETTING;
 		atCommandArrayIndex = 0;
 		sim3g_Retry_Counter = 0;
@@ -532,6 +536,8 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 //		UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer);
 		if(isReceivedData((uint8_t *)PB_DONE)){
 			isPBDoneFlag = SET;
+		} else if(isReceivedData((uint8_t *)STIN25)){
+			isStin25 = SET;
 		} else if(isReceivedData((uint8_t *)OK)){
 			isOKFlag = SET;
 		} else if(isReceivedData((uint8_t *)ERROR_1)){

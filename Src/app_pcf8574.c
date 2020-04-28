@@ -77,7 +77,8 @@ uint32_t Get_All_Relay_Fuse_Statuses(void){
 }
 
 uint16_t Get_Box_ID(void){
-	return pcfData.wordPCFData[1] >> 4;
+	return 1;
+//	return pcfData.wordPCFData[1] >> 4;
 }
 
 void PCF_read(void){

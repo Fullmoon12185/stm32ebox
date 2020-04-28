@@ -229,7 +229,7 @@ static void Node_Setup(void) {
 //						Main.nodes[outletID].energy, (int)
 //						Main.nodes[outletID].limitEnergy);
 //				UART3_SendToHost((uint8_t *)strtmpPower);
-//				HAL_Delay(300);
+//				HAL_Delay(500);
 //			} else
 			{
 				Main.nodes[outletID].limitEnergy = 0;
