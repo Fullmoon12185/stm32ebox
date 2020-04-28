@@ -56,6 +56,13 @@ void System_Initialization(void)
         	break;
         case GPIO_INIT:
         	MX_GPIO_Init();
+//			Turn_On_Buzzer();
+//			HAL_Delay(100);
+//			Turn_Off_Buzzer();
+//			HAL_Delay(100);
+//			Turn_On_Buzzer();
+//			HAL_Delay(100);
+//			Turn_Off_Buzzer();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
         case LED_DISPLAY_INIT:
@@ -96,9 +103,7 @@ void System_Initialization(void)
         case ACCELERATOR_INIT:
         	break;
         case WATCH_DOG_INIT:
-#if(WATCHDOG_ENABLE == 1)
-        	MX_IWDG_Init();
-#endif
+
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
             break;
         case START_DMA_ADC:
@@ -112,7 +117,7 @@ void System_Initialization(void)
         	break;
         case POWER_SETUP_INIT:
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"POWER_SETUP_INIT - Done \r\n"));
-        	Power_Setup();
+//        	Power_Setup();
 
         	break;
         default:

@@ -21,7 +21,7 @@ extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
 
 extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
-uint8_t strTest[] = "                                   ";
+uint8_t strTest[] = "                                                                                        ";
 void test1(void){
 
 
@@ -110,6 +110,7 @@ void test9(void){
 		e++;
 		l++;
 		Eeprom_Write_Outlet (0, s, e, l, w);
+		HAL_Delay(100);
 		s = 0;
 		e = 0;
 		l = 0;
@@ -123,17 +124,31 @@ void test9(void){
 void Test10(void){
 	uint8_t i = 0,s;
 	uint32_t e, l, w;
-	Eeprom_Read_Outlet(i, &s, &e, &l, &w);
-	sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
-	UART3_SendToHost((uint8_t *)strTest);
-	s ++;
-	e++;
-	l++;
-	Eeprom_Write_Outlet (i, s, e, l, w);
-	s = 0;
-	e = 0;
-	l = 0;
-	Eeprom_Read_Outlet(i, &s, &e, &l, &w);
-	sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
-	UART3_SendToHost((uint8_t *)strTest);
+	for(i = 0; i < 10; i ++){
+		Eeprom_Read_Outlet(i, &s, &e, &l, &w);
+		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (uint32_t)s, (uint32_t)e, (uint32_t)l);
+		UART3_SendToHost((uint8_t *)strTest);
+		s ++;
+		e++;
+		l++;
+	//	HAL_Delay(1000);
+		Eeprom_Write_Outlet (i, s, e, l, w);
+		HAL_Delay(100);
+		s = 0;
+		e = 0;
+		l = 0;
+		Eeprom_Read_Outlet(i, &s, &e, &l, &w);
+		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (uint32_t)s, (uint32_t)e, (uint32_t)l);
+		UART3_SendToHost((uint8_t *)strTest);
+	}
+}
+
+void Test11(void){
+
+	for(uint8_t i = 0; i < 10; i ++){
+		Eeprom_Write_Outlet (i, 0, 0, 0, 0);
+		HAL_Delay(100);
+		Eeprom_Update_LimitEnergy(i, 0);
+//		HAL_Delay(1000);
+	}
 }

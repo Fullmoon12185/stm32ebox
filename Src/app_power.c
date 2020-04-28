@@ -193,13 +193,14 @@ void Set_Power_Timeout_Flags(uint8_t outletID, uint32_t PowerTimeOut){
 static void Node_Setup(void) {
 	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID ++){
 		if (outletID == MAIN_INPUT) {	//setup for Main node
-			if(Eeprom_Read_Outlet(outletID,
-					&Main.status,
-					&Main.energy,
-					&Main.limitEnergy,
-					&Main.workingTime)){
-
-			} else {
+//			if(Eeprom_Read_Outlet(outletID,
+//					&Main.status,
+//					&Main.energy,
+//					&Main.limitEnergy,
+//					&Main.workingTime)){
+//
+//			} else
+			{
 				Main.currentTotal = 0;
 				Main.status = SYSTEM_NORMAL;
 				Main.refTotalCurrent = 0;
@@ -224,7 +225,11 @@ static void Node_Setup(void) {
 //						Main.nodes[outletID].nodeStatus == CHARGING){
 //					Set_Relay(outletID);
 //				}
-//
+//				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus, (int)
+//						Main.nodes[outletID].energy, (int)
+//						Main.nodes[outletID].limitEnergy);
+//				UART3_SendToHost((uint8_t *)strtmpPower);
+//				HAL_Delay(300);
 //			} else
 			{
 				Main.nodes[outletID].limitEnergy = 0;
@@ -234,8 +239,8 @@ static void Node_Setup(void) {
 			}
 			Main.nodes[outletID].power = 0;
 			Main.nodes[outletID].current = 0;
-			power_TimeoutFlag[outletID - 1] = 0;
-			power_Timeout_Task_ID[outletID - 1] = NO_TASK_ID;
+			power_TimeoutFlag[outletID] = 0;
+			power_Timeout_Task_ID[outletID] = NO_TASK_ID;
 		}
 
 	}

@@ -49,28 +49,21 @@ int main(void)
 	System_Initialization();
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
-
 	MX_GPIO_Init();
-
-	Turn_On_Buzzer();
-	HAL_Delay(100);
-	Turn_Off_Buzzer();
-	HAL_Delay(100);
-	Turn_On_Buzzer();
-	HAL_Delay(100);
-	Turn_Off_Buzzer();
-
-
-	PCF_Init();
+	Power_Setup();
+//	PCF_Init();
 	SCH_Add_Task(PCF_read, 7, 21);
-	SCH_Add_Task(test9, 7, 200);
 	SCH_Add_Task(LED_Display_FSM, 11, 20);
-
 	SCH_Add_Task(Watchdog_Counting, 3, 100);
+//	Test10();
+//	Test11();
+#if(WATCHDOG_ENABLE == 1)
+    MX_IWDG_Init();
+#endif
 	while (1){
 
 		SCH_Dispatch_Tasks();
-//		Main_FSM();
+		Main_FSM();
 	}
 	return 0;
 }
