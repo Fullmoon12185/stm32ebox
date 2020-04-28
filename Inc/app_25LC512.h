@@ -34,7 +34,7 @@
 #define EEPROM_CS_PIN_RESET 		0
 //extern unsigned char Enable,Disable;
 
-void MC25LC512_Initilize(void);
+void MC25LC512_Initialize(void);
 void MC25LC512_Write_Bytes(uint16_t AddresOfData, uint8_t *WriteArrayOfEEProm, uint16_t SizeOfArray);
 void MC25LC512_Write_HalfWords(uint16_t AddresOfData, uint16_t *WriteArrayOfEEProm, uint16_t sizeOfArray);
 void MC25LC512_Write_Words(uint16_t AddresOfData, uint32_t *WriteArrayOfEEProm, uint16_t sizeOfArray);

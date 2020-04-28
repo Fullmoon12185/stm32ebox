@@ -58,8 +58,9 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 
-#define		BOX_ID		1
-
+#define		VERSION_EBOX				2
+#define		INTERRUPT_TIMER_PERIOD		10 //ms
+#define		WATCHDOG_ENABLE 			1
 
 //#define B1_Pin 							GPIO_PIN_13
 //#define B1_GPIO_Port 					GPIOC
@@ -104,10 +105,16 @@ void Error_Handler(void);
 #define BUZZER_PIN						PB5_BUZZER_PIN
 #define BUZZER_PORT						PB5_BUZZER_PORT
 
+//SPI CS pin
+#define SPI_CS_PIN						GPIO_PIN_12
+#define SPI_CS_PORT						GPIOB
 
 //3G control signals pins ports
+#if(VERSION_EBOX != 2)
 #define PC7_3G_WAKEUP					GPIO_PIN_7
 #define PC7_3G_WAKEUP_PORT				GPIOC
+#endif
+
 #define PC8_3G_PWRON					GPIO_PIN_8
 #define PC8_3G_PWRON_PORT				GPIOC
 #define PC9_3G_PERST					GPIO_PIN_9
@@ -115,8 +122,10 @@ void Error_Handler(void);
 #define PA8_3G_REG_EN					GPIO_PIN_8
 #define PA8_3G_REG_EN_PORT				GPIOA
 
+#if(VERSION_EBOX != 2)
 #define SIM5320_3G_WAKEUP					PC7_3G_WAKEUP
 #define SIM5320_3G_WAKEUP_PORT				PC7_3G_WAKEUP_PORT
+#endif
 #define SIM5320_3G_PWRON					PC8_3G_PWRON
 #define SIM5320_3G_PWRON_PORT				PC8_3G_PWRON_PORT
 #define SIM5320_3G_PERST					PC9_3G_PERST
@@ -186,23 +195,27 @@ void Error_Handler(void);
 #define USART3_RX_PIN 					GPIO_PIN_11
 #define USART3_RX_GPIO_PORT 				GPIOB
 
-#define USART3_CLK_ENABLE()              __HAL_RCC_USART3_CLK_ENABLE();
-#define DMA3_CLK_ENABLE()                __HAL_RCC_DMA3_CLK_ENABLE()
-#define USART3_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
-#define USART3_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
+#define USART3_CLK_ENABLE()              		__HAL_RCC_USART3_CLK_ENABLE();
+#define DMA3_CLK_ENABLE()                		__HAL_RCC_DMA3_CLK_ENABLE()
+#define USART3_RX_GPIO_CLK_ENABLE()      		__HAL_RCC_GPIOB_CLK_ENABLE()
+#define USART3_TX_GPIO_CLK_ENABLE()      		__HAL_RCC_GPIOB_CLK_ENABLE()
 
-#define USART3_FORCE_RESET()             __HAL_RCC_USART3_FORCE_RESET()
-#define USART3_RELEASE_RESET()           __HAL_RCC_USART3_RELEASE_RESET()
+#define USART3_FORCE_RESET()             		__HAL_RCC_USART3_FORCE_RESET()
+#define USART3_RELEASE_RESET()           		__HAL_RCC_USART3_RELEASE_RESET()
 
 
 #define		SAMPLE_STEPS							2
 #define 	NUMBER_OF_SAMPLES_PER_AVERAGE			(1 << SAMPLE_STEPS)
-#define 	NUMBER_OF_SAMPLES_PER_SECOND			200
+#define 	NUMBER_OF_SAMPLES_PER_SECOND			275
 #define 	NUMBER_OF_ADC_CHANNELS					14
 
+#if(VERSION_EBOX == 2)
+#define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
+#define 	ZERO_POINT_DETECTION_PORT				GPIOC
+#else
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_14
 #define 	ZERO_POINT_DETECTION_PORT				GPIOC
-
+#endif
 
 //SPI2
 #define MASTER_BOARD
@@ -332,13 +345,22 @@ void Error_Handler(void);
 #define RELAY_PORT_9						PB4_OUT9_PORT
 
 
+#if(VERSION_EBOX == 2)
+#define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
+#define PD2_RELAY_ENABLE_PORT						GPIOD
+#endif
 
 
-#define		NUMBER_OF_SUBSCRIBE_TOPIC	2
-#define		NUMBER_OF_PUBLISH_TOPIC		2
+#define		NUMBER_OF_SUBSCRIBE_TOPIC						2
+#define		NUMBER_OF_PUBLISH_TOPIC							2
+#define 	MAX_TOPIC_LENGTH								14
 
-#define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 		48
-#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE 	16
+#define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 					48
+#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE 				15
+
+#define		NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION	(NUMBER_OF_RELAYS + 1)
+#define		MAIN_INPUT										(NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION - 1)
+
 
 
 #ifdef __cplusplus

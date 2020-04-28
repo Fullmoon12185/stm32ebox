@@ -67,6 +67,8 @@ void Timer_Init(void){
 	    /* Starting Error */
 	    Error_Handler();
 	  }
+
+//	  HAL_NVIC_SetPriority((IRQn_Type)(TIM3_IRQn), 0x0, 0);
 }
 
 /**

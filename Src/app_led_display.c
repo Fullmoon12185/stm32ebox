@@ -118,10 +118,7 @@ void Led_Display(void) {
 
 
 void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
-	uint8_t strtmpLED[] = "                                     ";
 	if(position < NUMBER_OF_RELAYS){
-//		sprintf((char*) strtmpLED, "p = %d\t s = %d\r\n", (int) position, (int) status);
-//		UART3_SendToHost((uint8_t *)strtmpLED);
 		if(status == NODE_NORMAL) {
 			ledStatusBuffer[position] = (LED_COLOR)GREEN;
 		} else if(status == NODE_READY) {

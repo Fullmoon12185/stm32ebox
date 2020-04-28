@@ -15,16 +15,19 @@
 #include "app_gpio.h"
 #include "app_power.h"
 
-#define		BOX_ID	1
 #define		TIME_FOR_PING_REQUEST		6000 //5s
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
 
 
-#define 	TIME_FOR_BUZZER				15
+#define 	TIME_FOR_BUZZER				1
 
 
-extern const uint8_t PUBLISH_TOPIC_STATUS[];
-extern const uint8_t PUBLISH_TOPIC_POWER[];
+extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_VOLTAGE[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
+
 
 extern uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
 extern uint8_t publishTopicIndex;
@@ -35,10 +38,10 @@ extern int32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
 extern FlagStatus array_Of_Outlet_Status[NUMBER_OF_ADC_CHANNELS];
 
 uint8_t ping_Request_TimeoutFlag = 0;
-uint8_t ping_Request_TimeoutIndex = SCH_MAX_TASKS;
+uint32_t ping_Request_TimeoutIndex = NO_TASK_ID;
 
 uint8_t publish_message_TimeoutFlag = 0;
-uint8_t publish_message_TimeoutIndex = SCH_MAX_TASKS;
+uint32_t publish_message_TimeoutIndex = NO_TASK_ID;
 
 
 typedef enum {
@@ -65,6 +68,11 @@ uint8_t is_Publish_Message_Timeout(void);
 void Update_Publish_Status_Message(void);
 void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData);
 
+void Update_Publish_Power_Message_All_Outlets(void);
+void Update_Publish_Power_Factor_Message_All_Outlets(void);
+void Update_Publish_Voltage_Message_All_Outlets(void);
+void Update_Publish_Ampere_Message_All_Outlets(void);
+
 void Clear_Ping_Request_Timeout_Flag(void){
 	ping_Request_TimeoutFlag = 0;
 }
@@ -85,15 +93,6 @@ uint8_t is_Publish_Message_Timeout(void){
 	return publish_message_TimeoutFlag;
 }
 
-void Update_Power_Consumption(void){
-	for(uint8_t outletID = 0; outletID < NUMBER_OF_RELAYS; outletID++){
-		if(Get_Relay_Status(outletID)){
-			array_Of_Power_Consumption_In_WattHour[outletID] = array_Of_Power_Consumption_In_WattHour[outletID] + (outletID + 1) * 10;
-		} else {
-			array_Of_Power_Consumption_In_WattHour[outletID] = 0;
-		}
-	}
-}
 
 void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData){
 
@@ -148,20 +147,185 @@ void Update_Publish_Power_Message_All_Outlets(void){
 
 	uint8_t publishMessageIndex = 0;
 	uint32_t tempValue;
+	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
+		publish_message[publishMessageIndex] = 0;
+	}
+	publishMessageIndex = 0;
+	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID++){
+
+		if(outletID < MAIN_INPUT){
+			publish_message[publishMessageIndex++] = outletID + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			tempValue = Get_Power_Consumption(outletID);
+		} else {
+			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			tempValue = Get_Main_Power_Consumption();
+		}
+
+		if(tempValue >= 1000000){
+			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
+			tempValue = tempValue % 1000000;
+			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+			tempValue = tempValue % 100000;
+			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+			tempValue = tempValue % 10000;
+			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+			tempValue = tempValue % 1000;
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		} else if(tempValue >= 100000){
+			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+			tempValue = tempValue % 100000;
+			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+			tempValue = tempValue % 10000;
+			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+			tempValue = tempValue % 1000;
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		} else if(tempValue >= 10000){
+			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+			tempValue = tempValue % 10000;
+			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+			tempValue = tempValue % 1000;
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		} else if (tempValue >= 1000){
+			tempValue = tempValue % 10000;
+			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+			tempValue = tempValue % 1000;
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+
+		} else if (tempValue >= 100){
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		} else if(tempValue >= 10){
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		} else {
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		}
+		if(outletID < MAIN_INPUT)
+			publish_message[publishMessageIndex++] = ',';
+	}
+	publish_message_length = publishMessageIndex;
+}
+
+
+void Update_Publish_Power_Factor_Message_All_Outlets(void){
+
+	uint8_t publishMessageIndex = 0;
+	uint8_t tempValue;
+	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
+		publish_message[publishMessageIndex] = 0;
+	}
+	publishMessageIndex = 0;
+	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID++){
+		if(outletID < MAIN_INPUT){
+			publish_message[publishMessageIndex++] = outletID + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			tempValue = Get_Power_Factor(outletID);
+		} else {
+			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			tempValue = Get_Main_Power_Factor();
+		}
+
+		if (tempValue >= 100){
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		} else if(tempValue >= 10){
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		} else {
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		}
+		if(outletID < MAIN_INPUT)
+			publish_message[publishMessageIndex++] = ',';
+	}
+	publish_message_length = publishMessageIndex;
+}
+
+void Update_Publish_Voltage_Message_All_Outlets(void){
+
+	uint8_t publishMessageIndex = 0;
+	uint8_t tempValue;
 	for(publishMessageIndex = 0; publishMessageIndex < 20; publishMessageIndex ++){
 		publish_message[publishMessageIndex] = 0;
 	}
 	publishMessageIndex = 0;
 //	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
-	for(uint8_t outletID = 0; outletID < NUMBER_OF_RELAYS; outletID++){
+	for(uint8_t outletID = 0; outletID < 1; outletID++){
 		publish_message[publishMessageIndex++] = outletID + 0x30;
 		publish_message[publishMessageIndex++] = '-';
-		tempValue = Get_Power_Consumption(outletID);
-		if(outletID == 3){
-			uint8_t strtmpfsm[] = "                                               ";
-			sprintf((char*) strtmpfsm, "%d\r\n", (int) tempValue);
-			UART3_SendToHost((uint8_t *)strtmpfsm);
+		tempValue = Get_Voltage(outletID);
+		if (tempValue >= 100){
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
 
+		} else if(tempValue >= 10){
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		} else {
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		}
+	}
+	publish_message_length = publishMessageIndex;
+}
+
+void Update_Publish_Current_Message_All_Outlets(void){
+
+	uint8_t publishMessageIndex = 0;
+	uint32_t tempValue;
+	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
+		publish_message[publishMessageIndex] = 0;
+	}
+	publishMessageIndex = 0;
+//	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
+	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID++){
+
+		if(outletID < MAIN_INPUT){
+			publish_message[publishMessageIndex++] = outletID + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			tempValue = Get_Current(outletID);
+		} else {
+			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			tempValue = Get_Main_Current();
 		}
 		if(tempValue >= 1000000){
 			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
@@ -227,7 +391,7 @@ void Update_Publish_Power_Message_All_Outlets(void){
 		} else {
 			publish_message[publishMessageIndex++] = tempValue + 0x30;
 		}
-		if(outletID < NUMBER_OF_RELAYS - 1)
+		if(outletID < MAIN_INPUT)
 			publish_message[publishMessageIndex++] = ',';
 	}
 	publish_message_length = publishMessageIndex;
@@ -235,28 +399,32 @@ void Update_Publish_Power_Message_All_Outlets(void){
 
 
 void Update_Publish_Status_Message(void){
-	static uint8_t chargingStatus = 1;
 	uint8_t publishMessageIndex = 0;
 	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
 		publish_message[publishMessageIndex] = 0;
 	}
 	publishMessageIndex = 0;
-//	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
-
-	for(uint8_t outletID = 0; outletID < NUMBER_OF_RELAYS; outletID ++){
-		publish_message[publishMessageIndex++] = outletID + 0x30;
-		publish_message[publishMessageIndex++] = '-';
-		if(Get_Relay_Status(outletID)){
-			if(array_Of_Power_Consumption_In_WattHour[outletID] < 1000){
-				chargingStatus = 1;
+	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID ++){
+		if(outletID < MAIN_INPUT){
+			publish_message[publishMessageIndex++] = outletID + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			if(Get_Relay_Status(outletID)){
+				if((uint8_t)Get_Node_Status(outletID) <= 9){
+					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID) + 0x30;
+				} else {
+					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)/10 + 0x30;
+					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)%10 + 0x30;
+				}
 			} else {
-				chargingStatus = 2;
+				publish_message[publishMessageIndex++] = 0x30;
 			}
-			publish_message[publishMessageIndex++] = chargingStatus + 0x30;
 		} else {
-			publish_message[publishMessageIndex++] = 0x30;
+			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			publish_message[publishMessageIndex++] = '-';
+			publish_message[publishMessageIndex++] = (uint8_t)Get_Main_Status() + 0x30;
 		}
-		if(outletID < NUMBER_OF_RELAYS - 1)
+		if(outletID < MAIN_INPUT)
 			publish_message[publishMessageIndex++] = ',';
 	}
 	publish_message_length = publishMessageIndex;
@@ -358,31 +526,65 @@ void Server_Communication(void){
 				} else if (is_Publish_Message_Timeout()){
 					if(publishTopicIndex == 0){
 						publishTopicIndex = 1;
-						Update_Power_Consumption();
 						Update_Publish_Power_Message_All_Outlets();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER, publish_message, publish_message_length);
-						Set_Mqtt_State(MQTT_PUBLISH_STATE);
+//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
+//						Clear_Publish_Message_Timeout_Flag();
+//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+//
+//						Turn_On_Buzzer();
+//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 
-						SCH_Delete_Task(publish_message_TimeoutIndex);
-						Clear_Publish_Message_Timeout_Flag();
-						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-
-						Turn_On_Buzzer();
-						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
-
-					} else {
-						publishTopicIndex = 0;
+					} else if(publishTopicIndex == 1){
+						publishTopicIndex = 2;
 						Update_Publish_Status_Message();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-						Set_Mqtt_State(MQTT_PUBLISH_STATE);
+//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
+//						Clear_Publish_Message_Timeout_Flag();
+//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+//
+//						Turn_On_Buzzer();
+//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+					} else if(publishTopicIndex == 2){
+						publishTopicIndex = 3;
+						Update_Publish_Power_Factor_Message_All_Outlets();
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR, publish_message, publish_message_length);
+//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
+//						Clear_Publish_Message_Timeout_Flag();
+//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+//
+//						Turn_On_Buzzer();
+//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+					} else if(publishTopicIndex == 3){
+						publishTopicIndex = 4;
+						Update_Publish_Voltage_Message_All_Outlets();
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE, publish_message, publish_message_length);
+//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
+//						Clear_Publish_Message_Timeout_Flag();
+//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+//
+//						Turn_On_Buzzer();
+//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+					} else if(publishTopicIndex == 4){
+						publishTopicIndex = 0;
+						Update_Publish_Current_Message_All_Outlets();
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT, publish_message, publish_message_length);
 
-						SCH_Delete_Task(publish_message_TimeoutIndex);
-						Clear_Publish_Message_Timeout_Flag();
-						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-
-						Turn_On_Buzzer();
-						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
+//						Clear_Publish_Message_Timeout_Flag();
+//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+//
+//						Turn_On_Buzzer();
+//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 					}
+					Set_Mqtt_State(MQTT_PUBLISH_STATE);
+					Clear_Publish_Message_Timeout_Flag();
+					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+
+					Turn_On_Buzzer();
+					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+
+
 				}
 			}
 

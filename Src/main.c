@@ -30,6 +30,9 @@
 #include "app_test.h"
 #include "app_pcf8574.h"
 #include "app_gpio.h"
+#include "app_iwatchdog.h"
+#include "app_eeprom.h"
+
 
 typedef enum {
 	POWER_CONSUMPTION_CALCULATION = 0,
@@ -44,8 +47,16 @@ void Main_FSM(void);
 int main(void)
 {
 	System_Initialization();
+
 	Set_Sim3G_State(POWER_ON_SIM3G);
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
+
+	MX_GPIO_Init();
+	Power_Setup();
+	PCF_Init();
+	SCH_Add_Task(PCF_read, 7, 21);
+	SCH_Add_Task(LED_Display_FSM, 11, 20);
+	SCH_Add_Task(Watchdog_Counting, 3, 100);
 
 	Turn_On_Buzzer();
 	HAL_Delay(100);
@@ -54,14 +65,12 @@ int main(void)
 	Turn_On_Buzzer();
 	HAL_Delay(100);
 	Turn_Off_Buzzer();
-	//	SCH_Add_Task(test3, 3, 100);
-	SCH_Add_Task(PCF_read, 7, 100);
-//	SCH_Add_Task(Led_Display, 5, 5);
-	SCH_Add_Task(LED_Display_FSM, 0, 20);
-//	Set_Relay(0);
-//	Set_Relay(3);
-//	Set_Relay(8);
+
+#if(WATCHDOG_ENABLE == 1)
+    MX_IWDG_Init();
+#endif
 	while (1){
+
 		SCH_Dispatch_Tasks();
 		Main_FSM();
 	}
@@ -72,19 +81,28 @@ int main(void)
 
 void Main_FSM(void){
 
+
+#if(WATCHDOG_ENABLE == 1)
+	if(Is_Watchdog_Reset() == 0){
+		Watchdog_Refresh();
+	}
+#endif
 	PowerConsumption_FSM();
 	FSM_Process_Data_Received_From_Sim3g();
 
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:
-
 		if(Is_Done_Getting_ADC() == SET){
 			mainState = POST_DATA_TO_SERVER;
+#if(WATCHDOG_ENABLE == 1)
+			Reset_Watchdog_Counting();
+#endif
 		}
+
 		break;
 	case POST_DATA_TO_SERVER:
 		Server_Communication();
-		Power_Loop();
+		Process_System_Power();
 		if(Is_Done_Getting_ADC() == RESET){
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}
@@ -101,10 +119,10 @@ void Main_FSM(void){
   */
 void Error_Handler(void)
 {
-	while(1){
-//		HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
-		HAL_Delay(100);
-	}
+//	while(1){
+//		HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+//		HAL_Delay(50);
+//	}
 }
 
 #ifdef  USE_FULL_ASSERT

@@ -43,7 +43,7 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 };
 
 
-uint8_t relay_TimeoutFlag_Index = SCH_MAX_TASKS;
+static uint32_t relay_TimeoutFlag_Index = NO_TASK_ID;
 uint8_t set_Relay_TimeoutFlag = 1;
 
 void Clear_Relay_Timeout_Flag(void){
@@ -56,6 +56,10 @@ uint8_t is_Set_Relay_Timeout(void){
 	return set_Relay_TimeoutFlag;
 }
 
+static void Relay_Output_Control_Enable(void){
+	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);
+}
+
 void Relay_Init(void){
 	uint8_t i;
 	for (i = 0; i < NUMBER_OF_RELAYS; i ++){
@@ -63,6 +67,17 @@ void Relay_Init(void){
 	}
 	Update_Relay_Physical_Status();
 	set_Relay_TimeoutFlag = 1;
+	Relay_Output_Control_Enable();
+}
+
+void Set_Relay1(uint8_t relayIndex){
+	if(relayIndex > 9) return;
+	if(array_Of_Relay_Statuses[relayIndex] == RESET){
+		isUpdateRelayStatus = SET;
+	}
+	array_Of_Relay_Statuses[relayIndex] = SET;
+	HAL_GPIO_WritePin(array_Of_Relay_Ports[relayIndex], array_Of_Relay_Pins[relayIndex], SET);
+
 }
 void Set_Relay(uint8_t relayIndex){
 	if(relayIndex > 9) return;
@@ -74,7 +89,7 @@ void Set_Relay(uint8_t relayIndex){
 
 	SCH_Delete_Task(relay_TimeoutFlag_Index);
 	Clear_Relay_Timeout_Flag();
-	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 200, 0);
+	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 100, 0);
 }
 
 void Reset_Relay(uint8_t relayIndex){
@@ -87,7 +102,7 @@ void Reset_Relay(uint8_t relayIndex){
 
 	SCH_Delete_Task(relay_TimeoutFlag_Index);
 	Clear_Relay_Timeout_Flag();
-	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 200, 0);
+	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 100, 0);
 }
 
 void Update_Relay_Physical_Status(void){

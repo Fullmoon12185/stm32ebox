@@ -38,16 +38,18 @@ typedef enum {
 
 typedef enum  {
 	NODE_NORMAL 		= 	0,
-	CHARGING			=	1,
-	CHARGEFULL			=	2,
-	UNPLUG				=	3,
-	NO_POWER			=	4,
-	NO_FUSE				=	5,
-	NO_RELAY			=	6,
-	NODE_OVER_CURRENT	=	7,
-	NODE_OVER_MONEY		=	8,
-	NODE_OVER_TIME		=	9,
-	NODE_READY
+	NODE_READY			=	1,
+	CHARGING			=	2,
+	CHARGEFULL			=	3,
+	UNPLUG				=	4,
+	NO_POWER			=	5,
+	NO_FUSE				=	6,
+	NO_RELAY			=	7,
+
+	NODE_OVER_CURRENT	=	8,
+	NODE_OVER_MONEY		=	9,
+	NODE_OVER_TIME		=	10
+
 }NodeStatus;
 
 //cap dien ma chua cam thi time out
@@ -74,9 +76,21 @@ typedef struct Commands {
 } Command;
 
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period);
+
+uint32_t Get_Main_Power_Consumption(void);
+uint8_t Get_Main_Power_Factor(void);
+uint32_t Get_Main_Current(void);
+SystemStatus Get_Main_Status(void);
+
 uint32_t Get_Power_Consumption(uint8_t outletID);
+uint8_t Get_Power_Factor(uint8_t outletID);
+uint8_t Get_Voltage(uint8_t outletID);
+uint32_t Get_Current(uint8_t outletID);
+
+
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy);
+NodeStatus Get_Node_Status(uint8_t outletID);
 void Power_Setup(void);
 void Power_Loop(void);
-
+void Process_System_Power(void);
 #endif /* APP_POWER_H_ */

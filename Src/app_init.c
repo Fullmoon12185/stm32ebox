@@ -11,6 +11,7 @@
 #include "app_gpio.h"
 #include "app_led_display.h"
 #include "app_sim3g.h"
+#include "app_sim5320MQTT.h"
 #include "app_temperature.h"
 #include "app_timer.h"
 #include "app_uart.h"
@@ -23,6 +24,11 @@
 #include "app_init.h"
 #include "app_relay.h"
 #include "app_power.h"
+#include "app_iwatchdog.h"
+#include "app_scheduler.h"
+#include "app_eeprom.h"
+
+#include "app_test.h"
 
 
 
@@ -37,6 +43,7 @@ void System_Initialization(void)
             break;
         case SYSTEM_CLOCK_INIT:
         	SystemClock_Config();
+
             break;
         case UART_INIT:
         	UART3_Init();
@@ -65,10 +72,11 @@ void System_Initialization(void)
         case SPI_INIT:
         	SPI1_Init();
         	SPI2_Init();
+
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_INIT - Done \r\n"));
         	break;
         case SPI_25LCXXX_INIT:
-        	MC25LC512_Initilize();
+        	Eeprom_Initialize();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_25LCXXX_INIT - Done \r\n"));
         	break;
         case I2C_INIT:
@@ -93,11 +101,12 @@ void System_Initialization(void)
         	break;
         case SIM_3G_INIT:
         	Sim3g_Init();
+        	Set_Up_Topic_Names();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SIM_3G_INIT - Done \r\n"));
         	break;
         case POWER_SETUP_INIT:
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"POWER_SETUP_INIT - Done \r\n"));
-        	Power_Setup();
+//        	Power_Setup();
 
         	break;
         default:
