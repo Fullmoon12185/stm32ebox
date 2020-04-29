@@ -389,18 +389,18 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-//		if(tempOutletID <= 9 && tempOutletID >= 0){
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
-//		}
+		if(tempOutletID <= 9 && tempOutletID >= 8){
+			DEBUG_POWER(sprintf((char*) strtmpPower, "powerFactor %d\t", (int) Main.nodes[tempOutletID].powerFactor););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
+		}
 
 
 	}
