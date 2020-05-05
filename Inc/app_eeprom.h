@@ -25,7 +25,7 @@
 //hàm kiểm tra có thay dổi và trả về true false
 
 //void eeprom_write_outlet(uint8_t outletIndex, )
-
+void Setup_Eeprom(void);
 void Write_First_Byte(uint8_t value);
 uint8_t Read_First_Byte(void);
 

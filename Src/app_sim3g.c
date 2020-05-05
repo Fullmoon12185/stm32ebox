@@ -18,8 +18,8 @@
 #define DATA_TO_SEND_LENGTH						20
 
 #define TIMER_TO_POWER_ON_SIM3G					(100/INTERRUPT_TIMER_PERIOD)
-#define TIMER_TO_POWER_OFF_SIM3G				(5000/INTERRUPT_TIMER_PERIOD)
-#define TIMER_TO_POWER_ON_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
+#define TIMER_TO_POWER_OFF_SIM3G				(3000/INTERRUPT_TIMER_PERIOD)
+#define TIMER_TO_POWER_ON_SIM3G_TIMEOUT			(500/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_OFF_SIM3G_TIMEOUT		(10000/INTERRUPT_TIMER_PERIOD)
 
 
@@ -332,6 +332,7 @@ void Clear_All_Uart_Receive_Flags(void){
 void SM_Power_On_Sim3g(void){
 	SCH_Add_Task(Power_Signal_Low, 0, 0);
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_ON_SIM3G, 0);
+	Clear_All_Uart_Receive_Flags();
 	Sim3g_Clear_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_ON_SIM3G_TIMEOUT,0);
 	sim3gState = WAIT_FOR_SIM3G_POWER_ON;
@@ -380,12 +381,15 @@ void Setting_Up_Timeout(void){
 }
 
 void SM_Sim3g_Startup(void){
-	Clear_All_Uart_Receive_Flags();
+
+	SCH_Delete_Task(sim3g_Timeout_Task_Index);
+	Sim3g_Clear_Timeout_Flag();
+	sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, COMMAND_TIME_OUT,0);
 	sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
 }
 
 void SM_Wait_For_Sim3g_Startup_Response(void){
-	if(isPBDoneFlag == SET && isStin25 == SET){
+	if(isPBDoneFlag == SET){
 		isPBDoneFlag = RESET;
 		isStin25 = RESET;
 		sim3gState = SIM3G_SETTING;
@@ -394,8 +398,10 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 	} else if(isErrorFlag){
 		isErrorFlag = RESET;
 		sim3gState = POWER_OFF_SIM3G;
-	} else {
-		sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
+	}
+	if(is_Sim3g_Command_Timeout() || isIPCloseFlag){
+		isIPCloseFlag = RESET;
+		sim3gState = POWER_OFF_SIM3G;
 	}
 
 }
@@ -466,32 +472,32 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 	tempBoxID += (Sim3gDataProcessingBuffer[8+3] - 0x30);
 
 	if(boxID == tempBoxID){
-			if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_ONLY){
-				relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
-				relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
-				if(relayStatus == SET){
-					Set_Relay(relayIndex);
-					Set_Limit_Energy(relayIndex, 0xffffffff);
-				} else {
-					Set_Limit_Energy(relayIndex, 0);
-					Reset_Relay(relayIndex);
-				}
-			} else if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_WITH_MAX_ENERGY){
-				relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
-				relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
-				maxEnergy = (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 0] - 0x30)*1000;
-				maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 1] - 0x30)*100;
-				maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 2] - 0x30)*10;
-				maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 3] - 0x30);
-
-				if(relayStatus == SET){
-					Set_Relay(relayIndex);
-					Set_Limit_Energy(relayIndex, maxEnergy);
-				} else {
-					Set_Limit_Energy(relayIndex, 0);
-					Reset_Relay(relayIndex);
-				}
+		if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_ONLY){
+			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
+			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
+			if(relayStatus == SET){
+				Set_Relay(relayIndex);
+				Set_Limit_Energy(relayIndex, 0xffffffff);
+			} else {
+				Reset_Relay(relayIndex);
+				Set_Limit_Energy(relayIndex, 0);
 			}
+		} else if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_WITH_MAX_ENERGY){
+			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
+			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
+			maxEnergy = (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 0] - 0x30)*1000;
+			maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 1] - 0x30)*100;
+			maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 2] - 0x30)*10;
+			maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 3] - 0x30);
+
+			if(relayStatus == SET){
+				Set_Relay(relayIndex);
+				Set_Limit_Energy(relayIndex, maxEnergy);
+			} else {
+				Reset_Relay(relayIndex);
+				Set_Limit_Energy(relayIndex, 0);
+			}
+		}
 
 	}
 

@@ -126,7 +126,7 @@ void Test10(void){
 	uint32_t e, l, w;
 	for(i = 0; i < 10; i ++){
 		Eeprom_Read_Outlet(i, &s, &e, &l, &w);
-		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (uint32_t)s, (uint32_t)e, (uint32_t)l);
+		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
 		UART3_SendToHost((uint8_t *)strTest);
 		s ++;
 		e++;
@@ -138,7 +138,7 @@ void Test10(void){
 		e = 0;
 		l = 0;
 		Eeprom_Read_Outlet(i, &s, &e, &l, &w);
-		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (uint32_t)s, (uint32_t)e, (uint32_t)l);
+		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
 		UART3_SendToHost((uint8_t *)strTest);
 	}
 }

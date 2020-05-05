@@ -89,6 +89,7 @@ void MC25LC512_Write_Bytes(uint16_t AddresOfData, uint8_t *WriteArrayOfEEProm, u
 	uint8_t SendOneByte;
 	MC25LC512_WriteEnableOrDisable(EEPROM_Enable);
 	for(uint16_t i = 0; i < TIME_DELAY; i ++);
+	MC25LC512_CS(EEPROM_CS_PIN_SET);
 	MC25LC512_CS(EEPROM_CS_PIN_RESET);// Reset The spi Chip //Reset means Enable
 	for(uint16_t i = 0; i < TIME_DELAY; i ++);
 	SendOneByte = MC25LCxxx_SPI_WRITE;
@@ -100,7 +101,9 @@ void MC25LC512_Write_Bytes(uint16_t AddresOfData, uint8_t *WriteArrayOfEEProm, u
 	//
 	HAL_SPI_Transmit(&Spi2Handle, WriteArrayOfEEProm, SizeOfArray, SizeOfArray*50) ;
 	for(uint16_t i = 0; i < TIME_DELAY; i ++);
+	MC25LC512_CS(EEPROM_CS_PIN_RESET);
 	MC25LC512_CS(EEPROM_CS_PIN_SET);// Reset The spi Chip //Reset means Enable
+	for(uint16_t i = 0; i < 10000; i ++);
 	for(uint16_t i = 0; i < 10000; i ++);
 //	MC25LC512_WriteEnableOrDisable(EEPROM_Enable);
 

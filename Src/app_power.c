@@ -68,7 +68,7 @@ PowerSystem Main;
 POWER_FSM_STATE powerFsmState = POWER_FINISH_STATE;
 uint32_t lastTimeErr, lastReport;
 
-uint8_t strtmpPower[] = "                                 ";
+uint8_t strtmpPower[] = "                                      ";
 uint8_t power_TimeoutFlag[NUMBER_OF_RELAYS];
 uint32_t power_Timeout_Task_ID[NUMBER_OF_RELAYS]= {
 		NO_TASK_ID, NO_TASK_ID,
@@ -89,11 +89,10 @@ static uint32_t outletCounter[NUMBER_OF_RELAYS] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+FlagStatus is_Node_Status_Changed = RESET;
 
-uint8_t strPower[] = "                                         ";
 
 static void Node_Setup(void);
-static void Node_Check(void);
 void Power_Clear_Timeout_Flag(uint8_t outletID);
 void Power_Set_Timeout_Flag_0(void);
 void Power_Set_Timeout_Flag_1(void);
@@ -110,6 +109,14 @@ uint8_t Is_Power_Timeout_Flag(uint8_t outletID);
 
 void Process_Outlets(void);
 SystemStatus Process_Input_Source(void);
+
+/////////////////////////////////////////////////////////////
+
+void Process_System_Power(void){
+	if(Process_Input_Source() == SYSTEM_NORMAL){
+		Process_Outlets();
+	}
+}
 
 
 void Set_Power_Input_Source_Timeout_Flag(void){
@@ -193,13 +200,6 @@ void Set_Power_Timeout_Flags(uint8_t outletID, uint32_t PowerTimeOut){
 static void Node_Setup(void) {
 	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID ++){
 		if (outletID == MAIN_INPUT) {	//setup for Main node
-//			if(Eeprom_Read_Outlet(outletID,
-//					&Main.status,
-//					&Main.energy,
-//					&Main.limitEnergy,
-//					&Main.workingTime)){
-//
-//			} else
 			{
 				Main.currentTotal = 0;
 				Main.status = SYSTEM_NORMAL;
@@ -208,7 +208,9 @@ static void Node_Setup(void) {
 				Main.valueTotal = 0;
 				Main.ambientTemp = 25;
 				Main.internalTemp = 25;
-				Main.energy = 0;
+				Main.energy = Eeprom_Get_Main_Energy();
+				sprintf((char*) strtmpPower, "Main.energy:%d \r\n", (int) Main.energy);
+							UART3_SendToHost((uint8_t *)strtmpPower);
 				Main.limitEnergy = 0xffffffff;
 			}
 
@@ -216,23 +218,22 @@ static void Node_Setup(void) {
 		} else {
 			Main.nodes[outletID].voltage = 230;
 			Main.nodes[outletID].powerFactor = 100;
-//			if(Eeprom_Read_Outlet(outletID,
-//					&Main.nodes[outletID].nodeStatus,
-//					&Main.nodes[outletID].energy,
-//					&Main.nodes[outletID].limitEnergy,
-//					&Main.nodes[outletID].workingTime)){
-//				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
-//						Main.nodes[outletID].nodeStatus == CHARGING){
-//					Set_Relay(outletID);
-//				}
-//				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus, (int)
-//						Main.nodes[outletID].energy, (int)
-//						Main.nodes[outletID].limitEnergy);
+			if(Eeprom_Read_Outlet(outletID,
+					&Main.nodes[outletID].nodeStatus,
+					&Main.nodes[outletID].energy,
+					&Main.nodes[outletID].limitEnergy,
+					&Main.nodes[outletID].workingTime)){
+				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
+						Main.nodes[outletID].nodeStatus == CHARGING){
+					Set_Relay(outletID);
+				}
+//				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%lu\t l:%lu\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus,
+//						(uint32_t)Main.nodes[outletID].energy, (uint32_t)Main.nodes[outletID].limitEnergy);
 //				UART3_SendToHost((uint8_t *)strtmpPower);
-//				HAL_Delay(500);
-//			} else
+				HAL_Delay(100);
+			} else
 			{
-				Main.nodes[outletID].limitEnergy = 0;
+				Main.nodes[outletID].limitEnergy = 0xffffffff;
 				Main.nodes[outletID].energy = 0;
 				Main.nodes[outletID].nodeStatus = NODE_NORMAL;
 				Main.nodes[outletID].workingTime = 0;
@@ -248,69 +249,7 @@ static void Node_Setup(void) {
 
 
 
-static void Node_Check(void) {
 
-	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
-
-	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID ++){
-		if (outletID == MAIN_INPUT) {
-			if (Main.valueTotal > 1800 || Main.valueRef > 1800) {
-				Main.status = SYSTEM_OVER_CURRENT;
-			} else if ((Main.valueTotal - Main.valueRef) > 100) {
-				Main.status = NODE_OVER_TOTAL;
-			} else if (Main.valueRef - Main.valueTotal > 100) {
-				Main.status = NODE_UNDER_TOTAL;
-			} else if (Main.ambientTemp > 80) {
-				Main.status = SYSTEM_OVER_TEMP;
-			} else if (Main.internalTemp > 80) {
-				Main.status = SYSTEM_OVER_TEMP;
-			} else {
-				for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
-					if (Main.nodes[i].nodeStatus == NODE_OVER_CURRENT) {
-						Main.status = SYSTEM_OVER_CURRENT;
-					}
-				}
-				Main.status = SYSTEM_NORMAL;
-			}
-		} else if (outletID < MAIN_INPUT) {
-
-			uint8_t tempOutletID = outletID;
-
-			if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x02) > 0) {	//return NOFUSE
-				Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
-			} else if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x01) > 0
-					&& (Get_Relay_Status(tempOutletID) == SET)) {	//relay not working MUST and is Working
-				Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
-			} else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860
-				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
-			} else if (Main.nodes[tempOutletID].limitEnergy > 0
-					&& Main.nodes[tempOutletID].energy >= Main.nodes[tempOutletID].limitEnergy) {
-				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_MONEY;
-			} else if (Main.nodes[tempOutletID].limitEnergy == 0) {
-				Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
-			} else if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
-				Main.nodes[tempOutletID].nodeStatus = CHARGING;
-			} else if (Main.nodes[tempOutletID].nodeStatus == CHARGING) {
-				if (Main.nodes[tempOutletID].previousCurrent - Main.nodes[tempOutletID].current > CURRENT_CHANGING_THRESHOLD) {
-					Main.nodes[tempOutletID].nodeStatus = UNPLUG;
-				} else {
-					Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
-				}
-			} else if(Main.nodes[tempOutletID].nodeStatus == UNPLUG && Get_Relay_Status(tempOutletID) == SET){
-
-			} else if(Main.nodes[tempOutletID].nodeStatus == CHARGEFULL && Get_Relay_Status(tempOutletID) == SET){
-
-			}
-			else {
-				if(Get_Relay_Status(tempOutletID) == SET){
-					Main.nodes[tempOutletID].nodeStatus = NODE_READY;
-				} else {
-					Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
-				}
-			}
-		}
-	}
-}
 
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 	if(outletID < NUMBER_OF_RELAYS){
@@ -365,11 +304,18 @@ NodeStatus Get_Node_Status(uint8_t outletID){
 	return 9;
 }
 
+FlagStatus Get_Is_Node_Status_Changed(void){
+	if(is_Node_Status_Changed == SET){
+		is_Node_Status_Changed = RESET;
+		return SET;
+	}
+	return RESET;
+}
+
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period) {	//update and return energy ???
 	if (outletID == MAIN_INPUT) {	//setup for Main node
-		for(uint8_t tempOutletID = 0; tempOutletID < NUMBER_OF_RELAYS; tempOutletID++){
-			Main.energy += Main.nodes[tempOutletID].energy + POWER_CONSUMPTION_OF_MCU;
-		}
+		Main.energy +=  POWER_CONSUMPTION_OF_MCU;
+		Eeprom_Update_Main_Energy(Main.energy);
 	} else if (outletID < MAIN_INPUT) {
 		uint8_t tempOutletID = outletID;
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].current;
@@ -382,9 +328,10 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.nodes[tempOutletID].powerFactor = power_factor;
 		Main.nodes[tempOutletID].power = Main.nodes[tempOutletID].voltage * Main.nodes[tempOutletID].current * Main.nodes[tempOutletID].powerFactor / 100000;	//in mA	// /100
 		if (Main.nodes[tempOutletID].limitEnergy > 0 || Get_Relay_Status(tempOutletID) == SET){
+			Main.energy += Main.nodes[tempOutletID].power*time_period/100;
 			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period/100;
 			Main.nodes[tempOutletID].workingTime++;
-//			Eeprom_Update_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
+			Eeprom_Update_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
 
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
@@ -413,81 +360,6 @@ void Power_Setup(void) {
 	powerFsmState = POWER_FINISH_STATE;
 	Node_Setup();
 	Led_Display_Clear_All();
-}
-
-void Power_Loop(void) {
-	static uint8_t relayIndex = 0;
-	switch (powerFsmState) {
-	case POWER_FINISH_STATE:
-		powerFsmState = POWER_BEGIN_STATE;
-		break;
-	case POWER_BEGIN_STATE:
-		powerFsmState = POWER_CHECK_STATUS_STATE;
-		break;
-	case POWER_CHECK_STATUS_STATE:
-		Node_Check();
-		powerFsmState = POWER_CHECK_COMMAND_STATE;
-		break;
-	case POWER_CHECK_COMMAND_STATE:
-		if (Main.status == SYSTEM_OVER_CURRENT) {
-			DEBUG_POWER(UART3_SendToHost((uint8_t*) "System over current \r\n"););
-			powerFsmState = POWER_ERROR_HANDLER_STATE;
-			Led_Display_Set_All(RED);
-		} else if (Main.status == SYSTEM_OVER_TEMP) {
-			DEBUG_POWER(UART3_SendToHost((uint8_t*) "System over temp \r\n"););
-			powerFsmState = POWER_WARNING_HANDLER_STATE;
-			Led_Display_Set_All(YELLOW);
-		} else if (Main.status == NODE_OVER_TOTAL || Main.status == NODE_UNDER_TOTAL) {
-			UART3_SendToHost((uint8_t*) "System Node != total \r\n");
-			powerFsmState = POWER_WARNING_HANDLER_STATE;
-			Main.status = SYSTEM_NORMAL;
-			Led_Display_Set_All(YELLOW);
-		} else if (Main.status == SYSTEM_NORMAL) {
-			if (Main.nodes[relayIndex].nodeStatus == NODE_NORMAL) {
-			} else if (Main.nodes[relayIndex].nodeStatus == CHARGING) {
-			} else if (Main.nodes[relayIndex].nodeStatus == CHARGEFULL) {
-			} else if (Main.nodes[relayIndex].nodeStatus == UNPLUG) {
-			} else if (Main.nodes[relayIndex].nodeStatus == NO_FUSE) {
-			} else if (Main.nodes[relayIndex].nodeStatus == NO_RELAY) {
-			} else if (Main.nodes[relayIndex].nodeStatus == NODE_OVER_MONEY) {
-				if (Get_Relay_Status(relayIndex) == SET) {
-					Reset_Relay(relayIndex);
-				}
-				Main.nodes[relayIndex].limitEnergy = 0;
-			} else if (Main.nodes[relayIndex].nodeStatus == NODE_OVER_TIME) {
-				if (Get_Relay_Status(relayIndex) == 1) {
-					Reset_Relay(relayIndex);
-				}
-				Main.nodes[relayIndex].nodeStatus = NODE_NORMAL;
-			}
-
-			Led_Update_Status_Buffer(relayIndex, Main.nodes[relayIndex].nodeStatus);
-			if(Is_Power_Timeout_Flag(relayIndex)){
-				Reset_Relay(relayIndex);
-			}
-			relayIndex++;
-			if (relayIndex >= NUMBER_OF_RELAYS) {
-				relayIndex = 0;
-				powerFsmState = POWER_FINISH_STATE;
-			}
-		}
-
-		break;
-	case POWER_ERROR_HANDLER_STATE:
-		if (HAL_GetTick() - lastTimeErr > 5000) {
-			lastTimeErr = HAL_GetTick();
-			for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++)
-				Reset_Relay(i);
-			powerFsmState = POWER_FINISH_STATE;
-		}
-		break;
-	case POWER_WARNING_HANDLER_STATE:
-		powerFsmState = POWER_FINISH_STATE;
-		break;
-	default:
-		powerFsmState = POWER_FINISH_STATE;
-		break;
-	}
 }
 
 
@@ -560,51 +432,66 @@ SystemStatus Process_Input_Source(void){
 	return Main.status;
 }
 void Display_OutLet_Status(uint8_t outletID){
-	static NodeStatus previousOutletStatus[NUMBER_OF_RELAYS];
+	static NodeStatus previousOutletStatus[NUMBER_OF_RELAYS] = {
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL,
+			NODE_NORMAL
+	};
 	if(previousOutletStatus[outletID] != Main.nodes[outletID].nodeStatus){
 		previousOutletStatus[outletID] = Main.nodes[outletID].nodeStatus;
+		is_Node_Status_Changed = SET;
 
 		switch(Main.nodes[outletID].nodeStatus){
 		case NODE_NORMAL:
-			DEBUG_POWER(sprintf((char*) strPower, "NODE_NORMAL=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "NODE_NORMAL=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			Eeprom_Update_Status(outletID, Main.nodes[outletID].nodeStatus);
 			break;
 		case NODE_READY:
-			DEBUG_POWER(sprintf((char*) strPower, "NODE_READY=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "NODE_READY=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			Eeprom_Update_Status(outletID, Main.nodes[outletID].nodeStatus);
 			break;
 		case CHARGING:
-			DEBUG_POWER(sprintf((char*) strPower, "CHARGING=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "CHARGING=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			Eeprom_Update_Status(outletID, Main.nodes[outletID].nodeStatus);
 			break;
 		case CHARGEFULL:
-			DEBUG_POWER(sprintf((char*) strPower, "CHARGEFULL=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "CHARGEFULL=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 		case UNPLUG:
-			DEBUG_POWER(sprintf((char*) strPower, "UNPLUG=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "UNPLUG=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 		case NO_POWER:
-			DEBUG_POWER(sprintf((char*) strPower, "NO_POWER=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "NO_POWER=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 		case NO_FUSE:
-			DEBUG_POWER(sprintf((char*) strPower, "NO_FUSE=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "NO_FUSE=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 		case NO_RELAY:
-			DEBUG_POWER(sprintf((char*) strPower, "NO_RELAY=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "NO_RELAY=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 
 		case NODE_OVER_CURRENT:
-			DEBUG_POWER(sprintf((char*) strPower, "NODE_OVER_CURRENT=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "NODE_OVER_CURRENT=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 		case NODE_OVER_MONEY:
-			DEBUG_POWER(sprintf((char*) strPower, "NODE_OVER_MONEY=%d\r\n", (int) outletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "NODE_OVER_MONEY=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 		case NODE_OVER_TIME:
 			break;
@@ -645,19 +532,15 @@ void Process_Outlets(void){
 		outletState[tempOutletID] = 3;
 
 	} else if (Main.nodes[tempOutletID].limitEnergy == 0) {
-
 		Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
 		outletState[tempOutletID] = 0;
-
 	} else {
 		switch(outletState[tempOutletID]){
 		case 0:
 			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
-
 				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 				outletCounter[tempOutletID] = 0;
 				outletState[tempOutletID] = 1;
-
 			} else {
 				if(Get_Relay_Status(tempOutletID) == SET){
 					Main.nodes[tempOutletID].nodeStatus = NODE_READY;
@@ -665,8 +548,6 @@ void Process_Outlets(void){
 					Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
 				}
 			}
-
-//			Eeprom_Update_Status(tempOutletID, Main.nodes[tempOutletID].nodeStatus);
 			break;
 		case 1:
 			if (Main.nodes[tempOutletID].current < MIN_CURRENT){
@@ -708,9 +589,4 @@ void Process_Outlets(void){
 	tempOutletID = (tempOutletID + 1) % NUMBER_OF_RELAYS;
 }
 
-void Process_System_Power(void){
-	if(Process_Input_Source() == SYSTEM_NORMAL){
-		Process_Outlets();
-	}
 
-}

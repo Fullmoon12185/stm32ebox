@@ -76,7 +76,7 @@ void System_Initialization(void)
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_INIT - Done \r\n"));
         	break;
         case SPI_25LCXXX_INIT:
-//        	Eeprom_Initialize();
+        	Eeprom_Initialize();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_25LCXXX_INIT - Done \r\n"));
         	break;
         case I2C_INIT:
@@ -91,24 +91,35 @@ void System_Initialization(void)
         	break;
         case ACCELERATOR_INIT:
         	break;
-        case WATCH_DOG_INIT:
-
-        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
-            break;
         case START_DMA_ADC:
         	ADC_Start_Getting_Values();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"START_DMA_ADC - Done \r\n"));
         	break;
+        case POWER_SETUP_INIT:
+        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"POWER_SETUP_INIT - Done \r\n"));
+        	MX_GPIO_Init();
+        	Power_Setup();
+
+        	break;
         case SIM_3G_INIT:
         	Sim3g_Init();
         	Set_Up_Topic_Names();
+        	Set_Sim3G_State(POWER_ON_SIM3G);
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SIM_3G_INIT - Done \r\n"));
         	break;
-        case POWER_SETUP_INIT:
-        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"POWER_SETUP_INIT - Done \r\n"));
-//        	Power_Setup();
-
+        case END_OF_INITIALISATION_STATE:
+        	Turn_On_Buzzer();
+			HAL_Delay(100);
+			Turn_Off_Buzzer();
+			HAL_Delay(100);
+			Turn_On_Buzzer();
+			HAL_Delay(100);
+			Turn_Off_Buzzer();
         	break;
+
+        case WATCH_DOG_INIT:
+        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
+            break;
         default:
             initState = HAL_INIT;
             break;

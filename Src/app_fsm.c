@@ -512,70 +512,38 @@ void Server_Communication(void){
 //					ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, TIME_FOR_PING_REQUEST, 0);
 //				}
 //				else
-				if(Get_Is_Update_Relay_Status() == SET){
-					Update_Publish_Status_Message();
-					Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-					Set_Mqtt_State(MQTT_PUBLISH_STATE);
+				if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
+//					Update_Publish_Status_Message();
+//					Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
+//					Set_Mqtt_State(MQTT_PUBLISH_STATE);
 					publishTopicIndex = 0;
-					SCH_Delete_Task(publish_message_TimeoutIndex);
-					Clear_Publish_Message_Timeout_Flag();
-					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-					Turn_On_Buzzer();
-					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+//					SCH_Delete_Task(publish_message_TimeoutIndex);
+//					Clear_Publish_Message_Timeout_Flag();
+//					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+//					Turn_On_Buzzer();
+//					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 
 				} else if (is_Publish_Message_Timeout()){
 					if(publishTopicIndex == 0){
 						publishTopicIndex = 1;
-						Update_Publish_Power_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER, publish_message, publish_message_length);
-//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
-//						Clear_Publish_Message_Timeout_Flag();
-//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-//
-//						Turn_On_Buzzer();
-//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
-
-					} else if(publishTopicIndex == 1){
-						publishTopicIndex = 2;
 						Update_Publish_Status_Message();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
-//						Clear_Publish_Message_Timeout_Flag();
-//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-//
-//						Turn_On_Buzzer();
-//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+					} else if(publishTopicIndex == 1){
+						publishTopicIndex = 2;
+						Update_Publish_Power_Message_All_Outlets();
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER, publish_message, publish_message_length);
 					} else if(publishTopicIndex == 2){
 						publishTopicIndex = 3;
 						Update_Publish_Power_Factor_Message_All_Outlets();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR, publish_message, publish_message_length);
-//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
-//						Clear_Publish_Message_Timeout_Flag();
-//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-//
-//						Turn_On_Buzzer();
-//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 					} else if(publishTopicIndex == 3){
 						publishTopicIndex = 4;
 						Update_Publish_Voltage_Message_All_Outlets();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE, publish_message, publish_message_length);
-//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
-//						Clear_Publish_Message_Timeout_Flag();
-//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-//
-//						Turn_On_Buzzer();
-//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 					} else if(publishTopicIndex == 4){
 						publishTopicIndex = 0;
 						Update_Publish_Current_Message_All_Outlets();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT, publish_message, publish_message_length);
-
-//						Set_Mqtt_State(MQTT_PUBLISH_STATE);
-//						Clear_Publish_Message_Timeout_Flag();
-//						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-//
-//						Turn_On_Buzzer();
-//						SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 					}
 					Set_Mqtt_State(MQTT_PUBLISH_STATE);
 					Clear_Publish_Message_Timeout_Flag();
@@ -583,11 +551,8 @@ void Server_Communication(void){
 
 					Turn_On_Buzzer();
 					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
-
-
 				}
 			}
-
 		}
 		break;
 	default:

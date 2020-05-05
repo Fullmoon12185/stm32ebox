@@ -86,7 +86,7 @@ uint32_t Get_Power_Consumption(uint8_t outletID);
 uint8_t Get_Power_Factor(uint8_t outletID);
 uint8_t Get_Voltage(uint8_t outletID);
 uint32_t Get_Current(uint8_t outletID);
-
+FlagStatus Get_Is_Node_Status_Changed(void);
 
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy);
 NodeStatus Get_Node_Status(uint8_t outletID);
