@@ -29,14 +29,14 @@
 void Write_First_Byte(uint8_t value);
 uint8_t Read_First_Byte(void);
 
-
+uint32_t Eeprom_Get_Main_Energy(void);
+void Eeprom_Update_Main_Energy(uint32_t main_energy);
 //boolean eeprom_is_channel_change(uint8_t outletIndex);
 void Eeprom_Initialize();
-void Eeprom_Write_Outlet (uint8_t outletIndex, uint8_t status, uint32_t energy, uint32_t limitEnergy, uint32_t workingTime);
 uint8_t Eeprom_Read_Outlet  (uint8_t outletIndex, uint8_t * status, uint32_t * energy, uint32_t * limitEnergy, uint32_t *workingTime);
 
-void Eeprom_Save(uint8_t outletID);
 void Eeprom_Update_Status(uint8_t outletID, uint8_t status);
 void Eeprom_Update_LimitEnergy(uint8_t outletID, uint32_t limitEnergy);
-void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy, uint32_t workingTime);
+void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy);
+void Eeprom_Update_WorkingTime(uint8_t outletID, uint32_t workingTime);
 #endif

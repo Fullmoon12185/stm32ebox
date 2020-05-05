@@ -216,21 +216,21 @@ static void Node_Setup(void) {
 		} else {
 			Main.nodes[outletID].voltage = 230;
 			Main.nodes[outletID].powerFactor = 100;
-//			if(Eeprom_Read_Outlet(outletID,
-//					&Main.nodes[outletID].nodeStatus,
-//					&Main.nodes[outletID].energy,
-//					&Main.nodes[outletID].limitEnergy,
-//					&Main.nodes[outletID].workingTime)){
-//				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
-//						Main.nodes[outletID].nodeStatus == CHARGING){
-//					Set_Relay(outletID);
-//				}
-//				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus, (int)
-//						Main.nodes[outletID].energy, (int)
-//						Main.nodes[outletID].limitEnergy);
-//				UART3_SendToHost((uint8_t *)strtmpPower);
-//				HAL_Delay(500);
-//			} else
+			if(Eeprom_Read_Outlet(outletID,
+					&Main.nodes[outletID].nodeStatus,
+					&Main.nodes[outletID].energy,
+					&Main.nodes[outletID].limitEnergy,
+					&Main.nodes[outletID].workingTime)){
+				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
+						Main.nodes[outletID].nodeStatus == CHARGING){
+					Set_Relay(outletID);
+				}
+				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus, (int)
+						Main.nodes[outletID].energy, (int)
+						Main.nodes[outletID].limitEnergy);
+				UART3_SendToHost((uint8_t *)strtmpPower);
+				HAL_Delay(500);
+			} else
 			{
 				Main.nodes[outletID].limitEnergy = 0;
 				Main.nodes[outletID].energy = 0;
@@ -367,9 +367,9 @@ NodeStatus Get_Node_Status(uint8_t outletID){
 
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period) {	//update and return energy ???
 	if (outletID == MAIN_INPUT) {	//setup for Main node
-//		Main.ambientTemp = AdcDmaBuffer[10] * 0.08056641;	//chua tinh, LM35 10mV/C => C = V/10mV = ADC*3.3/4096 *100 = adc*0.08056641
-//		Main.internalTemp = ((1.43 - (AdcDmaBuffer[12] * 3.3 / 4096)) / 4.3) + 25 ;//AdcDmaBuffer[12];	//chua lay 1v8//Temp = (v25 - Vsense)/AVGSlope + 25 = (1.43 - Vsense)/4.3 + 25 = (1.43 - (ADC*3.3/4096) / 4.3 ) + 25
-//		Main.valueRef =
+		for(uint8_t tempOutletID = 0; tempOutletID < NUMBER_OF_RELAYS; tempOutletID++){
+			Main.energy += Main.nodes[tempOutletID].energy + POWER_CONSUMPTION_OF_MCU;
+		}
 	} else if (outletID < MAIN_INPUT) {
 		uint8_t tempOutletID = outletID;
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].current;
@@ -384,7 +384,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		if (Main.nodes[tempOutletID].limitEnergy > 0 || Get_Relay_Status(tempOutletID) == SET){
 			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period/100;
 			Main.nodes[tempOutletID].workingTime++;
-			Eeprom_Update_Energy(tempOutletID, Main.nodes[tempOutletID].energy, Main.nodes[tempOutletID].workingTime);
+			Eeprom_Update_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
 
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
@@ -665,6 +665,8 @@ void Process_Outlets(void){
 					Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
 				}
 			}
+
+			Eeprom_Update_Status(tempOutletID, Main.nodes[tempOutletID].nodeStatus);
 			break;
 		case 1:
 			if (Main.nodes[tempOutletID].current < MIN_CURRENT){
@@ -703,7 +705,6 @@ void Process_Outlets(void){
 		}
 	}
 	Led_Update_Status_Buffer(tempOutletID, Main.nodes[tempOutletID].nodeStatus);
-	Eeprom_Update_Status(tempOutletID, Main.nodes[tempOutletID].nodeStatus);
 	tempOutletID = (tempOutletID + 1) % NUMBER_OF_RELAYS;
 }
 
