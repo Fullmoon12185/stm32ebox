@@ -216,21 +216,21 @@ static void Node_Setup(void) {
 		} else {
 			Main.nodes[outletID].voltage = 230;
 			Main.nodes[outletID].powerFactor = 100;
-			if(Eeprom_Read_Outlet(outletID,
-					&Main.nodes[outletID].nodeStatus,
-					&Main.nodes[outletID].energy,
-					&Main.nodes[outletID].limitEnergy,
-					&Main.nodes[outletID].workingTime)){
-				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
-						Main.nodes[outletID].nodeStatus == CHARGING){
-					Set_Relay(outletID);
-				}
-				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus, (int)
-						Main.nodes[outletID].energy, (int)
-						Main.nodes[outletID].limitEnergy);
-				UART3_SendToHost((uint8_t *)strtmpPower);
-				HAL_Delay(500);
-			} else
+//			if(Eeprom_Read_Outlet(outletID,
+//					&Main.nodes[outletID].nodeStatus,
+//					&Main.nodes[outletID].energy,
+//					&Main.nodes[outletID].limitEnergy,
+//					&Main.nodes[outletID].workingTime)){
+//				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
+//						Main.nodes[outletID].nodeStatus == CHARGING){
+//					Set_Relay(outletID);
+//				}
+//				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus, (int)
+//						Main.nodes[outletID].energy, (int)
+//						Main.nodes[outletID].limitEnergy);
+//				UART3_SendToHost((uint8_t *)strtmpPower);
+//				HAL_Delay(500);
+//			} else
 			{
 				Main.nodes[outletID].limitEnergy = 0;
 				Main.nodes[outletID].energy = 0;
@@ -317,7 +317,7 @@ void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 		Main.nodes[outletID].limitEnergy = limit_energy;
 		Main.nodes[outletID].energy = 0;
 		Main.nodes[outletID].workingTime = 0;
-		Eeprom_Update_LimitEnergy(outletID, limit_energy);
+//		Eeprom_Update_LimitEnergy(outletID, limit_energy);
 	}
 }
 uint32_t Get_Main_Power_Consumption(void){
@@ -384,7 +384,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		if (Main.nodes[tempOutletID].limitEnergy > 0 || Get_Relay_Status(tempOutletID) == SET){
 			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period/100;
 			Main.nodes[tempOutletID].workingTime++;
-			Eeprom_Update_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
+//			Eeprom_Update_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
 
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
@@ -666,7 +666,7 @@ void Process_Outlets(void){
 				}
 			}
 
-			Eeprom_Update_Status(tempOutletID, Main.nodes[tempOutletID].nodeStatus);
+//			Eeprom_Update_Status(tempOutletID, Main.nodes[tempOutletID].nodeStatus);
 			break;
 		case 1:
 			if (Main.nodes[tempOutletID].current < MIN_CURRENT){
