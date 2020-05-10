@@ -220,7 +220,7 @@ uint32_t Eeprom_Get_Main_Energy(void){
 void Eeprom_Update_Main_Energy(uint32_t main_energy){
 	uint8_t tempBuffer[5];
 	static uint8_t countForUpdateMainEnergy = 0;
-	countForUpdateMainEnergy = (countForUpdateMainEnergy + 1)%10;
+	countForUpdateMainEnergy = (countForUpdateMainEnergy + 1)%60;
 	if(countForUpdateMainEnergy == 0){
 		tempBuffer[0] = (uint8_t)(main_energy & 0xff);
 		tempBuffer[1] = (uint8_t)(main_energy>>8 & 0xff);

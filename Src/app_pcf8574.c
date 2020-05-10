@@ -77,7 +77,16 @@ uint32_t Get_All_Relay_Fuse_Statuses(void){
 }
 
 uint16_t Get_Box_ID(void){
-	return pcfData.bytePCFData[3];
+	uint8_t tempHi = pcfData.bytePCFData[2] & 0xf0;
+	uint8_t tempHiReversed = 0, temp;
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		temp = (tempHi & (1 << i));
+		if(temp)
+			tempHiReversed |= (1 << ((8 - 1) - i));
+	}
+
+	return (uint16_t)((tempHiReversed & 0x0f) << 8) | pcfData.bytePCFData[3];
 }
 
 void PCF_read(void){

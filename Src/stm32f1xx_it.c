@@ -26,6 +26,7 @@
 extern TIM_HandleTypeDef    TimHandle;
 extern UART_HandleTypeDef Uart1Handle;
 extern DMA_HandleTypeDef Hdma_adc1Handle;
+extern ADC_HandleTypeDef ADC1Handle;
 /******************************************************************************/
 /*           Cortex-M3 Processor Interruption and Exception Handlers          */ 
 /******************************************************************************/
@@ -183,6 +184,15 @@ void USART1_IRQHandler(void)
  }
 
 
+/**
+  * @brief  This function handles ADC interrupt request.
+  * @param  None
+  * @retval None
+  */
+void ADC1_2_IRQHandler(void)
+{
+  HAL_ADC_IRQHandler(&ADC1Handle);
+}
 
 
 /**

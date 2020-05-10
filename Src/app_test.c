@@ -65,8 +65,10 @@ void test4(void){
 }
 
 void test5(void){
-
-	UART3_SendToHost((uint8_t *)"test5\r\n");
+	uint16_t boxID;
+	boxID = Get_Box_ID();
+	sprintf((char*) strTest, "boxID = %d\r\n", (int) boxID);
+	UART3_SendToHost((uint8_t *)strTest);
 }
 void test8(void){
 	UART3_SendToHost((uint8_t *)"test8\r\n");

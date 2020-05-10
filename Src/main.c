@@ -48,11 +48,14 @@ int main(void)
 {
 	System_Initialization();
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
+
 //	Setup_Eeprom();
+
 	PCF_Init();
 	SCH_Add_Task(PCF_read, 7, 21);
-	SCH_Add_Task(LED_Display_FSM, 11, 20);
-	SCH_Add_Task(Watchdog_Counting, 3, 100);
+	SCH_Add_Task(LED_Display_FSM, 11, 23);
+	SCH_Add_Task(Watchdog_Counting, 3, 101);
+	Set_Relay(4);
 #if(WATCHDOG_ENABLE == 1)
     MX_IWDG_Init();
 #endif
@@ -74,7 +77,7 @@ void Main_FSM(void){
 	}
 #endif
 	PowerConsumption_FSM();
-	FSM_Process_Data_Received_From_Sim3g();
+//	FSM_Process_Data_Received_From_Sim3g();
 
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:
@@ -87,8 +90,8 @@ void Main_FSM(void){
 
 		break;
 	case POST_DATA_TO_SERVER:
-		Server_Communication();
-		Process_System_Power();
+//		Server_Communication();
+//		Process_System_Power();
 		if(Is_Done_Getting_ADC() == RESET){
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}

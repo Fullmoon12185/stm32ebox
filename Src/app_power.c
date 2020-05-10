@@ -58,6 +58,7 @@ typedef struct PowerSystems {
 	uint8_t internalTemp;
 
 	uint8_t powerFactor;
+	uint32_t previousEnergy;
 	uint32_t energy;
 	uint32_t limitEnergy;
 	uint32_t workingTime;
@@ -209,6 +210,7 @@ static void Node_Setup(void) {
 				Main.ambientTemp = 25;
 				Main.internalTemp = 25;
 				Main.energy = Eeprom_Get_Main_Energy();
+				Main.previousEnergy = Main.energy;
 				sprintf((char*) strtmpPower, "Main.energy:%d \r\n", (int) Main.energy);
 							UART3_SendToHost((uint8_t *)strtmpPower);
 				Main.limitEnergy = 0xffffffff;
@@ -218,20 +220,20 @@ static void Node_Setup(void) {
 		} else {
 			Main.nodes[outletID].voltage = 230;
 			Main.nodes[outletID].powerFactor = 100;
-			if(Eeprom_Read_Outlet(outletID,
-					&Main.nodes[outletID].nodeStatus,
-					&Main.nodes[outletID].energy,
-					&Main.nodes[outletID].limitEnergy,
-					&Main.nodes[outletID].workingTime)){
-				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
-						Main.nodes[outletID].nodeStatus == CHARGING){
-					Set_Relay(outletID);
-				}
-//				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%lu\t l:%lu\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus,
-//						(uint32_t)Main.nodes[outletID].energy, (uint32_t)Main.nodes[outletID].limitEnergy);
-//				UART3_SendToHost((uint8_t *)strtmpPower);
-				HAL_Delay(100);
-			} else
+//			if(Eeprom_Read_Outlet(outletID,
+//					&Main.nodes[outletID].nodeStatus,
+//					&Main.nodes[outletID].energy,
+//					&Main.nodes[outletID].limitEnergy,
+//					&Main.nodes[outletID].workingTime)){
+//				if(Main.nodes[outletID].nodeStatus == NODE_READY ||
+//						Main.nodes[outletID].nodeStatus == CHARGING){
+//					Set_Relay(outletID);
+//				}
+////				sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%lu\t l:%lu\t \r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus,
+////						(uint32_t)Main.nodes[outletID].energy, (uint32_t)Main.nodes[outletID].limitEnergy);
+////				UART3_SendToHost((uint8_t *)strtmpPower);
+//				HAL_Delay(100);
+//			} else
 			{
 				Main.nodes[outletID].limitEnergy = 0xffffffff;
 				Main.nodes[outletID].energy = 0;
@@ -260,7 +262,9 @@ void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 	}
 }
 uint32_t Get_Main_Power_Consumption(void){
-	return Main.energy;
+	uint32_t derivativeEnergy = Main.energy - Main.previousEnergy;
+	Main.previousEnergy = Main.energy;
+	return derivativeEnergy;
 }
 uint8_t Get_Main_Power_Factor(void){
 	return Main.powerFactor;
