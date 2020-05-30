@@ -60,7 +60,7 @@ void Error_Handler(void);
 
 #define		VERSION_EBOX				2
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
-#define		WATCHDOG_ENABLE 			0
+#define		WATCHDOG_ENABLE 			1
 
 //#define B1_Pin 							GPIO_PIN_13
 //#define B1_GPIO_Port 					GPIOC

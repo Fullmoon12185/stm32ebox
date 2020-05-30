@@ -161,6 +161,17 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 
 #define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G	8
 
+const AT_COMMAND_ARRAY atCommandArrayForCheckingSim3g[] = {
+		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CSQ\r\n",							 	(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CREG?\r\n",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CPSI?\r\n",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CGREG?\r",  								(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
+};
+uint8_t atCommandArrayIndexForCheckingSim3g = 0;
+
 const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
@@ -254,8 +265,8 @@ void Sim3g_Init(void){
 	Sim3g_GPIO_Init();
 	Sim3g_Enable();
 	Reset_Signal_High();
-
 }
+
 void Sim3g_GPIO_Init(void){
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -270,8 +281,9 @@ void Sim3g_GPIO_Init(void){
 	HAL_GPIO_Init(SIM5320_3G_PWRON_PORT, &GPIO_InitStruct);
 	GPIO_InitStruct.Pin = SIM5320_3G_PERST;
 	HAL_GPIO_Init(SIM5320_3G_PERST_PORT, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
-	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
+
+//	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
+//	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
 
 #if(VERSION_EBOX != 2)
 	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
@@ -285,6 +297,35 @@ void Sim3g_Enable(void){
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_SET);
 
 }
+
+void Check_Sim_3G_Available(void){
+	static CHECK_SIM_3G_STATE checkSim3G_State = SEND_AT_COMMAND;
+	switch(checkSim3G_State){
+	case SEND_AT_COMMAND:
+		SCH_Delete_Task(sim3g_Timeout_Task_Index);
+		Sim3g_Clear_Timeout_Flag();
+		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, 200,0);
+		isOKFlag = RESET;
+		isErrorFlag = RESET;
+		isIPCloseFlag = RESET;
+		ATcommandSending((uint8_t *)"AT\r\n");
+		checkSim3G_State = 1;
+		break;
+	case WAIT_FOR_RESPONSE_FROM_AT_COMMAND:
+		if(isOKFlag){
+			checkSim3G_State = 2;
+		}
+		if(is_Sim3g_Command_Timeout()){
+
+		}
+		break;
+	case 2:
+		break;
+
+	}
+
+}
+
 
 #if(VERSION_EBOX != 2)
 void Sim3g_WakeUp(void){

@@ -9,7 +9,11 @@
 #ifndef APP_SIM3G_H_
 #define APP_SIM3G_H_
 
-
+typedef enum {
+	SEND_AT_COMMAND = 0,
+	WAIT_FOR_RESPONSE_FROM_AT_COMMAND,
+	MAX_CHECK_SIM_3G_STATE
+}CHECK_SIM_3G_STATE;
 
 typedef enum {
 	POWER_ON_SIM3G = 0,

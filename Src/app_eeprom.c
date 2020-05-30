@@ -175,18 +175,23 @@ uint32_t Eeprom_Get_Energy(uint8_t outletID){
 		return tempE;
 }
 void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy){
-
-	if(block[outletID].block_element.energy != energy){
-		block[outletID].block_element.energy = energy;
-		uint8_t tempBuffer[5];
-		tempBuffer[0] = (uint8_t)(energy & 0xff);
-		tempBuffer[1] = (uint8_t)(energy>>8 & 0xff);
-		tempBuffer[2] = (uint8_t)(energy>>16 & 0xff);
-		tempBuffer[3] = (uint8_t)(energy>>24 & 0xff);
-		tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
-		MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_ENERGY_SIZE);
+	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	};
+	if(outletID >= NUMBER_OF_RELAYS) return;
+	updateEnergy[outletID] = (updateEnergy[outletID] + 1) % 20;
+	if(updateEnergy[outletID] == 0){
+		if(block[outletID].block_element.energy != energy){
+			block[outletID].block_element.energy = energy;
+			uint8_t tempBuffer[5];
+			tempBuffer[0] = (uint8_t)(energy & 0xff);
+			tempBuffer[1] = (uint8_t)(energy>>8 & 0xff);
+			tempBuffer[2] = (uint8_t)(energy>>16 & 0xff);
+			tempBuffer[3] = (uint8_t)(energy>>24 & 0xff);
+			tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+			MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_ENERGY_SIZE);
+		}
 	}
-
 }
 
 void Eeprom_Update_WorkingTime(uint8_t outletID, uint32_t workingTime){
