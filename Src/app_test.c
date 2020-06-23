@@ -4,6 +4,7 @@
  *  Created on: Feb 12, 2020
  *      Author: VAIO
  */
+#include <app_i2c_lcd.h>
 #include "main.h"
 
 #include "app_relay.h"
@@ -15,6 +16,7 @@
 #include "app_scheduler.h"
 #include "app_gpio.h"
 #include "app_eeprom.h"
+
 
 extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH];
 extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
@@ -57,10 +59,10 @@ void test4(void){
 	static uint8_t poweron = 0;
 	if(poweron == 0){
 		poweron = 1;
-		Sim3g_Disable();
+		Power_Signal_High();
 	} else {
 		poweron = 0;
-		Sim3g_Enable();
+		Power_Signal_Low();
 	}
 }
 
@@ -153,4 +155,10 @@ void Test11(void){
 		Eeprom_Update_LimitEnergy(i, 0);
 //		HAL_Delay(1000);
 	}
+}
+
+
+void Test12(void){
+	Lcd_Goto_XY(1,0);
+	Lcd_Send_String("Nguyen");
 }

@@ -13,19 +13,21 @@
 #include "app_power.h"
 #include "app_pcf8574.h"
 
-#define DEBUG_SIM3G(X)    						//X
+#define DEBUG_SIM3G(X)    						X
 
 #define DATA_TO_SEND_LENGTH						20
 
-#define TIMER_TO_POWER_ON_SIM3G					(100/INTERRUPT_TIMER_PERIOD)
+#define TIMER_TO_POWER_ON_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_OFF_SIM3G				(3000/INTERRUPT_TIMER_PERIOD)
-#define TIMER_TO_POWER_ON_SIM3G_TIMEOUT			(500/INTERRUPT_TIMER_PERIOD)
+#define TIMER_TO_POWER_ON_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_OFF_SIM3G_TIMEOUT		(10000/INTERRUPT_TIMER_PERIOD)
 
 
-#define TIMER_TO_RESET_SIM3G					(500/INTERRUPT_TIMER_PERIOD)
+#define TIMER_TO_RESET_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_RESET_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
 #define COMMAND_TIME_OUT						(20000/INTERRUPT_TIMER_PERIOD)
+
+#define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(10000/INTERRUPT_TIMER_PERIOD) //10s
 
 #define MAX_RETRY_NUMBER						3
 
@@ -74,6 +76,7 @@ const uint8_t NETWORK_OPENED[] = "Network opened";
 const uint8_t Send_ok[] = "Send ok\r";
 const uint8_t RECV_FROM[] = "RECV FROM";
 const uint8_t IP_CLOSE[] = "+IPCLOSE";
+const uint8_t ISCIPSEND[]= "+CIPSEND";
 
 FlagStatus isPBDoneFlag = RESET;
 FlagStatus isStin25 = RESET;
@@ -84,6 +87,7 @@ FlagStatus isRecvFromFlag = RESET;
 FlagStatus isReadyToSendDataToServer = RESET;
 FlagStatus isSendOKFlag = RESET;
 FlagStatus isReceiveDataFromServer = RESET;
+FlagStatus isCipsend = RESET;
 
 
 static uint8_t sim3g_TimeoutFlag = 0;
@@ -138,6 +142,8 @@ void SM_Wait_For_Sim3g_Power_Off(void);
 
 void SM_Sim3g_Startup(void);
 void SM_Wait_For_Sim3g_Startup_Response(void);
+
+void SM_Wait_For_Sim3g_Network_Establishment(void);
 void SM_Sim3g_Setting(void);
 void SM_Wait_For_Sim3g_Setting_Response(void);
 
@@ -153,6 +159,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 		{WAIT_FOR_SIM3G_RESET, 								SM_Wait_For_Sim3g_Reset		  						},
 		{SIM3G_START_UP, 									SM_Sim3g_Startup									},
 		{WAIT_FOR_SIM3G_STARTUP_RESPONSE, 					SM_Wait_For_Sim3g_Startup_Response					},
+		{WAIT_FOR_NETWORK_ESTABLISHMENT, 					SM_Wait_For_Sim3g_Network_Establishment				},
 		{SIM3G_SETTING, 									SM_Sim3g_Setting									},
 		{WAIT_FOR_SIM3G_SETTING_RESPONSE, 					SM_Wait_For_Sim3g_Setting_Response					},
 
@@ -163,7 +170,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 
 const AT_COMMAND_ARRAY atCommandArrayForCheckingSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
-		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"ATE0\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSQ\r\n",							 	(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CREG?\r\n",  							(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CPSI?\r\n",  							(uint8_t*)"OK\r"		},
@@ -174,12 +181,12 @@ uint8_t atCommandArrayIndexForCheckingSim3g = 0;
 
 const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
-		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"ATE0\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGDCONT=1,\"IP\",\"v-internet\"\r", 		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CIPMODE=0\r",  							(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
 };
 uint8_t atCommandArrayIndex = 0;
@@ -263,7 +270,10 @@ void Sim3g_Init(void){
 	pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 	Sim3g_GPIO_Init();
+#ifdef 	SIM3G_ENABLE_PORT
 	Sim3g_Enable();
+#endif
+	Power_Signal_High();
 	Reset_Signal_High();
 }
 
@@ -290,6 +300,7 @@ void Sim3g_GPIO_Init(void){
 #endif
 }
 
+//#ifdef	SIM3G_ENABLE_PORT
 void Sim3g_Disable(void){
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_RESET);
 }
@@ -297,7 +308,7 @@ void Sim3g_Enable(void){
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_SET);
 
 }
-
+//#endif
 void Check_Sim_3G_Available(void){
 	static CHECK_SIM_3G_STATE checkSim3G_State = SEND_AT_COMMAND;
 	switch(checkSim3G_State){
@@ -336,16 +347,24 @@ void Sim3g_WakeUp(void){
 #endif
 
 void Power_Signal_Low(void){
-	HAL_GPIO_WritePin(PC8_3G_PWRON_PORT, PC8_3G_PWRON, GPIO_PIN_RESET);
-}
-void Power_Signal_High(void){
 	HAL_GPIO_WritePin(PC8_3G_PWRON_PORT, PC8_3G_PWRON, GPIO_PIN_SET);
 }
+void Power_Signal_High(void){
+	HAL_GPIO_WritePin(PC8_3G_PWRON_PORT, PC8_3G_PWRON, GPIO_PIN_RESET);
+}
 void Reset_Signal_Low(void){
+#if (SIM5320 == 1)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
+#elif (SIM7600 == 1)
+	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
+#endif
 }
 void Reset_Signal_High(void){
+#if(SIM5320 == 1)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
+#elif (SIM7600 == 1)
+	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
+#endif
 }
 
 void Sim3g_Clear_Timeout_Flag(void){
@@ -399,9 +418,9 @@ void SM_Wait_For_Sim3g_Reset(void){
 	}
 }
 void SM_Power_Off_Sim3g(void){
-//	SCH_Add_Task(Power_Signal_Low, 0, 0);
-//	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
-	Sim3g_Disable();
+	SCH_Add_Task(Power_Signal_Low, 0, 0);
+	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
+	//Sim3g_Disable();
 	Sim3g_Clear_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G,0);
 	sim3gState = WAIT_FOR_SIM3G_POWER_OFF;
@@ -433,16 +452,31 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 	if(isPBDoneFlag == SET){
 		isPBDoneFlag = RESET;
 		isStin25 = RESET;
-		sim3gState = SIM3G_SETTING;
-		atCommandArrayIndex = 0;
-		sim3g_Retry_Counter = 0;
+
+		SCH_Delete_Task(sim3g_Timeout_Task_Index);
+		Sim3g_Clear_Timeout_Flag();
+		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT,0);
+		sim3gState = WAIT_FOR_NETWORK_ESTABLISHMENT;
 	} else if(isErrorFlag){
 		isErrorFlag = RESET;
-		sim3gState = POWER_OFF_SIM3G;
+		sim3gState = RESET_SIM3G;
 	}
 	if(is_Sim3g_Command_Timeout() || isIPCloseFlag){
 		isIPCloseFlag = RESET;
-		sim3gState = POWER_OFF_SIM3G;
+		sim3gState = RESET_SIM3G;
+	}
+
+}
+
+void SM_Wait_For_Sim3g_Network_Establishment(void){
+	if(is_Sim3g_Command_Timeout()){
+		atCommandArrayIndex = 0;
+		sim3g_Retry_Counter = 0;
+		sim3gState = SIM3G_SETTING;
+		SCH_Delete_Task(sim3g_Timeout_Task_Index);
+		Sim3g_Clear_Timeout_Flag();
+		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, COMMAND_TIME_OUT,0);
+
 	}
 
 }
@@ -467,7 +501,7 @@ void SM_Wait_For_Sim3g_Setting_Response(void){
 		isErrorFlag = RESET;
 		if(sim3g_Retry_Counter > MAX_RETRY_NUMBER){
 			sim3g_Retry_Counter = 0;
-			sim3gState = POWER_OFF_SIM3G;
+			sim3gState = RESET_SIM3G;
 		} else {
 			sim3gState = SIM3G_SETTING;
 		}
@@ -475,7 +509,7 @@ void SM_Wait_For_Sim3g_Setting_Response(void){
 	if(is_Sim3g_Command_Timeout() || isIPCloseFlag){
 		isIPCloseFlag = RESET;
 		sim3g_Retry_Counter = 0;
-		sim3gState = POWER_OFF_SIM3G;
+		sim3gState = RESET_SIM3G;
 	}
 }
 
@@ -597,6 +631,8 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			isRecvFromFlag = SET;
 		} else if(isReceivedData((uint8_t *)Send_ok)){
 			isSendOKFlag = SET;
+		} else if(isReceivedData((uint8_t *)ISCIPSEND)){
+			isCipsend = SET;
 		}
 		processDataState = CHECK_DATA_AVAILABLE_STATE;
 		break;

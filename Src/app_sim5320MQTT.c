@@ -36,8 +36,11 @@ extern FlagStatus isSendOKFlag;
 
 extern FlagStatus isReadyToSendDataToServer;
 extern FlagStatus isReceiveDataFromServer;
+extern FlagStatus isCipsend;
+
 
 const uint8_t MQTTCLOSE_COMMAND[]   = "AT+CIPCLOSE\r\n";
+const uint8_t LAST_WILL_MESSAGE[]   = "0-0,1-0,2-0,3-0,4-0,5-0,6-0,7-0,8-0,9-0,10-5";
 uint8_t CLIENT_ID[MAX_TOPIC_LENGTH];
 
 //nguyen cloudmqtt
@@ -425,6 +428,9 @@ void SM_Mqtt_Wait_For_Response_From_Open_State(void){
 	if(isOKFlag){
 		isOKFlag = RESET;
 		mqttState = MQTT_CONNECT_STATE;
+		SCH_Delete_Task(mqtt_Timeout_Task_Index);
+		Mqtt_Clear_Timeout_Flag();
+		mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, 100, 0);
 	} else if(isErrorFlag){
 		isErrorFlag = 0;
 		mqttState = MAX_MQTT_NUMBER_STATES;
@@ -434,12 +440,14 @@ void SM_Mqtt_Wait_For_Response_From_Open_State(void){
 }
 
 void SM_Mqtt_Connect(void){
-	SCH_Delete_Task(mqtt_Timeout_Task_Index);
-	Mqtt_Clear_Timeout_Flag();
-	mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_COMMAND_TIME_OUT,0);
-	isReadyToSendDataToServer = RESET;
-	Setup_Mqtt_Connect_Message();
-	mqttState = MQTT_RECEIVE_GREATER_THAN_SYMBOL_CONNECT_STATE;
+	if(is_Mqtt_Command_Timeout()){
+		SCH_Delete_Task(mqtt_Timeout_Task_Index);
+		Mqtt_Clear_Timeout_Flag();
+		mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_COMMAND_TIME_OUT,0);
+		isReadyToSendDataToServer = RESET;
+		Setup_Mqtt_Connect_Message();
+		mqttState = MQTT_RECEIVE_GREATER_THAN_SYMBOL_CONNECT_STATE;
+	}
 }
 void SM_Mqtt_Receive_Greater_Than_Symbol_Connect_State(void){
 	if(isReadyToSendDataToServer){
@@ -557,6 +565,8 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Publish_State(void){
 		isSendOKFlag = RESET;
 		isErrorFlag = RESET;
 		isIPCloseFlag = RESET;
+
+		isCipsend = RESET;
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
 		mqttState = MQTT_WAIT_FOR_RESPONSE_FROM_PUBLISH_STATE;
 	} else if(isErrorFlag){
@@ -570,8 +580,9 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Publish_State(void){
 	}
 }
 void SM_Mqtt_Wait_For_Response_From_Publish_State(void){
-	if(isSendOKFlag){
+	if(isSendOKFlag || isCipsend){
 		isSendOKFlag = RESET;
+		isCipsend = RESET;
 		mqttState = MQTT_WAIT_FOR_NEW_COMMAND;
 	} else if(isErrorFlag){
 		isErrorFlag = RESET;
@@ -639,16 +650,18 @@ void Setup_Mqtt_Connect_Message(void){
 
 #if(CLOUD_MQTT == 1)
 	uint8_t i;
-	uint8_t clientIdLength = GetStringLength((uint8_t*)CLIENT_ID);
-	uint8_t usernameLength = GetStringLength((uint8_t*)USERNAME);
-	uint8_t passwordLength = GetStringLength((uint8_t*)PASSWORD);
+	const uint8_t clientIdLength = GetStringLength((uint8_t*)CLIENT_ID);
+	const uint8_t usernameLength = GetStringLength((uint8_t*)USERNAME);
+	const uint8_t passwordLength = GetStringLength((uint8_t*)PASSWORD);
+	const uint8_t willPayloadLength = GetStringLength((uint8_t*)LAST_WILL_MESSAGE);
+	const uint8_t willTopicLength = GetStringLength((uint8_t*)PUBLISH_TOPIC_STATUS);
 
 	Clear_Mqtt_Message_Buffer();
 
 	// Header
 	mqttMessage[mqttMessageIndex++] = MQTT_MSG_CONNECT;
 
-	mqttMessage[mqttMessageIndex++] = 18 + clientIdLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
+	mqttMessage[mqttMessageIndex++] = 22 + clientIdLength + willPayloadLength + willTopicLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
 	// Protocol name
 	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
 	mqttMessage[mqttMessageIndex++] = 6;                      // Protocol Name Length LSB
@@ -664,11 +677,11 @@ void Setup_Mqtt_Connect_Message(void){
 
 	// Connection flags   2 for clean session
  //   mqttMessage[9] = 2;
-	mqttMessage[mqttMessageIndex++] = 0b11000010;  //enable username, password, will retain, will-qos (2), will flag, clean session
+	mqttMessage[mqttMessageIndex++] = 0b11101110;  //enable username, password, will retain, will-qos (2), will flag, clean session
 
 	// Keep-alive (maximum duration)
 //	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
-//	mqttMessage[mqttMessageIndex++] = 0x3c;                     // Keep-alive Time Length LSB
+//	mqttMessage[mqttMessageIndex++] = 0x0a;                     // Keep-alive Time Length LSB
 
 	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
 		mqttMessage[mqttMessageIndex++] = 0x0;                     // Keep-alive Time Length LSB
@@ -679,6 +692,26 @@ void Setup_Mqtt_Connect_Message(void){
 	for (i = 0; i < clientIdLength; i ++){
 		mqttMessage[mqttMessageIndex++] = CLIENT_ID[i];
 	}
+
+
+	//will topic
+	mqttMessage[mqttMessageIndex++] = 0;                     // Will topic length MSB
+	mqttMessage[mqttMessageIndex++] = willTopicLength;        			// Will topic length LSB
+	for (i = 0; i < willTopicLength; i ++){
+		mqttMessage[mqttMessageIndex++] = PUBLISH_TOPIC_STATUS[i];
+	}
+
+	//end will topic
+
+	//will message
+	mqttMessage[mqttMessageIndex++] = 0;                     // Will message length MSB
+	mqttMessage[mqttMessageIndex++] = willPayloadLength;        			// Will message length LSB
+	for (i = 0; i < willPayloadLength; i ++){
+		mqttMessage[mqttMessageIndex++] = LAST_WILL_MESSAGE[i];
+	}
+
+	//end will message
+
 
 	// Username
 	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB

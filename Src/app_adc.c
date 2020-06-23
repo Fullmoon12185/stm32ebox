@@ -21,8 +21,21 @@
 #define		REFERENCE_1V8_VOLTAGE_INDEX					12
 #define		DIFFERENCE_ADC_VALUE_THRESHOLD				10
 
+//#define		AVCC_OPAMP								5 //5 Volt
+#define AVCC_OPAMP								3 //3.3 Volt
 
+#if (AVCC_OPAMP == 3)
+#define		COEFFICIENT_1								713
+#define		COEFFICIENT_2								390
+#define		COEFFICIENT_3								252
 
+#else
+
+#define		COEFFICIENT_1								540
+#define		COEFFICIENT_2								390
+#define		COEFFICIENT_3								252
+
+#endif
 ADC_HandleTypeDef ADC1Handle;
 DMA_HandleTypeDef Hdma_adc1Handle;
 
@@ -257,7 +270,7 @@ void ADC1_Init(void)
     Error_Handler();
   }
 
-  WatchDogAnalogInit();
+ // WatchDogAnalogInit();
 
   Adc_Buffers_Init();
 }
@@ -336,12 +349,12 @@ void WatchDogAnalogInit(void){
 		Error_Handler();
 	  }
 
-	  AnalogWDGConfig.Channel = ADC_CHANNEL_10;
-	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
-	  {
-		/* Channel Configuration Error */
-		Error_Handler();
-	  }
+//	  AnalogWDGConfig.Channel = ADC_CHANNEL_10;
+//	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+//	  {
+//		/* Channel Configuration Error */
+//		Error_Handler();
+//	  }
 	  AnalogWDGConfig.Channel = ADC_CHANNEL_11;
 	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
 	  {
@@ -576,34 +589,35 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 
-				if(i < 10 && i >= 0){
-					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-					UART3_SendToHost((uint8_t *)"\r\n");
-				}
+//				if(i < 10 && i >= 0){
+//					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//				}
 
 
 #if(VERSION_EBOX == 2)
 				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];
 				if(tempIrmsADCValue > 1000){
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* 713)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_1)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
 				} else if (tempIrmsADCValue > 800){
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* 390)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_2)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
 				} else {
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* 252)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
 				}
 #else
-
-				if(i >= 8){
-					Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 530, 230, PowerFactor[i], 1);
+				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];
+				if(tempIrmsADCValue > 1000){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_1)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
+				} else if (tempIrmsADCValue > 800){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_2)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
 				} else {
-					Node_Update(i+1, array_Of_Average_Vrms_ADC_Values[i] * 236, 230, PowerFactor[i], 1);
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
 				}
 #endif
 			}

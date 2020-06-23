@@ -17,8 +17,17 @@
 #define		DEBUG_POWER(X)							X
 
 #define		MAX_CURRENT								350000
+
+
+#if(VERSION_EBOX == 2)
 #define		MIN_CURRENT								30000
 #define 	CURRENT_CHANGING_THRESHOLD				30000
+#define 	MIN_PF									30
+#else
+#define		MIN_CURRENT								10000
+#define 	CURRENT_CHANGING_THRESHOLD				10000
+
+#endif
 
 
 #define		TIME_OUT_AFTER_UNPLUG					(20000/INTERRUPT_TIMER_PERIOD)
@@ -220,24 +229,24 @@ static void Node_Setup(void) {
 		} else {
 			Main.nodes[outletID].voltage = 230;
 			Main.nodes[outletID].powerFactor = 100;
-			if(Eeprom_Read_Outlet(outletID,
-					&Main.nodes[outletID].nodeStatus,
-					&Main.nodes[outletID].energy,
-					&Main.nodes[outletID].limitEnergy,
-					&Main.nodes[outletID].workingTime)){
-				if(Main.nodes[outletID].nodeStatus == CHARGING){
-					Set_Relay(outletID);
-				} else if(Main.nodes[outletID].nodeStatus == NODE_READY){
-					Main.nodes[outletID].limitEnergy = 0xffffffff;
-					Main.nodes[outletID].energy = 0;
-					Set_Relay(outletID);
-				} else {
-					Main.nodes[outletID].limitEnergy = 0xffffffff;
-					Main.nodes[outletID].energy = 0;
-				}
-
-				HAL_Delay(100);
-			} else
+//			if(Eeprom_Read_Outlet(outletID,
+//					&Main.nodes[outletID].nodeStatus,
+//					&Main.nodes[outletID].energy,
+//					&Main.nodes[outletID].limitEnergy,
+//					&Main.nodes[outletID].workingTime)){
+//				if(Main.nodes[outletID].nodeStatus == CHARGING){
+//					Set_Relay(outletID);
+//				} else if(Main.nodes[outletID].nodeStatus == NODE_READY){
+//					Main.nodes[outletID].limitEnergy = 0xffffffff;
+//					Main.nodes[outletID].energy = 0;
+//					Set_Relay(outletID);
+//				} else {
+//					Main.nodes[outletID].limitEnergy = 0xffffffff;
+//					Main.nodes[outletID].energy = 0;
+//				}
+//
+//				HAL_Delay(100);
+//			} else
 			{
 
 				Main.nodes[outletID].limitEnergy = 0xffffffff;
@@ -270,9 +279,9 @@ void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 	}
 }
 uint32_t Get_Main_Power_Consumption(void){
-	uint32_t derivativeEnergy = Main.energy - Main.previousEnergy;
-	Main.previousEnergy = Main.energy;
-	return derivativeEnergy;
+//	uint_t derivativeEnergy = Main.energy - Main.previousEnergy;
+//	Main.previousEnergy = Main.energy;
+	return (uint32_t)(Main.energy);
 }
 uint8_t Get_Main_Power_Factor(void){
 	return Main.powerFactor;
@@ -331,7 +340,9 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 	} else if (outletID < MAIN_INPUT) {
 		uint8_t tempOutletID = outletID;
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].current;
-		if (current <= CURRENT_CHANGING_THRESHOLD || (Get_Relay_Status(tempOutletID) == RESET)){
+		if (current <= CURRENT_CHANGING_THRESHOLD
+				|| (Get_Relay_Status(tempOutletID) == RESET)
+				|| Main.nodes[tempOutletID].powerFactor < MIN_PF){
 			Main.nodes[tempOutletID].current = 0;
 			Main.nodes[tempOutletID].powerFactor = 0;
 		} else	{
@@ -349,7 +360,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID <= 9 && tempOutletID >= 0){
+		if(tempOutletID < 10 && tempOutletID >= 0){
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current););

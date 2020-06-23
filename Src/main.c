@@ -18,7 +18,6 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include <app_init.h>
 #include "main.h"
 #include "app_fsm.h"
 #include "app_uart.h"
@@ -32,6 +31,9 @@
 #include "app_gpio.h"
 #include "app_iwatchdog.h"
 #include "app_eeprom.h"
+#include "app_i2c_lcd.h"
+#include "app_init.h"
+
 
 
 typedef enum {
@@ -46,12 +48,22 @@ void Main_FSM(void);
 
 int main(void)
 {
+
 	System_Initialization();
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
 
 //	Setup_Eeprom();
 
 	PCF_Init();
+
+
+//	SCH_Add_Task(test5, 5, 100);
+
+	Lcd_Initialization();
+	Show_Box_ID(Get_Box_ID());
+
+	Setup_Eeprom();
+
 	SCH_Add_Task(PCF_read, 7, 21);
 	SCH_Add_Task(LED_Display_FSM, 11, 23);
 	SCH_Add_Task(Watchdog_Counting, 3, 101);
@@ -93,6 +105,7 @@ void Main_FSM(void){
 		Server_Communication();
 		Process_System_Power();
 		if(Is_Done_Getting_ADC() == RESET){
+			Show_KWH(Get_Main_Power_Consumption());
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}
 		break;

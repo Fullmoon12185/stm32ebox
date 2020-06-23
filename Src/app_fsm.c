@@ -14,6 +14,8 @@
 #include "app_relay.h"
 #include "app_gpio.h"
 #include "app_power.h"
+#include "app_i2c_lcd.h"
+
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
@@ -162,9 +164,71 @@ void Update_Publish_Power_Message_All_Outlets(void){
 			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
 			publish_message[publishMessageIndex++] = '-';
 			tempValue = Get_Main_Power_Consumption();
+
 		}
 
-		if(tempValue >= 1000000){
+
+		if(tempValue >= 1000000000){
+			publish_message[publishMessageIndex++] = tempValue/1000000000 + 0x30;
+			tempValue = tempValue % 1000000000;
+			publish_message[publishMessageIndex++] = tempValue/100000000 + 0x30;
+			tempValue = tempValue % 100000000;
+			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
+			tempValue = tempValue % 10000000;
+			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
+			tempValue = tempValue % 1000000;
+			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+			tempValue = tempValue % 100000;
+			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+			tempValue = tempValue % 10000;
+			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+			tempValue = tempValue % 1000;
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		}
+		else if(tempValue >= 100000000){
+			publish_message[publishMessageIndex++] = tempValue/100000000 + 0x30;
+			tempValue = tempValue % 100000000;
+			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
+			tempValue = tempValue % 10000000;
+			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
+			tempValue = tempValue % 1000000;
+			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+			tempValue = tempValue % 100000;
+			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+			tempValue = tempValue % 10000;
+			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+			tempValue = tempValue % 1000;
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		}
+		else if(tempValue >= 10000000){
+			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
+			tempValue = tempValue % 10000000;
+			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
+			tempValue = tempValue % 1000000;
+			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+			tempValue = tempValue % 100000;
+			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+			tempValue = tempValue % 10000;
+			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+			tempValue = tempValue % 1000;
+			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+			tempValue = tempValue % 100;
+			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+			tempValue = tempValue % 10;
+			publish_message[publishMessageIndex++] = tempValue + 0x30;
+
+		}
+		else if(tempValue >= 1000000){
 			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
 			tempValue = tempValue % 1000000;
 			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;

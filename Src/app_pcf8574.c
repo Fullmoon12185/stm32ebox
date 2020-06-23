@@ -12,7 +12,6 @@
 #define PCF_WRITE_ADDRESS_1		64
 #define PCF_WRITE_ADDRESS_2		72
 #define PCF_WRITE_ADDRESS_3		76
-
 #define PCF_WRITE_ADDRESS_4		78
 
 #define PCF_READ_ADDRESS_1		65
@@ -23,7 +22,7 @@
 //#define
 extern I2C_HandleTypeDef I2cHandle;
 
-uint8_t sfmReadPowerStateMode = 0;
+//uint8_t sfmReadPowerStateMode = 0;
 uint8_t I2CReceiveBuffer[2];
 //uint32_t Relay_and_Fuse_Statuses = 0;
 
@@ -49,6 +48,9 @@ void PCF_Init(void){
 		PCF_read();
 		HAL_Delay(100);
 	}
+
+	sprintf((char*) strpcf, "boxID = %d\r\n", (int) Get_Box_ID());
+	UART3_SendToHost((uint8_t *)strpcf);
 }
 
 uint8_t PCF_Scan(){
@@ -62,9 +64,11 @@ uint8_t PCF_Scan(){
 		}
 		else{
 			count ++;
-			sprintf((char*) strpcf, "%d\t", (int) i);
+			sprintf((char*) strpcf, "%d\t", (int) i<<1);
 			UART3_SendToHost((uint8_t *)strpcf);
-			return i;
+			uint8_t initData[1] = {0xFF};
+			HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)(i<<1), (uint8_t *) initData, 1, 0xffff);
+
 		}
 	}
 	sprintf((char*) strpcf, "count: %d", count);
@@ -77,6 +81,7 @@ uint32_t Get_All_Relay_Fuse_Statuses(void){
 }
 
 uint16_t Get_Box_ID(void){
+#if(VERSION_EBOX == 2)
 	uint8_t tempHi = pcfData.bytePCFData[2] & 0xf0;
 	uint8_t tempHiReversed = 0, temp;
 	for (uint8_t i = 0; i < 8; i++)
@@ -87,6 +92,9 @@ uint16_t Get_Box_ID(void){
 	}
 
 	return (uint16_t)((tempHiReversed & 0x0f) << 8) | pcfData.bytePCFData[3];
+#else
+	return 3;
+#endif
 }
 
 void PCF_read(void){
@@ -143,9 +151,14 @@ uint8_t PCF_read1(uint8_t address){
 void Set_Input_PCF_Pins(void){
 	uint8_t initData[1] = {0xff};
 	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)PCF_WRITE_ADDRESS_1, (uint8_t *) initData, 1, 0xffff);
+	HAL_Delay(100);
 	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)PCF_WRITE_ADDRESS_2, (uint8_t *) initData, 1, 0xffff);
+	HAL_Delay(100);
 	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)PCF_WRITE_ADDRESS_3, (uint8_t *) initData, 1, 0xffff);
+	HAL_Delay(100);
 	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)PCF_WRITE_ADDRESS_4, (uint8_t *) initData, 1, 0xffff);
+	HAL_Delay(100);
+
 }
 
 

@@ -20,12 +20,6 @@
 I2C_HandleTypeDef I2cHandle;
 
 
-/* Buffer used for transmission */
-uint8_t aI2C_TxBuffer[] = " ****I2C_TwoBoards communication based on Polling****  ****I2C_TwoBoards communication based on Polling****  ****I2C_TwoBoards communication based on Polling**** ";
-
-/* Buffer used for reception */
-uint8_t aI2C_RxBuffer[RXBUFFERSIZE];
-
 void I2C_Init(void){
 	/*##-1- Configure the I2C peripheral ######################################*/
 	  I2cHandle.Instance             = I2C1;

@@ -82,10 +82,10 @@ void GPIO_Relay_Init(void){
 	HAL_GPIO_Init(RELAY_PORT_8, &GPIO_InitStruct);
 	GPIO_InitStruct.Pin = RELAY_PIN_9;
 	HAL_GPIO_Init(RELAY_PORT_9, &GPIO_InitStruct);
-
+#if(VERSION_EBOX == 2)
 	GPIO_InitStruct.Pin = PD2_RELAY_ENABLE_PIN;
 	HAL_GPIO_Init(PD2_RELAY_ENABLE_PORT, &GPIO_InitStruct);
-
+#endif
 }
 
 

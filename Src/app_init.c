@@ -80,7 +80,9 @@ void System_Initialization(void)
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SPI_25LCXXX_INIT - Done \r\n"));
         	break;
         case I2C_INIT:
+
         	I2C_Init();
+        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"I2C_Init \r\n"));
         	PCF_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"I2C_Init - Done \r\n"));
         	break;

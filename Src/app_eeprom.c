@@ -9,6 +9,7 @@
 #include "app_eeprom.h"
 #include "app_25LC512.h"
 #include "app_uart.h"
+#include "app_pcf8574.h"
 
 #define		TIME_INTERVAL_TO_UPDATE_FLASH		1 //IN SECOND
 
@@ -59,6 +60,7 @@ uint32_t Eeprom_Get_LimitEnergy(uint8_t outletID);
 uint8_t Eeprom_Get_Status(uint8_t outletID);
 uint32_t Eeprom_Get_Energy(uint8_t outletID);
 
+void Eeprom_Reset_Main_Energy(uint32_t main_energy);
 
 void Eeprom_Initialize(){
 	MC25LC512_Initialize();
@@ -71,16 +73,18 @@ void Eeprom_Initialize(){
 
 
 void Setup_Eeprom(void){
-	for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i ++){
-		Eeprom_Update_Status(i, 0);
-		HAL_Delay(100);
-		Eeprom_Update_LimitEnergy(i, 0xffffffff);
-		HAL_Delay(100);
-		Eeprom_Update_Energy(i, 1);
-		HAL_Delay(100);
-		Eeprom_Update_WorkingTime(i, 0);
-		HAL_Delay(100);
-		Eeprom_Update_Main_Energy(0);
+	if(Get_Box_ID() == 0){
+		for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i ++){
+			Eeprom_Update_Status(i, 0);
+			HAL_Delay(100);
+			Eeprom_Update_LimitEnergy(i, 0xffffffff);
+			HAL_Delay(100);
+			Eeprom_Update_Energy(i, 0);
+			HAL_Delay(100);
+			Eeprom_Update_WorkingTime(i, 0);
+			HAL_Delay(100);
+		}
+		Eeprom_Reset_Main_Energy(0);
 		HAL_Delay(100);
 	}
 }
@@ -117,12 +121,12 @@ uint8_t Eeprom_Read_Outlet(uint8_t outletID, uint8_t *status, uint32_t *energy, 
 }
 
 uint8_t Eeprom_Get_Status(uint8_t outletID){
-		uint8_t tempBuffer[2];
-		MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_STATUS_ADDRESS, tempBuffer, EEPROM_OUTLET_STATUS_SIZE);
-		if(tempBuffer[0] == (tempBuffer[1] ^ 0xff)){
-			return tempBuffer[0];
-		}
-		return 0;
+	uint8_t tempBuffer[2];
+	MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_STATUS_ADDRESS, tempBuffer, EEPROM_OUTLET_STATUS_SIZE);
+	if(tempBuffer[0] == (tempBuffer[1] ^ 0xff)){
+		return tempBuffer[0];
+	}
+	return 0;
 }
 void Eeprom_Update_Status(uint8_t outletID, uint8_t status){
 	if(block[outletID].block_element.status != status)
@@ -226,6 +230,22 @@ void Eeprom_Update_Main_Energy(uint32_t main_energy){
 	uint8_t tempBuffer[5];
 	static uint8_t countForUpdateMainEnergy = 0;
 	countForUpdateMainEnergy = (countForUpdateMainEnergy + 1)%60;
+	if(countForUpdateMainEnergy == 0){
+		tempBuffer[0] = (uint8_t)(main_energy & 0xff);
+		tempBuffer[1] = (uint8_t)(main_energy>>8 & 0xff);
+		tempBuffer[2] = (uint8_t)(main_energy>>16 & 0xff);
+		tempBuffer[3] = (uint8_t)(main_energy>>24 & 0xff);
+		tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+		MC25LC512_Write_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
+	}
+
+}
+
+void Eeprom_Reset_Main_Energy(uint32_t main_energy){
+	uint8_t tempBuffer[5];
+	static uint8_t countForUpdateMainEnergy = 0;
+	countForUpdateMainEnergy = 0;
+	main_energy  = 0;
 	if(countForUpdateMainEnergy == 0){
 		tempBuffer[0] = (uint8_t)(main_energy & 0xff);
 		tempBuffer[1] = (uint8_t)(main_energy>>8 & 0xff);
