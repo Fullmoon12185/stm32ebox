@@ -16,7 +16,7 @@
 
 #define		DEBUG_POWER(X)							X
 
-#define		MAX_CURRENT								350000
+#define		MAX_CURRENT								500000
 
 
 #if(VERSION_EBOX == 2)
@@ -342,7 +342,8 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].current;
 		if (current <= CURRENT_CHANGING_THRESHOLD
 				|| (Get_Relay_Status(tempOutletID) == RESET)
-				|| Main.nodes[tempOutletID].powerFactor < MIN_PF){
+				|| power_factor < MIN_PF)
+		{
 			Main.nodes[tempOutletID].current = 0;
 			Main.nodes[tempOutletID].powerFactor = 0;
 		} else	{

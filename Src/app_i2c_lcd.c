@@ -472,10 +472,10 @@ void Show_Box_ID(uint16_t bID){
 void Show_KWH(uint32_t ws){
 	char strTotalKWH[16];
 	uint32_t kwh;
-	kwh = ws/1000;
+	kwh = ws;
 	kwh = kwh/3600;
 
-	sprintf(strTotalKWH, "Total: %ld kWh", kwh);
+	sprintf(strTotalKWH, "Total: %ld Wh", kwh);
 
 	Lcd_Goto_XY(1, 0);
 	Lcd_Send_String((char*)strTotalKWH);

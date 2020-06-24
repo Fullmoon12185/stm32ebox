@@ -651,10 +651,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				Clear_Sim3gDataProcessingBuffer();
 			} else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
-//				if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH){
-//					Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
-//					processDataState = CHECK_DATA_AVAILABLE_STATE;
-//				}
+				if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH){
+					Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
+					processDataState = CHECK_DATA_AVAILABLE_STATE;
+				}
 			}
 		}
 		break;
