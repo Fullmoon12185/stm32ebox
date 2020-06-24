@@ -599,7 +599,8 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				processDataState = PREPARE_FOR_SENDING_DATA;
 			}else if(preReadCharacter == '\r' && readCharacter == '\n'){
 				processDataState = PREPARE_PROCESSING_RECEIVED_DATA;
-			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE && readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE){
+			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
+					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 || readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
 				processDataState = PROCESSING_RECEIVED_DATA;
 				Clear_Sim3gDataProcessingBuffer();
 			} else {
@@ -640,15 +641,20 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		if(Uart1_Received_Buffer_Available()){
 			preReadCharacter = readCharacter;
 			readCharacter = Uart1_Read_Received_Buffer();
-			if(preReadCharacter == '\r' && readCharacter == '\n'){
+			if((preReadCharacter == '\r' && readCharacter == '\n')){
 				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
 				processDataState = CHECK_DATA_AVAILABLE_STATE;
-			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE && readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE){
+			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
+					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 || readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
 				processDataState = PROCESSING_RECEIVED_DATA;
 				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1,  Get_Box_ID());
 				Clear_Sim3gDataProcessingBuffer();
 			} else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
+//				if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH){
+//					Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
+//					processDataState = CHECK_DATA_AVAILABLE_STATE;
+//				}
 			}
 		}
 		break;

@@ -110,8 +110,7 @@ uint8_t _backlight;
 void LCD_Testing(void){
 
 	uint8_t initData[1] = {0xaa};
-	HAL_StatusTypeDef a;
-	a = HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)66, (uint8_t *) initData, 1, 0xffff);
+	HAL_I2C_Master_Transmit(&I2cHandle, (uint16_t)66, (uint8_t *) initData, 1, 0xffff);
 	HAL_Delay(100);
 }
 
@@ -464,7 +463,7 @@ void Lcd_Goto_XY (int row, int col)
 void Show_Box_ID(uint16_t bID){
 
 	char strBoxID[16];
-	sprintf(strBoxID, "Box ID: %ld", bID);
+	sprintf(strBoxID, "Box ID: %d", bID);
 
 	Lcd_Goto_XY(0, 0);
 	Lcd_Send_String((char*)strBoxID);
@@ -472,7 +471,9 @@ void Show_Box_ID(uint16_t bID){
 
 void Show_KWH(uint32_t ws){
 	char strTotalKWH[16];
-	uint32_t kwh = ws;
+	uint32_t kwh;
+	kwh = ws/1000;
+	kwh = kwh/3600;
 
 	sprintf(strTotalKWH, "Total: %ld kWh", kwh);
 
