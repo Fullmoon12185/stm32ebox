@@ -55,7 +55,12 @@ uint8_t CLIENT_ID[MAX_TOPIC_LENGTH];
 //const uint8_t USERNAME[] 			= "lyooeovx";
 //const uint8_t PASSWORD[] 			= "7Pq6P2PWLqME";
 
-const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt-dev.demo-application.net\",8083\r";
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt-dev.demo-application.net\",8083\r";
+//const uint8_t USERNAME[] 			= "eboost-k2";
+//const uint8_t PASSWORD[] 			= "ZbHzPb5W";
+
+//35.198.196.5
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.158.2\",8883\r";
 const uint8_t USERNAME[] 			= "eboost-k2";
 const uint8_t PASSWORD[] 			= "ZbHzPb5W";
 
