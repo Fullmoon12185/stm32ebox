@@ -45,7 +45,7 @@ typedef enum {
 MAIN_FSM_STATE mainState = POWER_CONSUMPTION_CALCULATION;
 
 void Main_FSM(void);
-
+void Show_ID(void);
 int main(void)
 {
 
@@ -63,26 +63,30 @@ int main(void)
 	Show_Box_ID(Get_Box_ID());
 
 
-	Setup_Eeprom();
+//	Setup_Eeprom();
 
 
 
 	SCH_Add_Task(PCF_read, 7, 21);
-	SCH_Add_Task(LED_Display_FSM, 11, 23);
-	SCH_Add_Task(Watchdog_Counting, 3, 101);
+//	SCH_Add_Task(LED_Display_FSM, 11, 23);
+//	SCH_Add_Task(Watchdog_Counting, 3, 101);
 
-	SCH_Add_Task(test5, 13, 100);
+	SCH_Add_Task(test5, 13, 30);
+	SCH_Add_Task(Test_Led_Display, 15, 50);
+	SCH_Add_Task(Show_ID, 5, 70);
 #if(WATCHDOG_ENABLE == 1)
     MX_IWDG_Init();
 #endif
 	while (1){
 		SCH_Dispatch_Tasks();
-		Main_FSM();
+//		Main_FSM();
 	}
 	return 0;
 }
 
-
+void Show_ID(void){
+	Show_Box_ID(Get_Box_ID());
+}
 
 void Main_FSM(void){
 

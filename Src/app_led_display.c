@@ -173,6 +173,7 @@ void Test_Led_Display(void){
 
 	ledStatus = 0x01 << ledIndex;
 	ledIndex = (ledIndex + 1)%20;
+	Led_Display();
 }
 void LED_Display_FSM(void) { // call each 200ms
 	LED_COLOR tempLedStatusBuffer;
