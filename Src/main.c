@@ -52,18 +52,13 @@ int main(void)
 	System_Initialization();
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
 
-//	Setup_Eeprom();
-
 	PCF_Init();
-
-
-//	SCH_Add_Task(test5, 5, 100);
 
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
 
 
-//	Setup_Eeprom();
+	Setup_Eeprom();
 
 
 
