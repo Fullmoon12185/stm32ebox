@@ -12,8 +12,8 @@
 
 typedef enum  {
 	NONE = 0,
-	GREEN = 1,
-	RED = 2,
+	RED = 1,
+	GREEN = 2,
 	YELLOW = 3,
 	BLINK_RED_SLOW = 4,
 	BLINK_RED_FAST = 5,

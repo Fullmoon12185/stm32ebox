@@ -63,7 +63,7 @@ int main(void)
 	Show_Box_ID(Get_Box_ID());
 
 
-	Setup_Eeprom();
+//	Setup_Eeprom();
 
 
 
@@ -71,7 +71,6 @@ int main(void)
 	SCH_Add_Task(LED_Display_FSM, 11, 23);
 	SCH_Add_Task(Watchdog_Counting, 3, 101);
 
-	SCH_Add_Task(test5, 13, 100);
 #if(WATCHDOG_ENABLE == 1)
     MX_IWDG_Init();
 #endif

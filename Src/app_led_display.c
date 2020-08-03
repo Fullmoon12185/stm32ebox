@@ -124,11 +124,11 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 		} else if(status == NODE_READY) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_GREEN_SLOW;
 		} else if(status == CHARGING) {
-			ledStatusBuffer[position] = (LED_COLOR)BLINK_YELLOW_SLOW;
+			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_SLOW;
 		} else if(status == CHARGEFULL) {
-			ledStatusBuffer[position] = (LED_COLOR)YELLOW;
+			ledStatusBuffer[position] = (LED_COLOR)BLINK_GREEN_FAST;
 		} else if(status == UNPLUG) {
-			ledStatusBuffer[position] = (LED_COLOR)BLINK_YELLOW_FAST;
+			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
 		} else if(status == NO_POWER) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
 		} else if(status == NO_FUSE) {
@@ -149,8 +149,11 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 void Led_Display_Color(uint8_t position, LED_COLOR color) {
 	if(position < NUMBER_OF_RELAYS){
 		uint32_t colorMask = color & 0x00000003;
-		ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS - position - 1) * 2));
-		ledStatus |= colorMask << ((NUMBER_OF_RELAYS - position - 1) * 2);
+//		ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS - position - 1) * 2));
+//		ledStatus |= colorMask << ((NUMBER_OF_RELAYS - position - 1) * 2);
+//change the led display in reverse order
+		ledStatus &= ~(0x00000003 << (position * 2));
+		ledStatus |= colorMask << (position * 2);
 	}
 
 }

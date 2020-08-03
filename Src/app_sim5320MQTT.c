@@ -689,7 +689,7 @@ void Setup_Mqtt_Connect_Message(void){
 //	mqttMessage[mqttMessageIndex++] = 0x0a;                     // Keep-alive Time Length LSB
 
 	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
-		mqttMessage[mqttMessageIndex++] = 0x0;                     // Keep-alive Time Length LSB
+	mqttMessage[mqttMessageIndex++] = 0x0F;                     // Keep-alive Time Length LSB
 
 	// Client ID
 	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
