@@ -34,7 +34,8 @@
 #include "app_i2c_lcd.h"
 #include "app_init.h"
 
-
+#define		NORMAL_RUN	0
+#define		TEST_RUN	1
 
 typedef enum {
 	POWER_CONSUMPTION_CALCULATION = 0,
@@ -43,6 +44,9 @@ typedef enum {
 } MAIN_FSM_STATE;
 
 MAIN_FSM_STATE mainState = POWER_CONSUMPTION_CALCULATION;
+
+static uint8_t runtestState = 0;
+void LCD_Show_Box_ID(void);
 
 void Main_FSM(void);
 
@@ -60,26 +64,39 @@ int main(void)
 
 	Setup_Eeprom();
 
-
-
 	SCH_Add_Task(PCF_read, 7, 21);
-	SCH_Add_Task(LED_Display_FSM, 11, 23);
-	SCH_Add_Task(Watchdog_Counting, 3, 101);
+
+	if(Get_Box_ID() != 0){
+		SCH_Add_Task(LED_Display_FSM, 11, 23);
+		SCH_Add_Task(Watchdog_Counting, 3, 101);
+		runtestState = NORMAL_RUN;
+	} else {
+		runtestState = TEST_RUN;
+		SCH_Add_Task(LCD_Show_Box_ID, 7, 70);
+		SCH_Add_Task(Test_Led_Display, 7, 50);
+
+	}
 
 #if(WATCHDOG_ENABLE == 1)
-    MX_IWDG_Init();
+	if(runtestState == NORMAL_RUN){
+	    MX_IWDG_Init();
+	}
 #endif
 	while (1){
 		SCH_Dispatch_Tasks();
-		Main_FSM();
+		if(runtestState == NORMAL_RUN){
+			Main_FSM();
+		}
 	}
 	return 0;
 }
 
 
+void LCD_Show_Box_ID(void){
+	Show_Box_ID(Get_Box_ID());
+}
 
 void Main_FSM(void){
-
 
 #if(WATCHDOG_ENABLE == 1)
 	if(Is_Watchdog_Reset() == 0){

@@ -149,11 +149,11 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 void Led_Display_Color(uint8_t position, LED_COLOR color) {
 	if(position < NUMBER_OF_RELAYS){
 		uint32_t colorMask = color & 0x00000003;
-		ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS - position - 1) * 2));
-		ledStatus |= colorMask << ((NUMBER_OF_RELAYS - position - 1) * 2);
+		//ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS - position - 1) * 2));
+		//ledStatus |= colorMask << ((NUMBER_OF_RELAYS - position - 1) * 2);
 //change the led display in reverse order
-//		ledStatus &= ~(0x00000003 << (position * 2));
-//		ledStatus |= colorMask << (position * 2);
+		ledStatus &= ~(0x00000003 << (position * 2));
+		ledStatus |= colorMask << (position * 2);
 	}
 
 }
@@ -176,6 +176,8 @@ void Test_Led_Display(void){
 
 	ledStatus = 0x01 << ledIndex;
 	ledIndex = (ledIndex + 1)%20;
+
+	Led_Display();
 }
 void LED_Display_FSM(void) { // call each 200ms
 	LED_COLOR tempLedStatusBuffer;

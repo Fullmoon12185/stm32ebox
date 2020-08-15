@@ -110,15 +110,6 @@ void test9(void){
 		rw = 3;
 	} else {
 		Eeprom_Read_Outlet(0, &s, &e, &l, &w);
-		s ++;
-		e++;
-		l++;
-		Eeprom_Write_Outlet (0, s, e, l, w);
-		HAL_Delay(100);
-		s = 0;
-		e = 0;
-		l = 0;
-		Eeprom_Read_Outlet(0, &s, &e, &l, &w);
 		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
 		UART3_SendToHost((uint8_t *)strTest);
 		rw = 0;
