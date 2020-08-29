@@ -62,7 +62,7 @@ void Error_Handler(void);
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
 #define		WATCHDOG_ENABLE 			1
 
-//#define		SIM5320					1
+//#define		SIM5320	    				1
 #define		SIM7600						1
 
 //#define B1_Pin 							GPIO_PIN_13

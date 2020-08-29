@@ -188,7 +188,11 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CIPMODE=0\r",  							(uint8_t*)"OK\r"		},
+#if(VERSION_EBOX == 1)
+		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
+#elif (VERSION_EBOX == 2)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
+#endif
 		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
 };
 uint8_t atCommandArrayIndex = 0;
@@ -272,7 +276,7 @@ void Sim3g_Init(void){
 	pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 	Sim3g_GPIO_Init();
-#ifdef 	SIM3G_ENABLE_PORT
+#if(VERSION_EBOX == 1)
 	Sim3g_Enable();
 #endif
 	Power_Signal_High();
@@ -285,30 +289,31 @@ void Sim3g_GPIO_Init(void){
 	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull  = GPIO_PULLUP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-#if(VERSION_EBOX != 2)
-	GPIO_InitStruct.Pin = SIM5320_3G_WAKEUP;
-	HAL_GPIO_Init(SIM5320_3G_WAKEUP_PORT, &GPIO_InitStruct);
-#endif
+
 	GPIO_InitStruct.Pin = SIM5320_3G_PWRON;
 	HAL_GPIO_Init(SIM5320_3G_PWRON_PORT, &GPIO_InitStruct);
 	GPIO_InitStruct.Pin = SIM5320_3G_PERST;
 	HAL_GPIO_Init(SIM5320_3G_PERST_PORT, &GPIO_InitStruct);
 
-//	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
-//	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
-
-#if(VERSION_EBOX != 2)
+#if(VERSION_EBOX == 1)
+	GPIO_InitStruct.Pin = SIM5320_3G_WAKEUP;
+	HAL_GPIO_Init(SIM5320_3G_WAKEUP_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
+	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
 	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
 #endif
 }
 
 //#ifdef	SIM3G_ENABLE_PORT
 void Sim3g_Disable(void){
+#if(VERSION_EBOX == 1)
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_RESET);
+#endif
 }
 void Sim3g_Enable(void){
+#if(VERSION_EBOX == 1)
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_SET);
-
+#endif
 }
 //#endif
 void Check_Sim_3G_Available(void){
@@ -334,9 +339,7 @@ void Check_Sim_3G_Available(void){
 		break;
 	case 2:
 		break;
-
 	}
-
 }
 
 
@@ -355,16 +358,16 @@ void Power_Signal_High(void){
 	HAL_GPIO_WritePin(PC8_3G_PWRON_PORT, PC8_3G_PWRON, GPIO_PIN_RESET);
 }
 void Reset_Signal_Low(void){
-#if (SIM5320 == 1)
+#if (VERSION_EBOX == 1)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
-#elif (SIM7600 == 1)
+#elif (VERSION_EBOX == 2)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #endif
 }
 void Reset_Signal_High(void){
-#if(SIM5320 == 1)
+#if(VERSION_EBOX == 1) //sim5320
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
-#elif (SIM7600 == 1)
+#elif (VERSION_EBOX == 2) //sim 7600
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #endif
 }
@@ -389,8 +392,8 @@ void Clear_All_Uart_Receive_Flags(void){
 	isReadyToSendDataToServer = RESET;
 	isSendOKFlag = RESET;
 	isReceiveDataFromServer = RESET;
-
 }
+
 void SM_Power_On_Sim3g(void){
 	SCH_Add_Task(Power_Signal_Low, 0, 0);
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_ON_SIM3G, 0);
@@ -422,7 +425,7 @@ void SM_Wait_For_Sim3g_Reset(void){
 void SM_Power_Off_Sim3g(void){
 	SCH_Add_Task(Power_Signal_Low, 0, 0);
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
-	//Sim3g_Disable();
+	Sim3g_Disable();
 	Sim3g_Clear_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G,0);
 	sim3gState = WAIT_FOR_SIM3G_POWER_OFF;

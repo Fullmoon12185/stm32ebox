@@ -186,13 +186,13 @@ uint8_t Uart1_Received_Buffer_Available(void){
 	}
 }
 uint8_t Uart1_Read_Received_Buffer(void){
-//	uint8_t buffer[2];
+	uint8_t buffer[2];
 	if(receiveBufferIndexTail == receiveBufferIndexHead) return 0xff;
 	uint8_t ch = aUART_RxBuffer[receiveBufferIndexTail];
 	receiveBufferIndexTail = (receiveBufferIndexTail + 1) % RXBUFFERSIZE;
-//	buffer[0] = ch;
-//	buffer[1] = 0;
-//	UART3_SendToHost(buffer);
+	buffer[0] = ch;
+	buffer[1] = 0;
+	UART3_SendToHost(buffer);
 	return ch;
 }
 
