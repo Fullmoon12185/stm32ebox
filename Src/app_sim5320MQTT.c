@@ -77,6 +77,7 @@ const uint8_t PASSWORD[] 			= "";
 uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH];
 uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
 
+uint8_t SUBSCRIBE_TOPIC_3[MAX_TOPIC_LENGTH];
 //const uint8_t PUBLISH_TOPIC_STATUS[] 		= "eBox/status";
 //const uint8_t PUBLISH_TOPIC_POWER[] 		= "eBox/power";
 
@@ -206,6 +207,19 @@ void Set_Up_Topic_Names(void){
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 0;
 
+	indexTopicCharacter = 0;
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = 'R';
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = 'E';
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = 'b';
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = 'o';
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = 'x';
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = '_';
+
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = 0;
 
 	indexTopicCharacter = 0;
 	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 'S';
@@ -488,6 +502,8 @@ void SM_Mqtt_Subscribe (void) {
 			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_TOPIC_1);
 		} else if(subscribeTopicIndex == 1){
 			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_TOPIC_2);
+		} else if(subscribeTopicIndex == 2){
+			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_TOPIC_3);
 		}
 	}
 	isErrorFlag = RESET;

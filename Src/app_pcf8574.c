@@ -93,7 +93,7 @@ uint16_t Get_Box_ID(void){
 
 	return (uint16_t)((tempHiReversed & 0x0f) << 8) | pcfData.bytePCFData[3];
 #else
-	return 3;
+	return 5;
 #endif
 }
 

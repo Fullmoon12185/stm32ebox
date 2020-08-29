@@ -50,7 +50,7 @@ typedef enum
   NORMAL = !ABNORMAL
 } WorkingStatus;
 
-#define DEBUG_INIT(X) 					X
+#define DEBUG_INIT(X) 					//X
 
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -58,7 +58,7 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 
-#define		VERSION_EBOX				2
+#define		VERSION_EBOX				1
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
 #define		WATCHDOG_ENABLE 			1
 
@@ -354,16 +354,18 @@ void Error_Handler(void);
 #endif
 
 
-#define		NUMBER_OF_SUBSCRIBE_TOPIC						2
-#define		NUMBER_OF_PUBLISH_TOPIC							2
-#define 	MAX_TOPIC_LENGTH								14
+#define		NUMBER_OF_SUBSCRIBE_TOPIC							3
+#define		NUMBER_OF_PUBLISH_TOPIC								2
+#define 	MAX_TOPIC_LENGTH									14
 
-#define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 					48
-#define		DATA_RECEIVE_LENGTH								15
-
+#define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 						48
+#define		DATA_RECEIVE_LENGTH									15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 				15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2 				17
 
+#define 	SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE				49
+#define		DATA_RETAINED_MESSAGE_LENGTH						51
+#define 	LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE			51
 
 
 #define		NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION	(NUMBER_OF_RELAYS + 1)

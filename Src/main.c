@@ -57,13 +57,15 @@ int main(void)
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
 
 	PCF_Init();
-
+#if(VERSION_EBOX == 2)
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
+#endif
+
+
 
 
 	Setup_Eeprom();
-
 	SCH_Add_Task(PCF_read, 7, 21);
 
 	if(Get_Box_ID() != 0){
@@ -72,8 +74,10 @@ int main(void)
 		runtestState = NORMAL_RUN;
 	} else {
 		runtestState = TEST_RUN;
+#if(VERSION_EBOX == 2)
 		SCH_Add_Task(LCD_Show_Box_ID, 7, 70);
 		SCH_Add_Task(Test_Led_Display, 7, 50);
+#endif
 
 	}
 
@@ -120,7 +124,9 @@ void Main_FSM(void){
 		Server_Communication();
 		Process_System_Power();
 		if(Is_Done_Getting_ADC() == RESET){
+#if(VERSION_EBOX == 2)
 			Show_KWH(Get_Main_Power_Consumption());
+#endif
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}
 		break;

@@ -34,8 +34,9 @@
 #define		COMMAND_ONLY						'1'
 #define		COMMAND_WITH_MAX_ENERGY				'2'
 
-extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH];
+extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH]; //CEbox_xxxx
 extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
+extern uint8_t SUBSCRIBE_TOPIC_3[MAX_TOPIC_LENGTH]; //REbox_xxxx
 
 
 //const uint8_t AT[] = "AT\r";
@@ -104,6 +105,7 @@ typedef enum{
 	PREPARE_FOR_SENDING_DATA,
 	PREPARE_PROCESSING_RECEIVED_DATA,
 	PROCESSING_RECEIVED_DATA,
+	PROCESSING_RETAINED_DATA,
 	MAX_NUMBER_STATE_OF_PROCESSING_DATA_FROM_SIM3G
 }PROCESS_DATA_RECEIVED_FROM_SIM3G;
 
@@ -170,7 +172,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 
 const AT_COMMAND_ARRAY atCommandArrayForCheckingSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
-		{(uint8_t*)"ATE0\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSQ\r\n",							 	(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CREG?\r\n",  							(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CPSI?\r\n",  							(uint8_t*)"OK\r"		},
@@ -181,7 +183,7 @@ uint8_t atCommandArrayIndexForCheckingSim3g = 0;
 
 const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
-		{(uint8_t*)"ATE0\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGDCONT=1,\"IP\",\"v-internet\"\r", 		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
@@ -196,7 +198,7 @@ SIM3G_STATE pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 void TestSendATcommand(void){
 	uint8_t i;
-	for (i = 0; i < 8; i++){
+	for (i = 0; i < NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G; i++){
 		UART3_SendToHost(atCommandArrayForSetupSim3g[i].ATCommand);
 		UART3_SendToHost(atCommandArrayForSetupSim3g[i].expectedReturn);
 	}
@@ -537,10 +539,7 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 	uint8_t relayIndex;
 	uint8_t relayStatus;
 	uint16_t tempBoxID;
-	uint32_t maxEnergy;
 
-	UART3_SendToHost((uint8_t*)"a");
-	UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer);
 	tempBoxID = (Sim3gDataProcessingBuffer[8+0] - 0x30)*1000;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+1] - 0x30)*100;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+2] - 0x30)*10;
@@ -557,26 +556,36 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 				Reset_Relay(relayIndex);
 				Set_Limit_Energy(relayIndex, 0);
 			}
-		} else if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_WITH_MAX_ENERGY){
-			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
-			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
-			maxEnergy = (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 0] - 0x30)*1000;
-			maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 1] - 0x30)*100;
-			maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 2] - 0x30)*10;
-			maxEnergy += (Sim3gDataProcessingBuffer[2 + lentopic + 4 + 3] - 0x30);
+		}
+	}
+}
 
+void Processing_Received_Data_From_Retained_Message(uint8_t * sub_topic, uint16_t boxID){
+	uint8_t lentopic = GetStringLength(sub_topic);
+	uint8_t relayIndex;
+	uint8_t relayStatus;
+	uint16_t tempBoxID;
+
+	tempBoxID = (Sim3gDataProcessingBuffer[8+0] - 0x30)*1000;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+1] - 0x30)*100;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+2] - 0x30)*10;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+3] - 0x30);
+
+	if(boxID == tempBoxID){
+		for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i++){
+			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + i*4 + 0] - 0x30;
+			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + i*4 + 2] - 0x30;
 			if(relayStatus == SET){
 				Set_Relay(relayIndex);
-				Set_Limit_Energy(relayIndex, maxEnergy);
+				Set_Limit_Energy(relayIndex, 0xffffffff);
 			} else {
 				Reset_Relay(relayIndex);
 				Set_Limit_Energy(relayIndex, 0);
 			}
 		}
-
 	}
-
 }
+
 
 void FSM_Process_Data_Received_From_Sim3g(void){
 	static uint8_t readCharacter = 0;
@@ -599,11 +608,17 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				processDataState = PREPARE_FOR_SENDING_DATA;
 			}else if(preReadCharacter == '\r' && readCharacter == '\n'){
 				processDataState = PREPARE_PROCESSING_RECEIVED_DATA;
-			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
+			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 || readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
 				processDataState = PROCESSING_RECEIVED_DATA;
 				Clear_Sim3gDataProcessingBuffer();
-			} else {
+			}
+			else if((preReadCharacter == SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)
+					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)){
+				processDataState = PROCESSING_RETAINED_DATA;
+				Clear_Sim3gDataProcessingBuffer();
+			}
+			else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
 			}
 		}
@@ -658,6 +673,22 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			}
 		}
 		break;
+	case PROCESSING_RETAINED_DATA:
+			if(Uart1_Received_Buffer_Available()){
+				preReadCharacter = readCharacter;
+				readCharacter = Uart1_Read_Received_Buffer();
+				if((preReadCharacter == '\r' && readCharacter == '\n')){
+					processDataState = CHECK_DATA_AVAILABLE_STATE;
+				}
+				else {
+					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
+					if(sim3gDataProcessingBufferIndex >= DATA_RETAINED_MESSAGE_LENGTH){
+						Processing_Received_Data_From_Retained_Message((uint8_t*)SUBSCRIBE_TOPIC_3, Get_Box_ID());
+						processDataState = CHECK_DATA_AVAILABLE_STATE;
+					}
+				}
+			}
+			break;
 	default:
 		break;
 	}
