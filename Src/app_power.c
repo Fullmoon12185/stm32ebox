@@ -20,13 +20,13 @@
 
 
 #if(VERSION_EBOX == 2)
-#define		MIN_CURRENT								30000
-#define 	CURRENT_CHANGING_THRESHOLD				30000
+#define		MIN_CURRENT								50000
+#define 	CURRENT_CHANGING_THRESHOLD				50000
 #define 	MIN_PF									30
 #else
 #define		MIN_CURRENT								10000
 #define 	CURRENT_CHANGING_THRESHOLD				10000
-#define 	MIN_PF									30
+#define 	MIN_PF									25
 #endif
 
 
@@ -273,8 +273,10 @@ static void Node_Setup(void) {
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 	if(outletID < NUMBER_OF_RELAYS){
 		Main.nodes[outletID].limitEnergy = limit_energy;
-		Main.nodes[outletID].energy = 0;
-		Main.nodes[outletID].workingTime = 0;
+		if(Main.nodes[outletID].nodeStatus != CHARGING){
+			Main.nodes[outletID].energy = 0;
+			Main.nodes[outletID].workingTime = 0;
+		}
 //		Eeprom_Update_LimitEnergy(outletID, limit_energy);
 	}
 }

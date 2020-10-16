@@ -58,7 +58,7 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 
-#define		VERSION_EBOX				1
+#define		VERSION_EBOX				2
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
 #define		WATCHDOG_ENABLE 			1
 

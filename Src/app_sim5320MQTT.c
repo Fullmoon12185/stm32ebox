@@ -45,9 +45,9 @@ uint8_t CLIENT_ID[MAX_TOPIC_LENGTH];
 
 //nguyen cloudmqtt
 
-//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"tailor.cloudmqtt.com\",13255\r";
-//const uint8_t USERNAME[] 			= "wayjxdzy";
-//const uint8_t PASSWORD[] 			= "2Awwc3zlS20r";
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"broker.mqttdashboard.com\",1883\r";
+//const uint8_t USERNAME[] 			= "";
+//const uint8_t PASSWORD[] 			= "";
 
 //Vinh cloudmqtt
 #if(CLOUD_MQTT == 1)

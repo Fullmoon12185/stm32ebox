@@ -8,6 +8,7 @@
 
 #include <app_i2c_lcd.h>
 #include "main.h"
+#include <math.h>
 extern I2C_HandleTypeDef I2cHandle;;  // change your handler here accordingly
 
 #define SLAVE_ADDRESS_LCD 				66 // change this according to ur setup
@@ -472,8 +473,8 @@ void Show_Box_ID(uint16_t bID){
 void Show_KWH(uint32_t ws){
 	char strTotalKWH[16];
 	uint32_t kwh;
-	kwh = ws/1000;
-	kwh = kwh/3600;
+//	kwh = ws/1000;
+	kwh = round((double)ws/(3600*1000));
 
 	sprintf(strTotalKWH, "Total: %ld kWh", kwh);
 
