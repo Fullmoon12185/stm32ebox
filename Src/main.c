@@ -103,7 +103,7 @@ void LCD_Show_Box_ID(void){
 void Main_FSM(void){
 
 #if(WATCHDOG_ENABLE == 1)
-	if(Is_Watchdog_Reset() == 0){
+	if(Is_Watchdog_Reset() == 0 && !isConnestionLost()){
 		Watchdog_Refresh();
 	}
 #endif

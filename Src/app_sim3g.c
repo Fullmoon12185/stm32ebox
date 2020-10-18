@@ -99,6 +99,8 @@ static uint8_t sim3g_Retry_Counter = 0;
 uint8_t Sim3gDataProcessingBuffer[RXBUFFERSIZE];
 uint8_t sim3gDataProcessingBufferIndex = 0;
 
+uint16_t counterForResetChargingAfterDisconnection = 0;
+
 typedef enum{
 	CHECK_DATA_AVAILABLE_STATE = 0,
 	DETECT_SPECIAL_CHARACTER,
@@ -274,7 +276,7 @@ void Sim3g_Init(void){
 	sim3g_Retry_Counter = 0;
 	sim3gState = SIM3G_START_UP;
 	pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
-
+	counterForResetChargingAfterDisconnection = 0;
 	Sim3g_GPIO_Init();
 #if(VERSION_EBOX == 1)
 	Sim3g_Enable();
@@ -642,7 +644,12 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			isOKFlag = SET;
 		} else if(isReceivedData((uint8_t *)ERROR_1)){
 			isErrorFlag = SET;
-			UART3_SendToHost((uint8_t*)"aNg");
+//			UART3_SendToHost((uint8_t*)"aNg");
+			if(counterForResetChargingAfterDisconnection < 100){
+				counterForResetChargingAfterDisconnection ++;
+			} else {
+				counterForResetChargingAfterDisconnection  = 100;
+			}
 		} else if(isReceivedData((uint8_t *)IP_CLOSE)){
 			isIPCloseFlag = SET;
 		} else if(isReceivedData((uint8_t *)RECV_FROM)){
@@ -708,7 +715,9 @@ void UART3_SendReceivedBuffer(void){
 	UART3_SendToHost((uint8_t *)Sim3gDataProcessingBuffer);
 }
 
-
+uint8_t isConnestionLost(void){
+	return (counterForResetChargingAfterDisconnection == 100);
+}
 
 FlagStatus isRecvFrom(void){
 	return isRecvFromFlag;

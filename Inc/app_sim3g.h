@@ -71,6 +71,8 @@ uint8_t is_Sim3g_Command_Timeout(void);
 
 
 
+uint8_t isConnestionLost(void);
+
 FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message);
 FlagStatus isReceivedData(const uint8_t * str);
 
