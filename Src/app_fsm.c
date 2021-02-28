@@ -613,6 +613,8 @@ void Server_Communication(void){
 					Clear_Publish_Message_Timeout_Flag();
 					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
 
+					ClearCounter();
+
 					Turn_On_Buzzer();
 					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 				}

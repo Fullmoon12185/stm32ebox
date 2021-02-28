@@ -17,6 +17,7 @@
 #define		DEBUG_POWER(X)							X
 
 #define		MAX_CURRENT								500000
+#define		MAX_CURRENT_1								700000
 
 
 #if(VERSION_EBOX == 2)
@@ -545,12 +546,19 @@ void Process_Outlets(void){
 		outletState[tempOutletID] = 3;
 
 	} else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860
-
-		Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
-		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
-		Reset_Relay(tempOutletID);
-		outletState[tempOutletID] = 3;
-
+		if(tempOutletID == 0 || tempOutletID == 1){
+			if (Main.nodes[tempOutletID].current > MAX_CURRENT_1){
+				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
+				Reset_Relay(tempOutletID);
+				outletState[tempOutletID] = 3;
+			}
+		} else {
+			Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
+			Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
+			Reset_Relay(tempOutletID);
+			outletState[tempOutletID] = 3;
+		}
 	} else if (Main.nodes[tempOutletID].limitEnergy > 0
 			&& Main.nodes[tempOutletID].energy >= Main.nodes[tempOutletID].limitEnergy) {
 

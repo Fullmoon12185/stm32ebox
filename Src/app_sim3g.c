@@ -78,6 +78,7 @@ const uint8_t Send_ok[] = "Send ok\r";
 const uint8_t RECV_FROM[] = "RECV FROM";
 const uint8_t IP_CLOSE[] = "+IPCLOSE";
 const uint8_t ISCIPSEND[]= "+CIPSEND";
+const uint8_t SIM_NOT_INSERT[] = "+CME ERROR: SIM not inserted\r";
 
 FlagStatus isPBDoneFlag = RESET;
 FlagStatus isStin25 = RESET;
@@ -645,12 +646,21 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		} else if(isReceivedData((uint8_t *)ERROR_1)){
 			isErrorFlag = SET;
 //			UART3_SendToHost((uint8_t*)"aNg");
-			if(counterForResetChargingAfterDisconnection < 100){
+			if(counterForResetChargingAfterDisconnection < 5){
 				counterForResetChargingAfterDisconnection ++;
 			} else {
-				counterForResetChargingAfterDisconnection  = 100;
+				counterForResetChargingAfterDisconnection  = 5;
 			}
-		} else if(isReceivedData((uint8_t *)IP_CLOSE)){
+		}else if(isReceivedData((uint8_t *)SIM_NOT_INSERT)){
+//			isErrorFlag = SET;
+			UART3_SendToHost((uint8_t*)"SIM_NOT_INSERT");
+			if(counterForResetChargingAfterDisconnection < 5){
+				counterForResetChargingAfterDisconnection ++;
+			} else {
+				counterForResetChargingAfterDisconnection  = 5;
+			}
+
+		}else if(isReceivedData((uint8_t *)IP_CLOSE)){
 			isIPCloseFlag = SET;
 		} else if(isReceivedData((uint8_t *)RECV_FROM)){
 			isSendOKFlag = RESET;
@@ -716,9 +726,11 @@ void UART3_SendReceivedBuffer(void){
 }
 
 uint8_t isConnestionLost(void){
-	return (counterForResetChargingAfterDisconnection == 100);
+	return (counterForResetChargingAfterDisconnection == 5);
 }
-
+void ClearCounter(void){
+	counterForResetChargingAfterDisconnection = 0;
+}
 FlagStatus isRecvFrom(void){
 	return isRecvFromFlag;
 }
