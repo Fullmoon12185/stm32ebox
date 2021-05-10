@@ -156,7 +156,11 @@ void EXTI9_5_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(ZERO_POINT_DETECTION_PIN);
 }
-
+#elif(VERSION_EBOX == 15)
+void EXTI9_5_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(ZERO_POINT_DETECTION_PIN);
+}
 #else
 /**
   * @brief This function handles EXTI line[15:10] interrupts.
@@ -164,7 +168,6 @@ void EXTI9_5_IRQHandler(void)
 void EXTI15_10_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(ZERO_POINT_DETECTION_PIN);
-//  test2();
 }
 #endif
 /**

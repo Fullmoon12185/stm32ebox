@@ -16,6 +16,8 @@
 #define DEBUG_SIM3G(X)    						X
 
 #define DATA_TO_SEND_LENGTH						20
+#define TIME_OUT_FOR_STOP_CHARGING	            120 //1 unit corresponding 30s
+
 
 #define TIMER_TO_POWER_ON_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_OFF_SIM3G				(3000/INTERRUPT_TIMER_PERIOD)
@@ -193,6 +195,8 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT+CIPMODE=0\r",  							(uint8_t*)"OK\r"		},
 #if(VERSION_EBOX == 1)
 		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
+#elif(VERSION_EBOX == 15)
+		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
 #elif (VERSION_EBOX == 2)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
 #endif
@@ -281,6 +285,8 @@ void Sim3g_Init(void){
 	Sim3g_GPIO_Init();
 #if(VERSION_EBOX == 1)
 	Sim3g_Enable();
+#elif(VERSION_EBOX == 15)
+	Sim3g_Enable();
 #endif
 	Power_Signal_High();
 	Reset_Signal_High();
@@ -304,6 +310,13 @@ void Sim3g_GPIO_Init(void){
 	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
 	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
 	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
+#elif(VERSION_EBOX == 15)
+	GPIO_InitStruct.Pin = SIM5320_3G_WAKEUP;
+	HAL_GPIO_Init(SIM5320_3G_WAKEUP_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = SIM5320_3G_REG_EN;
+	HAL_GPIO_Init(SIM5320_3G_REG_EN_PORT, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
+
 #endif
 }
 
@@ -311,10 +324,14 @@ void Sim3g_GPIO_Init(void){
 void Sim3g_Disable(void){
 #if(VERSION_EBOX == 1)
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_RESET);
+#elif(VERSION_EBOX == 15)
+	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_RESET);
 #endif
 }
 void Sim3g_Enable(void){
 #if(VERSION_EBOX == 1)
+	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_SET);
+#elif(VERSION_EBOX == 15)
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_SET);
 #endif
 }
@@ -346,7 +363,13 @@ void Check_Sim_3G_Available(void){
 }
 
 
-#if(VERSION_EBOX != 2)
+#if(VERSION_EBOX == 1)
+void Sim3g_WakeUp(void){
+	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
+	HAL_Delay(500);
+	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_RESET);
+}
+#elif(VERSION_EBOX == 15)
 void Sim3g_WakeUp(void){
 	HAL_GPIO_WritePin(PC7_3G_WAKEUP_PORT, PC7_3G_WAKEUP, GPIO_PIN_SET);
 	HAL_Delay(500);
@@ -363,6 +386,8 @@ void Power_Signal_High(void){
 void Reset_Signal_Low(void){
 #if (VERSION_EBOX == 1)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
+#elif (VERSION_EBOX == 15)
+	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #elif (VERSION_EBOX == 2)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #endif
@@ -370,6 +395,8 @@ void Reset_Signal_Low(void){
 void Reset_Signal_High(void){
 #if(VERSION_EBOX == 1) //sim5320
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
+#elif(VERSION_EBOX == 15) //sim5320
+	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);	
 #elif (VERSION_EBOX == 2) //sim 7600
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #endif
@@ -646,18 +673,18 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		} else if(isReceivedData((uint8_t *)ERROR_1)){
 			isErrorFlag = SET;
 //			UART3_SendToHost((uint8_t*)"aNg");
-			if(counterForResetChargingAfterDisconnection < 5){
+			if(counterForResetChargingAfterDisconnection < TIME_OUT_FOR_STOP_CHARGING){
 				counterForResetChargingAfterDisconnection ++;
 			} else {
-				counterForResetChargingAfterDisconnection  = 5;
+				counterForResetChargingAfterDisconnection  = TIME_OUT_FOR_STOP_CHARGING;
 			}
 		}else if(isReceivedData((uint8_t *)SIM_NOT_INSERT)){
 //			isErrorFlag = SET;
 			UART3_SendToHost((uint8_t*)"SIM_NOT_INSERT");
-			if(counterForResetChargingAfterDisconnection < 5){
+			if(counterForResetChargingAfterDisconnection < TIME_OUT_FOR_STOP_CHARGING){
 				counterForResetChargingAfterDisconnection ++;
 			} else {
-				counterForResetChargingAfterDisconnection  = 5;
+				counterForResetChargingAfterDisconnection  = TIME_OUT_FOR_STOP_CHARGING;
 			}
 
 		}else if(isReceivedData((uint8_t *)IP_CLOSE)){
@@ -726,7 +753,7 @@ void UART3_SendReceivedBuffer(void){
 }
 
 uint8_t isConnestionLost(void){
-	return (counterForResetChargingAfterDisconnection == 5);
+	return (counterForResetChargingAfterDisconnection == TIME_OUT_FOR_STOP_CHARGING);
 }
 void ClearCounter(void){
 	counterForResetChargingAfterDisconnection = 0;

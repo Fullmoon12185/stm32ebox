@@ -85,6 +85,9 @@ void GPIO_Relay_Init(void){
 #if(VERSION_EBOX == 2)
 	GPIO_InitStruct.Pin = PD2_RELAY_ENABLE_PIN;
 	HAL_GPIO_Init(PD2_RELAY_ENABLE_PORT, &GPIO_InitStruct);
+#elif (VERSION_EBOX == 15)
+	GPIO_InitStruct.Pin = PD2_RELAY_ENABLE_PIN;
+	HAL_GPIO_Init(PD2_RELAY_ENABLE_PORT, &GPIO_InitStruct);
 #endif
 }
 
@@ -115,9 +118,13 @@ void ZeroPoint_Detection_Pin_Init(void){
 	/* EXTI interrupt init*/
 	  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
 	  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-#else
-	  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-	  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+#elif(VERSION_EBOX == 15)
+	/* EXTI interrupt init*/
+	  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+	  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+#elif(VERSION_EBOX == 1)
+	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 #endif
 }
 

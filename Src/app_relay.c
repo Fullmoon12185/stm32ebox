@@ -59,6 +59,8 @@ uint8_t is_Set_Relay_Timeout(void){
 static void Relay_Output_Control_Enable(void){
 #if(VERSION_EBOX == 2)
 	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);
+#elif(VERSION_EBOX == 15)
+	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);
 #endif
 }
 

@@ -149,11 +149,16 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 void Led_Display_Color(uint8_t position, LED_COLOR color) {
 	if(position < NUMBER_OF_RELAYS){
 		uint32_t colorMask = color & 0x00000003;
+//for general
+#if(BOX_AT_SHOW_ROOM == 0)
 		ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS - position - 1) * 2));
 		ledStatus |= colorMask << ((NUMBER_OF_RELAYS - position - 1) * 2);
+#elif(BOX_AT_SHOW_ROOM == 1)
+//for showroom
 //change the led display in reverse order 0ld
-//		ledStatus &= ~(0x00000003 << (position * 2));
-//		ledStatus |= colorMask << (position * 2);
+		ledStatus &= ~(0x00000003 << (position * 2));
+		ledStatus |= colorMask << (position * 2);
+#endif
 	}
 
 }

@@ -57,14 +57,17 @@ typedef enum
 void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
+#define 	BOX_AT_SHOW_ROOM			0
 
-#define		VERSION_EBOX				1
+#define		VERSION_EBOX				2
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
 #define		WATCHDOG_ENABLE 			1
 
 #if (VERSION_EBOX == 1)
     #define		SIM5320	    				1
-#else
+#elif (VERSION_EBOX == 15)
+    #define		SIM5320	    				1
+#elif(VERSION_EBOX == 2)
     #define		SIM7600						1
 #endif
 //#define B1_Pin 							GPIO_PIN_13
@@ -115,9 +118,13 @@ void Error_Handler(void);
 #define SPI_CS_PORT						GPIOB
 
 //3G control signals pins ports
-#if(VERSION_EBOX != 2)
-#define PC7_3G_WAKEUP					GPIO_PIN_7
-#define PC7_3G_WAKEUP_PORT				GPIOC
+#if(VERSION_EBOX == 1)
+  #define PC7_3G_WAKEUP					GPIO_PIN_7
+  #define PC7_3G_WAKEUP_PORT				GPIOC
+
+#elif(VERSION_EBOX == 15)
+  #define PC7_3G_WAKEUP					GPIO_PIN_7
+  #define PC7_3G_WAKEUP_PORT				GPIOC
 #endif
 
 #define PC8_3G_PWRON					GPIO_PIN_8
@@ -127,10 +134,14 @@ void Error_Handler(void);
 #define PA8_3G_REG_EN					GPIO_PIN_8
 #define PA8_3G_REG_EN_PORT				GPIOA
 
-#if(VERSION_EBOX != 2)
+#if(VERSION_EBOX == 1)
+#define SIM5320_3G_WAKEUP					PC7_3G_WAKEUP
+#define SIM5320_3G_WAKEUP_PORT				PC7_3G_WAKEUP_PORT
+#elif(VERSION_EBOX == 15)
 #define SIM5320_3G_WAKEUP					PC7_3G_WAKEUP
 #define SIM5320_3G_WAKEUP_PORT				PC7_3G_WAKEUP_PORT
 #endif
+
 #define SIM5320_3G_PWRON					PC8_3G_PWRON
 #define SIM5320_3G_PWRON_PORT				PC8_3G_PWRON_PORT
 #define SIM5320_3G_PERST					PC9_3G_PERST
@@ -217,7 +228,10 @@ void Error_Handler(void);
 #if(VERSION_EBOX == 2)
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
 #define 	ZERO_POINT_DETECTION_PORT				GPIOC
-#else
+#elif(VERSION_EBOX == 15)
+#define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
+#define 	ZERO_POINT_DETECTION_PORT				GPIOC
+#elif(VERSION_EBOX == 1)
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_14
 #define 	ZERO_POINT_DETECTION_PORT				GPIOC
 #endif
@@ -351,6 +365,11 @@ void Error_Handler(void);
 
 
 #if(VERSION_EBOX == 2)
+#define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
+#define PD2_RELAY_ENABLE_PORT						GPIOD
+#endif
+
+#if(VERSION_EBOX == 15)
 #define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
 #define PD2_RELAY_ENABLE_PORT						GPIOD
 #endif

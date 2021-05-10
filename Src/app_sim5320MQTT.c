@@ -61,13 +61,13 @@ uint8_t CLIENT_ID[MAX_TOPIC_LENGTH];
 
 //35.198.196.5
 
-//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.158.2\",8883\r";
-//const uint8_t USERNAME[] 			= "eboost-k2";
-//const uint8_t PASSWORD[] 			= "ZbHzPb5W";
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.158.2\",8883\r";
+const uint8_t USERNAME[] 			= "eboost-k2";
+const uint8_t PASSWORD[] 			= "ZbHzPb5W";
 
-const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt-eboost.s3corp.vn\",8883\r";
-const uint8_t USERNAME[] 			= "eboost-k2-s3";
-const uint8_t PASSWORD[] 			= "Aa123456@";
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt-eboost.s3corp.vn\",8883\r";
+//const uint8_t USERNAME[] 			= "eboost-k2-s3";
+//const uint8_t PASSWORD[] 			= "Aa123456@";
 
 #elif(MOSQUITTO == 1)
 const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"broker.hivemq.com\",1883\r";
