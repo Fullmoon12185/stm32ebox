@@ -61,7 +61,7 @@ void Error_Handler(void);
 
 #define		VERSION_EBOX				2
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
-#define		WATCHDOG_ENABLE 			1
+#define		WATCHDOG_ENABLE 			0
 
 #if (VERSION_EBOX == 1)
     #define		SIM5320	    				1
@@ -87,8 +87,8 @@ void Error_Handler(void);
 
 //#define LED1_PIN                         GPIO_PIN_5
 //#define LED1_GPIO_PORT                   GPIOA
-#define LED2_PIN                         GPIO_PIN_2
-#define LED2_GPIO_PORT                   GPIOB
+#define LED2_PIN                         GPIO_PIN_5
+#define LED2_GPIO_PORT                   GPIOA
 //#define LED3_PIN                         GPIO_PIN_8
 //#define LED3_GPIO_PORT                   GPIOC
 //#define LED4_PIN                         GPIO_PIN_5

@@ -30,10 +30,10 @@ void MX_GPIO_Init(void)
 //	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 //
 	LED_Init();
-	GPIO_Relay_Init();
-	Buzzer_Init();
-	SPI_CS_Init();
-	ZeroPoint_Detection_Pin_Init();
+//	GPIO_Relay_Init();
+//	Buzzer_Init();
+//	SPI_CS_Init();
+//	ZeroPoint_Detection_Pin_Init();
 }
 
 void LED_Init(void){
@@ -51,6 +51,9 @@ void LED_Init(void){
 
 }
 
+void LED_Toggle(void){
+	HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+}
 
 
 

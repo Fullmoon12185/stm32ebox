@@ -615,8 +615,8 @@ void Server_Communication(void){
 
 					ClearCounter();
 
-					Turn_On_Buzzer();
-					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+//					Turn_On_Buzzer();
+//					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 				}
 			}
 		}

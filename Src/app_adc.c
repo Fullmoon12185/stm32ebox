@@ -25,8 +25,8 @@
 #define AVCC_OPAMP								3 //3.3 Volt
 
 #if (AVCC_OPAMP == 3)
-#define		COEFFICIENT_0								1100
-#define		COEFFICIENT_01								950
+//#define		COEFFICIENT_0								1100
+#define		COEFFICIENT_01								900
 #define		COEFFICIENT_1								750
 #define		COEFFICIENT_2								390
 #define		COEFFICIENT_3								252
@@ -606,10 +606,7 @@ void PowerConsumption_FSM(void){
 #if(VERSION_EBOX == 2)
 				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];
 
-				if(tempIrmsADCValue > 1250 && (i == 0 || i == 1)){
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_0)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
-				}
-				else if(tempIrmsADCValue > 1100 && (i == 0 || i == 1)){
+				if(tempIrmsADCValue > 1100){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_01)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
 				}
 				else if(tempIrmsADCValue > 1000){

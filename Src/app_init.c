@@ -46,9 +46,9 @@ void System_Initialization(void)
 
             break;
         case UART_INIT:
-        	UART3_Init();
-        	UART1_Init();
-        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
+//        	UART3_Init();
+//        	UART1_Init();
+//        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
         	break;
         case GPIO_INIT:
         	MX_GPIO_Init();

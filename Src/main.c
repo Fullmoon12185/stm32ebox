@@ -33,6 +33,7 @@
 #include "app_eeprom.h"
 #include "app_i2c_lcd.h"
 #include "app_init.h"
+#include "app_gps.h"
 
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
@@ -54,43 +55,27 @@ int main(void)
 {
 
 	System_Initialization();
-	UART3_SendToHost((uint8_t*)"Start program \r\n");
+	printf("start program!\r\n");
 
-	PCF_Init();
-#if(VERSION_EBOX == 2)
-	Lcd_Initialization();
-	Show_Box_ID(Get_Box_ID());
-#endif
+//	UART3_SendToHost((uint8_t*)"Start program \r\n");
+
+//	PCF_Init();
+//#if(VERSION_EBOX == 2)
+//	Lcd_Initialization();
+//	Show_Box_ID(Get_Box_ID());
+//#endif
 
 
+	SCH_Add_Task(LED_Toggle, 11, 100);
 
 
-	Setup_Eeprom();
-	SCH_Add_Task(PCF_read, 7, 21);
-
-	if(Get_Box_ID() != 0){
-		SCH_Add_Task(LED_Display_FSM, 11, 23);
-		SCH_Add_Task(Watchdog_Counting, 3, 101);
-		runtestState = NORMAL_RUN;
-	} else {
-		runtestState = TEST_RUN;
-#if(VERSION_EBOX == 2)
-		SCH_Add_Task(LCD_Show_Box_ID, 7, 70);
-		SCH_Add_Task(Test_Led_Display, 7, 50);
-#endif
-
-	}
 
 #if(WATCHDOG_ENABLE == 1)
-	if(runtestState == NORMAL_RUN){
 	    MX_IWDG_Init();
-	}
 #endif
 	while (1){
 		SCH_Dispatch_Tasks();
-		if(runtestState == NORMAL_RUN){
-			Main_FSM();
-		}
+		FSM_GPS_Process();
 	}
 	return 0;
 }

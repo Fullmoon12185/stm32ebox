@@ -13,10 +13,12 @@ enum InitState {
     SYSTEM_CLOCK_INIT,
 	GPIO_INIT,
     UART_INIT,
+
+    TIMER_INIT,
+    MAX_INIT_STATE,
 	RELAY_INIT,
 	LED_DISPLAY_INIT,
 	FLASH_INIT,
-    TIMER_INIT,
 	SPI_INIT,
 	SPI_25LCXXX_INIT,
 	I2C_INIT,
@@ -26,9 +28,8 @@ enum InitState {
 	SIM_3G_INIT,
 	ADC_INIT,
 	START_DMA_ADC,
-	WATCH_DOG_INIT,
+	WATCH_DOG_INIT
 
-    MAX_INIT_STATE
 };
 
 void System_Initialization(void);

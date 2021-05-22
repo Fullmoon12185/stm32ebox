@@ -8,11 +8,7 @@
 #define APP_GPIO_H_
 
 
-void Turn_On_Buzzer(void);
-void Turn_Off_Buzzer(void);
-
-void SPI_CS_Init(void);
-void MX_GPIO_Init(void);
+void LED_Toggle(void);
 
 #endif /* APP_GPIO_H_ */
 
