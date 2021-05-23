@@ -25,11 +25,26 @@
 #define AVCC_OPAMP								3 //3.3 Volt
 
 #if (AVCC_OPAMP == 3)
-#define		COEFFICIENT_0								1100
-#define		COEFFICIENT_01								950
-#define		COEFFICIENT_1								750
-#define		COEFFICIENT_2								390
-#define		COEFFICIENT_3								252
+//#define		COEFFICIENT_0								1100
+//#define		COEFFICIENT_01								950
+#define 	THRESHOLD_1									252
+#define 	THRESHOLD_2									250
+#define 	THRESHOLD_3									176
+#define 	THRESHOLD_4									124
+#define 	THRESHOLD_5									116
+#define 	THRESHOLD_6									109
+
+#define 	THRESHOLD_7									101
+#define 	THRESHOLD_8									93
+
+#define		COEFFICIENT_1								2330
+#define		COEFFICIENT_2								2307
+#define		COEFFICIENT_3								2178
+#define		COEFFICIENT_4								1990
+#define		COEFFICIENT_5								1921
+#define		COEFFICIENT_6								1876
+#define		COEFFICIENT_7								1833
+#define		COEFFICIENT_8								1785
 
 #else
 
@@ -457,11 +472,12 @@ FlagStatus Is_Done_Getting_ADC(void){
 
 
 uint8_t filterNoiseState = 0;
-
+uint16_t coefficientForPF = 0;
 void PowerConsumption_FSM(void){
 	static uint8_t externalInterruptCounter = 0;
 	static uint8_t cycleCounter = 0;
 	static uint8_t indexForAverageCurrent = 0;
+	double tempPowerFactor;
 //	Adc_State_Display();
 	switch(adcState){
 	case ADC_SETUP_TIMER_ONE_SECOND:
@@ -585,39 +601,56 @@ void PowerConsumption_FSM(void){
 				if(array_Of_Average_Vrms_ADC_Values[i] < 5 && i != MAIN_INPUT){
 					array_Of_Average_Vrms_ADC_Values[i] = 0;
 				}
+				uint32_t tempIrmsADCValue = array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA;
+
 //				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
-				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i] * 283) / (AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i] * 283) / (AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+				if(tempIrmsADCValue > 140){
+					coefficientForPF = 290;
+				} else {
+					coefficientForPF = 320;
+				}
+				tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
+
+				PowerFactor[i] = (uint32_t)tempPowerFactor;
 				if(PowerFactor[i] >= 98){
 					PowerFactor[i] = 100;
 				}
 
-//				if(i < 10 && i >= 0){
-//					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
-//					UART3_SendToHost((uint8_t *)strtmp);
+//				if(i < 10 && i >= 0)
+				if(i == 0)
+				{
+					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
+					UART3_SendToHost((uint8_t *)strtmp);
+					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+					UART3_SendToHost((uint8_t *)strtmp);
 //					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
 //					UART3_SendToHost((uint8_t *)strtmp);
-//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-//					UART3_SendToHost((uint8_t *)strtmp);
-//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-//					UART3_SendToHost((uint8_t *)strtmp);
-//				}
+					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+					UART3_SendToHost((uint8_t *)strtmp);
+				}
 
 
 #if(VERSION_EBOX == 2)
-				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];
-
-				if(tempIrmsADCValue > 1250 && (i == 0 || i == 1)){
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_0)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
+				uint8_t voltage = 228;
+				if(tempIrmsADCValue > THRESHOLD_1){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue > THRESHOLD_2){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue > THRESHOLD_3){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue > THRESHOLD_4){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				}
-				else if(tempIrmsADCValue > 1100 && (i == 0 || i == 1)){
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_01)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
+				else if (tempIrmsADCValue > THRESHOLD_5){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if (tempIrmsADCValue > THRESHOLD_6){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				}else if (tempIrmsADCValue > THRESHOLD_7){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_7)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				}
-				else if(tempIrmsADCValue > 1000){
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_1)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
-				} else if (tempIrmsADCValue > 800){
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_2)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
-				} else {
-					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3)/NUMBER_OF_SAMPLES_FOR_SMA , 230, PowerFactor[i], 1);
+				else {
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_8)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				}
 #else
 				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];
