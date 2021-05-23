@@ -617,18 +617,15 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 
-//				if(i < 10 && i >= 0)
-				if(i == 0)
-				{
-					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
+//   			if(i < 10 && i >= 0)
+//				{
+//					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
 //					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
 //					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-				}
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//				}
 
 
 #if(VERSION_EBOX == 2)

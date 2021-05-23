@@ -238,7 +238,16 @@ void Eeprom_Update_Main_Energy(uint32_t main_energy){
 		tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
 		MC25LC512_Write_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
 	}
+}
 
+void Eeprom_Update_Main_Energy_Immediately(uint32_t main_energy){
+	uint8_t tempBuffer[5];
+	tempBuffer[0] = (uint8_t)(main_energy & 0xff);
+	tempBuffer[1] = (uint8_t)(main_energy>>8 & 0xff);
+	tempBuffer[2] = (uint8_t)(main_energy>>16 & 0xff);
+	tempBuffer[3] = (uint8_t)(main_energy>>24 & 0xff);
+	tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+	MC25LC512_Write_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
 }
 
 void Eeprom_Reset_Main_Energy(uint32_t main_energy){

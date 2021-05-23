@@ -34,7 +34,10 @@
 #define MAX_RETRY_NUMBER						3
 
 #define		COMMAND_ONLY						'1'
-#define		COMMAND_WITH_MAX_ENERGY				'2'
+#define		START_UPDATE_TOTAL_POWER_CONSUMPTION	'*'
+#define		END_UPDATE_TOTAL_POWER_CONSUMPTION		'#'
+
+#define		COMMAND_WITH_MAX_ENERGY				'3'
 
 extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH]; //CEbox_xxxx
 extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
@@ -111,6 +114,7 @@ typedef enum{
 	PREPARE_PROCESSING_RECEIVED_DATA,
 	PROCESSING_RECEIVED_DATA,
 	PROCESSING_RETAINED_DATA,
+	PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION,
 	MAX_NUMBER_STATE_OF_PROCESSING_DATA_FROM_SIM3G
 }PROCESS_DATA_RECEIVED_FROM_SIM3G;
 
@@ -593,6 +597,26 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 	}
 }
 
+void Processing_Update_Total_Power_Consumption(uint8_t * sub_topic, uint16_t boxID){
+	uint8_t lentopic = GetStringLength(sub_topic);
+	uint16_t tempBoxID;
+	uint64_t updateTotalPowerConsumption = 0;
+	tempBoxID = (Sim3gDataProcessingBuffer[8+0] - 0x30)*1000;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+1] - 0x30)*100;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+2] - 0x30)*10;
+	tempBoxID += (Sim3gDataProcessingBuffer[8+3] - 0x30);
+
+	if(boxID == tempBoxID){
+		if((Sim3gDataProcessingBuffer[2 + lentopic] == START_UPDATE_TOTAL_POWER_CONSUMPTION)
+				&& (Sim3gDataProcessingBuffer[2 + lentopic + 11] == END_UPDATE_TOTAL_POWER_CONSUMPTION)){
+			for(uint8_t idx = 1; idx <= 10; idx++){
+				updateTotalPowerConsumption = updateTotalPowerConsumption*10 + (Sim3gDataProcessingBuffer[2 + lentopic + idx] - 0x30);
+			}
+			Set_Main_Power_Consumption(updateTotalPowerConsumption);
+		}
+	}
+}
+
 void Processing_Received_Data_From_Retained_Message(uint8_t * sub_topic, uint16_t boxID){
 	uint8_t lentopic = GetStringLength(sub_topic);
 	uint8_t relayIndex;
@@ -649,6 +673,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			else if((preReadCharacter == SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)){
 				processDataState = PROCESSING_RETAINED_DATA;
+				Clear_Sim3gDataProcessingBuffer();
+			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
+					&& (readCharacter == LEN_FOR_UPDATE_POWER_CONSUPMPTION)){ //For update total power consumption
+				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
 				Clear_Sim3gDataProcessingBuffer();
 			}
 			else {
@@ -736,6 +764,22 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				}
 			}
 			break;
+	case PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION:
+		if(Uart1_Received_Buffer_Available()){
+			preReadCharacter = readCharacter;
+			readCharacter = Uart1_Read_Received_Buffer();
+			if((preReadCharacter == '\r' && readCharacter == '\n')){
+				processDataState = CHECK_DATA_AVAILABLE_STATE;
+			}
+			else {
+				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
+				if(readCharacter == END_UPDATE_TOTAL_POWER_CONSUMPTION){
+					Processing_Update_Total_Power_Consumption((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
+					processDataState = CHECK_DATA_AVAILABLE_STATE;
+				}
+			}
+		}
+		break;
 	default:
 		break;
 	}
