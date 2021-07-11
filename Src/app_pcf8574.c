@@ -81,7 +81,7 @@ uint32_t Get_All_Relay_Fuse_Statuses(void){
 }
 
 uint16_t Get_Box_ID(void){
-#if(VERSION_EBOX == 2)
+#if(VERSION_EBOX == 2  || VERSION_EBOX == 3)
 	uint8_t tempHi = pcfData.bytePCFData[2] & 0xf0;
 	uint8_t tempHiReversed = 0, temp;
 	for (uint8_t i = 0; i < 8; i++)

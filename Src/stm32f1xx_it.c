@@ -151,7 +151,7 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
-#if(VERSION_EBOX == 2)
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
 void EXTI9_5_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(ZERO_POINT_DETECTION_PIN);

@@ -29,7 +29,18 @@
 //#define		COEFFICIENT_01								950
 #define 	THRESHOLD_1									252
 #define 	THRESHOLD_2									250
-#define 	THRESHOLD_3									176
+#define 	THRESHOLD_3_A								230
+#define 	THRESHOLD_3_A1								215
+#define 	THRESHOLD_3_A2								207
+#define 	THRESHOLD_3_A3								201
+#define 	THRESHOLD_3_A4								195
+#define 	THRESHOLD_3_A5								191
+#define 	THRESHOLD_3_A6								186
+
+#define 	THRESHOLD_3									170
+#define 	THRESHOLD_3_B								144
+#define 	THRESHOLD_3_BB								131
+
 #define 	THRESHOLD_4									124
 #define 	THRESHOLD_5									116
 #define 	THRESHOLD_6									109
@@ -39,7 +50,18 @@
 
 #define		COEFFICIENT_1								2330
 #define		COEFFICIENT_2								2307
+
+#define		COEFFICIENT_3_A								2250
+#define		COEFFICIENT_3_A1							2230
+#define		COEFFICIENT_3_A2							2196
+#define		COEFFICIENT_3_A3							2182
+#define		COEFFICIENT_3_A4							2165
+#define		COEFFICIENT_3_A5							2148
+#define		COEFFICIENT_3_A6							2123
+
 #define		COEFFICIENT_3								2178
+#define		COEFFICIENT_3_B								2080
+#define		COEFFICIENT_3_BB							2020
 #define		COEFFICIENT_4								1990
 #define		COEFFICIENT_5								1921
 #define		COEFFICIENT_6								1876
@@ -605,7 +627,10 @@ void PowerConsumption_FSM(void){
 
 //				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
 //				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i] * 283) / (AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-				if(tempIrmsADCValue > 140){
+				if(tempIrmsADCValue > 230){
+					coefficientForPF = 300;
+				}
+				else if(tempIrmsADCValue > 140){
 					coefficientForPF = 290;
 				} else {
 					coefficientForPF = 320;
@@ -628,25 +653,43 @@ void PowerConsumption_FSM(void){
 //				}
 
 
-#if(VERSION_EBOX == 2)
-				uint8_t voltage = 228;
-				if(tempIrmsADCValue > THRESHOLD_1){
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
+				uint8_t voltage = 230;
+				if(tempIrmsADCValue >= THRESHOLD_1){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
-				} else if(tempIrmsADCValue > THRESHOLD_2){
+				} else if(tempIrmsADCValue >= THRESHOLD_2){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
-				} else if(tempIrmsADCValue > THRESHOLD_3){
+				} else if(tempIrmsADCValue >= THRESHOLD_3_A){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3_A1){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3_A2){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3_A3){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A3)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3_A4){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3_A5){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3_A6){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
-				} else if(tempIrmsADCValue > THRESHOLD_4){
+				} else if(tempIrmsADCValue >= THRESHOLD_3_B){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_B)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= THRESHOLD_3_BB){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_BB)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				}
+				else if(tempIrmsADCValue >= THRESHOLD_4){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				}
-				else if (tempIrmsADCValue > THRESHOLD_5){
+				else if (tempIrmsADCValue >= THRESHOLD_5){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
-				} else if (tempIrmsADCValue > THRESHOLD_6){
+				} else if (tempIrmsADCValue >= THRESHOLD_6){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
-				}else if (tempIrmsADCValue > THRESHOLD_7){
+				}else if (tempIrmsADCValue >= THRESHOLD_7){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_7)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
-				}
-				else {
+				} else {
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_8)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				}
 #else

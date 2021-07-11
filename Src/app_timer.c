@@ -47,7 +47,7 @@ void Timer_Init(void){
 	       + ClockDivision = 0
 	       + Counter direction = Up
 	  */
-	  TimHandle.Init.Period            = 100 - 1;
+	  TimHandle.Init.Period            = 100-16;
 	  TimHandle.Init.Prescaler         = uwPrescalerValue;
 	  TimHandle.Init.ClockDivision     = 0;
 	  TimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -68,7 +68,7 @@ void Timer_Init(void){
 	    Error_Handler();
 	  }
 
-//	  HAL_NVIC_SetPriority((IRQn_Type)(TIM3_IRQn), 0x0, 0);
+	  HAL_NVIC_SetPriority((IRQn_Type)(TIM3_IRQn), 0x0, 0);
 }
 
 /**

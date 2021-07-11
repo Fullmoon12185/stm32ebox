@@ -13,7 +13,7 @@
 #include "app_relay.h"
 #include "app_scheduler.h"
 #include "app_eeprom.h"
-
+#include "app_string.h"
 #include <math.h>
 
 
@@ -25,8 +25,9 @@
 #define		MAX_CURRENT_1							700000
 
 
-#if(VERSION_EBOX == 2)
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
 #define		MIN_CURRENT								30000
+#define		MIN_CURRENT_FOR_START_CHARGING			70000
 #define 	CURRENT_CHANGING_THRESHOLD				30000
 #define 	MIN_PF									30
 
@@ -385,30 +386,22 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-//		if(tempOutletID == 0){
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)" tempCurrent \r\n"););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%f\t", (float) tempCurrent););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%f\t", (float) tempPower););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n after \r\n"););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].voltage););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
-//		}
+		if(tempOutletID == 0){
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].workingTime););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
+		}
 
 
 	}
@@ -606,7 +599,7 @@ void Process_Outlets(void){
 	} else {
 		switch(outletState[tempOutletID]){
 		case 0:
-			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT*3) {
+			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT_FOR_START_CHARGING) {
 				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 				outletCounter[tempOutletID] = 0;
 				outletState[tempOutletID] = 1;

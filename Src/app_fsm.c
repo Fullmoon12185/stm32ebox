@@ -21,7 +21,7 @@
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
 
 
-#define 	TIME_FOR_BUZZER				1
+#define 	TIME_FOR_BUZZER				3
 
 
 extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];

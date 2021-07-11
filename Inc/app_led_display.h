@@ -12,12 +12,15 @@
 
 typedef enum  {
 	NONE = 0,
-#if(BOX_AT_SHOW_ROOM == 0)
+#if(BOX_PLACE == BOX_GENERAL)
 	RED = 1,
 	GREEN = 2,
-#elif(BOX_AT_SHOW_ROOM == 1)
+#elif(BOX_PLACE == BOX_AT_SHOW_ROOM)
 	RED = 2,
 	GREEN = 1,
+#elif(BOX_PLACE == BOX_AT_XI)
+	RED = 1,
+	GREEN = 2,
 #endif
 	YELLOW = 3,
 	BLINK_RED_SLOW = 4,

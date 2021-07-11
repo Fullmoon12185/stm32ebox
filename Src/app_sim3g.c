@@ -28,6 +28,7 @@
 #define TIMER_TO_RESET_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_RESET_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
 #define COMMAND_TIME_OUT						(20000/INTERRUPT_TIMER_PERIOD)
+#define SETTING_TIME_OUT						(1000/INTERRUPT_TIMER_PERIOD)
 
 #define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(10000/INTERRUPT_TIMER_PERIOD) //10s
 
@@ -98,7 +99,9 @@ FlagStatus isCipsend = RESET;
 
 
 static uint8_t sim3g_TimeoutFlag = 0;
+static uint8_t sim3g_Setting_TimeoutFlag = 0;
 static uint32_t sim3g_Timeout_Task_Index = NO_TASK_ID;
+static uint32_t sim3g_Setting_Timeout_Task_Index = NO_TASK_ID;
 static uint8_t sim3g_Retry_Counter = 0;
 
 
@@ -140,6 +143,9 @@ void Reset_Signal_High(void);
 void Sim3g_Clear_Timeout_Flag(void);
 void Sim3g_Command_Timeout(void);
 uint8_t is_Sim3g_Command_Timeout(void);
+void Sim3g_Setting_Clear_Timeout_Flag(void);
+void Sim3g_Setting_Timeout(void);
+uint8_t is_Sim3g_Setting_Timeout(void);
 
 void Setting_Up_Timeout(void);
 
@@ -159,7 +165,7 @@ void SM_Sim3g_Setting(void);
 void SM_Wait_For_Sim3g_Setting_Response(void);
 
 void Clear_Sim3gDataProcessingBuffer(void);
-
+uint8_t isEndOfCommand(uint8_t pre, uint8_t cur);
 
 Sim3g_Machine_Type Sim3G_State_Machine [] = {
 		{POWER_ON_SIM3G, 									SM_Power_On_Sim3g									},
@@ -202,6 +208,8 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 #elif(VERSION_EBOX == 15)
 		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
 #elif (VERSION_EBOX == 2)
+		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
+#elif (VERSION_EBOX == 3)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
 #endif
 		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
@@ -281,6 +289,7 @@ SIM3G_STATE Get_Sim3G_State(void){
 void Sim3g_Init(void){
 
 	sim3g_TimeoutFlag = 0;
+	sim3g_Setting_TimeoutFlag = 0;
 	sim3g_Timeout_Task_Index = SCH_MAX_TASKS;
 	sim3g_Retry_Counter = 0;
 	sim3gState = SIM3G_START_UP;
@@ -392,7 +401,7 @@ void Reset_Signal_Low(void){
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #elif (VERSION_EBOX == 15)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
-#elif (VERSION_EBOX == 2)
+#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #endif
 }
@@ -401,7 +410,7 @@ void Reset_Signal_High(void){
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #elif(VERSION_EBOX == 15) //sim5320
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);	
-#elif (VERSION_EBOX == 2) //sim 7600
+#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3) //sim 7600
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #endif
 }
@@ -414,6 +423,16 @@ void Sim3g_Command_Timeout(void){
 }
 uint8_t is_Sim3g_Command_Timeout(void){
 	return sim3g_TimeoutFlag;
+}
+
+void Sim3g_Setting_Clear_Timeout_Flag(void){
+	sim3g_Setting_TimeoutFlag = 0;
+}
+void Sim3g_Setting_Timeout(void){
+	sim3g_Setting_TimeoutFlag = 1;
+}
+uint8_t is_Sim3g_Setting_Timeout(void){
+	return sim3g_Setting_TimeoutFlag;
 }
 
 void Clear_All_Uart_Receive_Flags(void){
@@ -515,23 +534,28 @@ void SM_Wait_For_Sim3g_Network_Establishment(void){
 		SCH_Delete_Task(sim3g_Timeout_Task_Index);
 		Sim3g_Clear_Timeout_Flag();
 		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, COMMAND_TIME_OUT,0);
-
+		Sim3g_Setting_Clear_Timeout_Flag();
+		sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT,0);
 	}
 
 }
 
 void SM_Sim3g_Setting(void){
-	Setting_Up_Timeout();
-	isOKFlag = RESET;
-	isErrorFlag = RESET;
-	isIPCloseFlag = RESET;
-	ATcommandSending((uint8_t *)atCommandArrayForSetupSim3g[atCommandArrayIndex].ATCommand);
-	sim3gState = WAIT_FOR_SIM3G_SETTING_RESPONSE;
+	if(is_Sim3g_Setting_Timeout()){
+		Setting_Up_Timeout();
+		isOKFlag = RESET;
+		isErrorFlag = RESET;
+		isIPCloseFlag = RESET;
+		ATcommandSending((uint8_t *)atCommandArrayForSetupSim3g[atCommandArrayIndex].ATCommand);
+		sim3gState = WAIT_FOR_SIM3G_SETTING_RESPONSE;
+	}
 }
 void SM_Wait_For_Sim3g_Setting_Response(void){
 	if(isOKFlag){
 		isOKFlag = RESET;
 		sim3gState = SIM3G_SETTING;
+		Sim3g_Setting_Clear_Timeout_Flag();
+		sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT,0);
 		atCommandArrayIndex++;
 		if(atCommandArrayIndex == NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G){
 			sim3gState = MAX_SIM3G_NUMBER_STATES;
@@ -643,6 +667,15 @@ void Processing_Received_Data_From_Retained_Message(uint8_t * sub_topic, uint16_
 	}
 }
 
+uint8_t isEndOfCommand(uint8_t pre, uint8_t cur){
+	if(pre == '\r' && cur == '\n')
+		return 1;
+	else if(pre == '\n' && cur == '\n')
+		return 1;
+	else
+		return 0;
+
+}
 
 void FSM_Process_Data_Received_From_Sim3g(void){
 	static uint8_t readCharacter = 0;
@@ -663,7 +696,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			readCharacter = Uart1_Read_Received_Buffer();
 			if(readCharacter == '>'){
 				processDataState = PREPARE_FOR_SENDING_DATA;
-			}else if(preReadCharacter == '\r' && readCharacter == '\n'){
+			}else if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
 				processDataState = PREPARE_PROCESSING_RECEIVED_DATA;
 			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 || readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
@@ -731,7 +764,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		if(Uart1_Received_Buffer_Available()){
 			preReadCharacter = readCharacter;
 			readCharacter = Uart1_Read_Received_Buffer();
-			if((preReadCharacter == '\r' && readCharacter == '\n')){
+			if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
 				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
 				processDataState = CHECK_DATA_AVAILABLE_STATE;
 			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
@@ -752,7 +785,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			if(Uart1_Received_Buffer_Available()){
 				preReadCharacter = readCharacter;
 				readCharacter = Uart1_Read_Received_Buffer();
-				if((preReadCharacter == '\r' && readCharacter == '\n')){
+				if(isEndOfCommand(preReadCharacter, readCharacter)){
 					processDataState = CHECK_DATA_AVAILABLE_STATE;
 				}
 				else {
@@ -768,7 +801,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		if(Uart1_Received_Buffer_Available()){
 			preReadCharacter = readCharacter;
 			readCharacter = Uart1_Read_Received_Buffer();
-			if((preReadCharacter == '\r' && readCharacter == '\n')){
+			if(isEndOfCommand(preReadCharacter, readCharacter)){
 				processDataState = CHECK_DATA_AVAILABLE_STATE;
 			}
 			else {
