@@ -20,11 +20,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "app_fsm.h"
-#include "app_uart.h"
 #include "app_adc.h"
 #include "app_scheduler.h"
 #include "app_relay.h"
 #include "app_led_display.h"
+
+#include "app_uart.h"
 #include "app_sim3g.h"
 #include "app_test.h"
 #include "app_pcf8574.h"

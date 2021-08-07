@@ -27,7 +27,7 @@
 #include "app_iwatchdog.h"
 #include "app_scheduler.h"
 #include "app_eeprom.h"
-
+#include "app_flash_internal.h"
 #include "app_test.h"
 
 
@@ -124,6 +124,11 @@ void System_Initialization(void)
         case WATCH_DOG_INIT:
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
             break;
+        case FLASH_INTERNAL_INIT:
+//        	cb_periph_flash_init();
+        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"FLASH_INTERNAL_INIT - Done \r\n"));
+
+        	break;
         default:
             initState = HAL_INIT;
             break;

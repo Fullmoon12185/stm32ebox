@@ -29,7 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-#include "stm32f1xx_nucleo.h"
+//#include "stm32f1xx_nucleo.h"
 
 #include "stdio.h"
 #include "string.h"
@@ -390,6 +390,7 @@ void Error_Handler(void);
 
 
 #define 	LEN_FOR_UPDATE_POWER_CONSUPMPTION 				24
+#define		LEN_FOR_UPDATE_FIRMWARE							19
 
 #define 	SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE				49
 #define		DATA_RETAINED_MESSAGE_LENGTH						51

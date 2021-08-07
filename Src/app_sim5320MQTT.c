@@ -199,7 +199,7 @@ void Set_Up_Topic_Names(void){
 	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 0;
 
 	indexTopicCharacter = 0;
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'Z';
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'U';
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'E';
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'b';
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'o';

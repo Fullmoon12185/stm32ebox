@@ -37,6 +37,7 @@
 #define		COMMAND_ONLY						'1'
 #define		START_UPDATE_TOTAL_POWER_CONSUMPTION	'*'
 #define		END_UPDATE_TOTAL_POWER_CONSUMPTION		'#'
+#define		END_UPDATE_FIRMWARE						'!'
 
 #define		COMMAND_WITH_MAX_ENERGY				'3'
 
@@ -118,6 +119,8 @@ typedef enum{
 	PROCESSING_RECEIVED_DATA,
 	PROCESSING_RETAINED_DATA,
 	PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION,
+	PROCESSING_UPDATE_FIRMWARE,
+	STARTING_UPDATE_FIRMWARE,
 	MAX_NUMBER_STATE_OF_PROCESSING_DATA_FROM_SIM3G
 }PROCESS_DATA_RECEIVED_FROM_SIM3G;
 
@@ -183,7 +186,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 
 };
 
-#define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G	8
+#define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G				8
 
 const AT_COMMAND_ARRAY atCommandArrayForCheckingSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
@@ -696,10 +699,13 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			readCharacter = Uart1_Read_Received_Buffer();
 			if(readCharacter == '>'){
 				processDataState = PREPARE_FOR_SENDING_DATA;
-			}else if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
+			}
+			else if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
 				processDataState = PREPARE_PROCESSING_RECEIVED_DATA;
-			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
-					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 || readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
+			}
+			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
+					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1
+						|| readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
 				processDataState = PROCESSING_RECEIVED_DATA;
 				Clear_Sim3gDataProcessingBuffer();
 			}
@@ -707,16 +713,25 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)){
 				processDataState = PROCESSING_RETAINED_DATA;
 				Clear_Sim3gDataProcessingBuffer();
-			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
+			}
+			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 					&& (readCharacter == LEN_FOR_UPDATE_POWER_CONSUPMPTION)){ //For update total power consumption
 				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
 				Clear_Sim3gDataProcessingBuffer();
 			}
+			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
+					&& (readCharacter == LEN_FOR_UPDATE_FIRMWARE)){
+				processDataState = PROCESSING_UPDATE_FIRMWARE;
+				Clear_Sim3gDataProcessingBuffer();
+			}
 			else {
-				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
+//				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE){
+//					Sim3gDataProcessingBuffer[sim3gDataProcessingBuferIndex++] = readCharacter;
+//				} else {
+//					sim3gDataProcessingBufferIndex = 0;
+//				}
 			}
 		}
-
 		break;
 	case PREPARE_FOR_SENDING_DATA:
 		isReadyToSendDataToServer = SET;
@@ -764,17 +779,24 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		if(Uart1_Received_Buffer_Available()){
 			preReadCharacter = readCharacter;
 			readCharacter = Uart1_Read_Received_Buffer();
-			if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
+			if(isEndOfCommand(preReadCharacter, readCharacter) == 1)
+			{
 				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
 				processDataState = CHECK_DATA_AVAILABLE_STATE;
-			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
-					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 || readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
+			}
+			else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
+					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1
+						|| readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2))
+			{
 				processDataState = PROCESSING_RECEIVED_DATA;
 				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1,  Get_Box_ID());
 				Clear_Sim3gDataProcessingBuffer();
-			} else {
+			}
+			else
+			{
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
-				if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH){
+				if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH)
+				{
 					Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
 					processDataState = CHECK_DATA_AVAILABLE_STATE;
 				}
@@ -785,12 +807,15 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			if(Uart1_Received_Buffer_Available()){
 				preReadCharacter = readCharacter;
 				readCharacter = Uart1_Read_Received_Buffer();
-				if(isEndOfCommand(preReadCharacter, readCharacter)){
+				if(isEndOfCommand(preReadCharacter, readCharacter))
+				{
 					processDataState = CHECK_DATA_AVAILABLE_STATE;
 				}
-				else {
+				else
+				{
 					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
-					if(sim3gDataProcessingBufferIndex >= DATA_RETAINED_MESSAGE_LENGTH){
+					if(sim3gDataProcessingBufferIndex >= DATA_RETAINED_MESSAGE_LENGTH)
+					{
 						Processing_Received_Data_From_Retained_Message((uint8_t*)SUBSCRIBE_TOPIC_3, Get_Box_ID());
 						processDataState = CHECK_DATA_AVAILABLE_STATE;
 					}
@@ -801,17 +826,42 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		if(Uart1_Received_Buffer_Available()){
 			preReadCharacter = readCharacter;
 			readCharacter = Uart1_Read_Received_Buffer();
-			if(isEndOfCommand(preReadCharacter, readCharacter)){
+			if(isEndOfCommand(preReadCharacter, readCharacter))
+			{
 				processDataState = CHECK_DATA_AVAILABLE_STATE;
 			}
-			else {
+			else
+			{
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
-				if(readCharacter == END_UPDATE_TOTAL_POWER_CONSUMPTION){
+				if(readCharacter == END_UPDATE_TOTAL_POWER_CONSUMPTION)
+				{
 					Processing_Update_Total_Power_Consumption((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
 					processDataState = CHECK_DATA_AVAILABLE_STATE;
 				}
 			}
 		}
+		break;
+	case PROCESSING_UPDATE_FIRMWARE:
+		if(Uart1_Received_Buffer_Available()){
+			preReadCharacter = readCharacter;
+			readCharacter = Uart1_Read_Received_Buffer();
+			if(isEndOfCommand(preReadCharacter, readCharacter)){
+				processDataState = CHECK_DATA_AVAILABLE_STATE;
+			}
+			else {
+				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
+				if(readCharacter == END_UPDATE_FIRMWARE){
+//					if(Processing_Update_Firmware((uint8_t*)SUBSCRIBE_TOPIC_2, Get_Box_ID())){
+//						processDataState = STARTING_UPDATE_FIRMWARE;
+//					} else {
+//						processDataState = CHECK_DATA_AVAILABLE_STATE;
+//					}
+				}
+			}
+		}
+		break;
+	case STARTING_UPDATE_FIRMWARE:
+
 		break;
 	default:
 		break;
