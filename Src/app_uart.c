@@ -25,8 +25,8 @@ uint8_t  aUART_TxBuffer[] = "";
 
 /* Buffer used for reception */
 uint8_t aUART_RxBuffer[RXBUFFERSIZE];
-uint8_t receiveBufferIndexHead = 0;
-uint8_t receiveBufferIndexTail = 0;
+uint16_t receiveBufferIndexHead = 0;
+uint16_t receiveBufferIndexTail = 0;
 
 __IO ITStatus UartTransmitReady = SET;
 __IO ITStatus UartReceiveReady = RESET;

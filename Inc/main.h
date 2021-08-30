@@ -191,7 +191,7 @@ void Error_Handler(void);
 /* Size of Trasmission buffer */
 #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
 /* Size of Reception buffer */
-#define RXBUFFERSIZE                      250
+#define RXBUFFERSIZE                      2048
 
 
 
@@ -389,7 +389,7 @@ void Error_Handler(void);
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2 				17
 
 
-#define 	LEN_FOR_UPDATE_POWER_CONSUPMPTION 				24
+#define 	LEN_FOR_UPDATE_POWER_CONSUPMPTION 				30
 #define		LEN_FOR_UPDATE_FIRMWARE							19
 
 #define 	SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE				49

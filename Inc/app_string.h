@@ -9,7 +9,7 @@
 #define APP_STRING_H_
 
 
-char *ConvertUint64ToString(uint64_t n);
+uint8_t *ConvertUint64ToString(uint64_t n);
 uint8_t GetStringLength(uint8_t* buffer);
 uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
 #endif /* APP_STRING_H_ */

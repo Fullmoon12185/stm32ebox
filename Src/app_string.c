@@ -44,8 +44,8 @@ uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
   return 0;
 }
 
-char *ConvertUint64ToString(uint64_t n) { // only one in a printf format string since local buffer
-  static char res[21];
+uint8_t *ConvertUint64ToString(uint64_t n) { // only one in a printf format string since local buffer
+  static uint8_t res[21];
   int i = 21;
   res[--i] = 0;
   if(n == 0) res[--i] = '0';

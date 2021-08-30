@@ -15,6 +15,20 @@
 #include "app_gpio.h"
 #include "app_power.h"
 #include "app_i2c_lcd.h"
+#include "app_string.h"
+
+
+#define 	TEN_BILLION 			10000000000
+#define 	ONE_BILLION 			1000000000
+#define 	ONE_HUNDRED_MILLION 	100000000
+#define 	TEN_MILLION 			10000000
+#define 	ONE_MILLION 			1000000
+#define 	ONE_HUNDRED_THOUSAND 	100000
+#define 	TEN_THOUSAND 			10000
+#define		ONE_THOUSAND 			1000
+#define		ONE_HUNDRED 			100
+#define		TEN			 			10
+
 
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
@@ -148,7 +162,10 @@ void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData){
 void Update_Publish_Power_Message_All_Outlets(void){
 
 	uint8_t publishMessageIndex = 0;
-	uint32_t tempValue;
+	uint64_t tempValue;
+	uint8_t * result;
+	uint8_t index = 0;
+
 	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
 		publish_message[publishMessageIndex] = 0;
 	}
@@ -158,7 +175,7 @@ void Update_Publish_Power_Message_All_Outlets(void){
 		if(outletID < MAIN_INPUT){
 			publish_message[publishMessageIndex++] = outletID + 0x30;
 			publish_message[publishMessageIndex++] = '-';
-			tempValue = Get_Power_Consumption(outletID);
+			tempValue = (uint64_t)Get_Power_Consumption(outletID);
 		} else {
 			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
 			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
@@ -167,131 +184,162 @@ void Update_Publish_Power_Message_All_Outlets(void){
 
 		}
 
+		result = ConvertUint64ToString(tempValue);
 
-		if(tempValue >= 1000000000){
-			publish_message[publishMessageIndex++] = tempValue/1000000000 + 0x30;
-			tempValue = tempValue % 1000000000;
-			publish_message[publishMessageIndex++] = tempValue/100000000 + 0x30;
-			tempValue = tempValue % 100000000;
-			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
-			tempValue = tempValue % 10000000;
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
+		index = 0;
+		while(result[index] != 0){
+			publish_message[publishMessageIndex++] = result[index];
+			index ++;
+			if(index > 21) break;
 		}
-		else if(tempValue >= 100000000){
-			publish_message[publishMessageIndex++] = tempValue/100000000 + 0x30;
-			tempValue = tempValue % 100000000;
-			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
-			tempValue = tempValue % 10000000;
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		}
-		else if(tempValue >= 10000000){
-			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
-			tempValue = tempValue % 10000000;
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		}
-		else if(tempValue >= 1000000){
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 100000){
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 10000){
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if (tempValue >= 1000){
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-
-		} else if (tempValue >= 100){
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 10){
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-		} else {
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-		}
+//		if(tempValue >= TEN_BILLION){
+//			publish_message[publishMessageIndex++] = tempValue/TEN_BILLION + 0x30;
+//			tempValue = tempValue % TEN_BILLION;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_BILLION + 0x30;
+//			tempValue = tempValue % ONE_BILLION;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_HUNDRED_MILLION + 0x30;
+//			tempValue = tempValue % ONE_HUNDRED_MILLION;
+//			publish_message[publishMessageIndex++] = tempValue/TEN_MILLION + 0x30;
+//			tempValue = tempValue % TEN_MILLION;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_MILLION + 0x30;
+//			tempValue = tempValue % ONE_MILLION;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_HUNDRED_THOUSAND + 0x30;
+//			tempValue = tempValue % ONE_HUNDRED_THOUSAND;
+//			publish_message[publishMessageIndex++] = tempValue/TEN_THOUSAND + 0x30;
+//			tempValue = tempValue % TEN_THOUSAND;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_THOUSAND + 0x30;
+//			tempValue = tempValue % ONE_THOUSAND;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_HUNDRED + 0x30;
+//			tempValue = tempValue % ONE_HUNDRED;
+//			publish_message[publishMessageIndex++] = tempValue/TEN + 0x30;
+//			tempValue = tempValue % TEN;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		}
+//		else if(tempValue >= ONE_BILLION){
+//			publish_message[publishMessageIndex++] = tempValue/ONE_BILLION + 0x30;
+//			tempValue = tempValue % ONE_BILLION;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_HUNDRED_MILLION + 0x30;
+//			tempValue = tempValue % ONE_HUNDRED_MILLION;
+//			publish_message[publishMessageIndex++] = tempValue/TEN_MILLION + 0x30;
+//			tempValue = tempValue % TEN_MILLION;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_MILLION + 0x30;
+//			tempValue = tempValue % ONE_MILLION;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_HUNDRED_THOUSAND + 0x30;
+//			tempValue = tempValue % ONE_HUNDRED_THOUSAND;
+//			publish_message[publishMessageIndex++] = tempValue/TEN_THOUSAND + 0x30;
+//			tempValue = tempValue % TEN_THOUSAND;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_THOUSAND + 0x30;
+//			tempValue = tempValue % ONE_THOUSAND;
+//			publish_message[publishMessageIndex++] = tempValue/ONE_HUNDRED + 0x30;
+//			tempValue = tempValue % ONE_HUNDRED;
+//			publish_message[publishMessageIndex++] = tempValue/TEN + 0x30;
+//			tempValue = tempValue % TEN;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		}
+//		else if(tempValue >= 100000000){
+//			publish_message[publishMessageIndex++] = tempValue/100000000 + 0x30;
+//			tempValue = tempValue % 100000000;
+//			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
+//			tempValue = tempValue % 10000000;
+//			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
+//			tempValue = tempValue % 1000000;
+//			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+//			tempValue = tempValue % 100000;
+//			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+//			tempValue = tempValue % 10000;
+//			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+//			tempValue = tempValue % 1000;
+//			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+//			tempValue = tempValue % 100;
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		}
+//		else if(tempValue >= 10000000){
+//			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
+//			tempValue = tempValue % 10000000;
+//			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
+//			tempValue = tempValue % 1000000;
+//			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+//			tempValue = tempValue % 100000;
+//			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+//			tempValue = tempValue % 10000;
+//			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+//			tempValue = tempValue % 1000;
+//			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+//			tempValue = tempValue % 100;
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		}
+//		else if(tempValue >= 1000000){
+//			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
+//			tempValue = tempValue % 1000000;
+//			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+//			tempValue = tempValue % 100000;
+//			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+//			tempValue = tempValue % 10000;
+//			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+//			tempValue = tempValue % 1000;
+//			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+//			tempValue = tempValue % 100;
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		} else if(tempValue >= 100000){
+//			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
+//			tempValue = tempValue % 100000;
+//			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+//			tempValue = tempValue % 10000;
+//			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+//			tempValue = tempValue % 1000;
+//			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+//			tempValue = tempValue % 100;
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		} else if(tempValue >= 10000){
+//			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
+//			tempValue = tempValue % 10000;
+//			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+//			tempValue = tempValue % 1000;
+//			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+//			tempValue = tempValue % 100;
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		} else if (tempValue >= 1000){
+//			tempValue = tempValue % 10000;
+//			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
+//			tempValue = tempValue % 1000;
+//			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+//			tempValue = tempValue % 100;
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//
+//		} else if (tempValue >= 100){
+//			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
+//			tempValue = tempValue % 100;
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//
+//		} else if(tempValue >= 10){
+//			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
+//			tempValue = tempValue % 10;
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//		} else {
+//			publish_message[publishMessageIndex++] = tempValue + 0x30;
+//		}
 		if(outletID < MAIN_INPUT)
 			publish_message[publishMessageIndex++] = ',';
 	}

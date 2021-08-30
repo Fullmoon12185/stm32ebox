@@ -79,9 +79,9 @@ typedef struct PowerSystems {
 	uint8_t internalTemp;
 
 	uint8_t powerFactor;
-	uint32_t previousEnergy;
-	uint32_t energy;
-	uint32_t limitEnergy;
+	uint64_t previousEnergy;
+	uint64_t energy;
+	uint64_t limitEnergy;
 	uint32_t workingTime;
 
 } PowerSystem;
@@ -291,13 +291,13 @@ void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 //		Eeprom_Update_LimitEnergy(outletID, limit_energy);
 	}
 }
-uint32_t Get_Main_Power_Consumption(void){
+uint64_t Get_Main_Power_Consumption(void){
 //	uint_t derivativeEnergy = Main.energy - Main.previousEnergy;
 //	Main.previousEnergy = Main.energy;
-	return (uint32_t)(Main.energy);
+	return Main.energy;
 }
 void Set_Main_Power_Consumption(uint64_t totalPowerConsumption){
-	Main.energy = (uint32_t)totalPowerConsumption;
+	Main.energy = totalPowerConsumption;
 	Eeprom_Update_Main_Energy_Immediately(Main.energy);
 }
 
