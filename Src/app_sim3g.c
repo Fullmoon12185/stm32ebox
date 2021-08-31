@@ -171,7 +171,7 @@ void SM_Sim3g_Setting(void);
 void SM_Wait_For_Sim3g_Setting_Response(void);
 
 void Clear_Sim3gDataProcessingBuffer(uint16_t maxIndex);
-uint8_t isEndOfCommand(uint8_t pre, uint8_t cur);
+
 
 Sim3g_Machine_Type Sim3G_State_Machine [] = {
 		{POWER_ON_SIM3G, 									SM_Power_On_Sim3g									},
