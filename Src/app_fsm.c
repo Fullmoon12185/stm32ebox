@@ -45,9 +45,6 @@ extern uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
 
 
-extern uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
-extern uint8_t publishTopicIndex;
-extern uint8_t publish_message_length;
 
 extern int32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
 
@@ -58,6 +55,10 @@ uint32_t ping_Request_TimeoutIndex = NO_TASK_ID;
 
 uint8_t publish_message_TimeoutFlag = 0;
 uint32_t publish_message_TimeoutIndex = NO_TASK_ID;
+
+uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
+uint8_t publish_message_length = 0;
+uint8_t publishTopicIndex = 0;
 
 
 typedef enum {
@@ -609,7 +610,7 @@ void Server_Communication(void){
 		if(Get_Mqtt_State() != MQTT_WAIT_FOR_NEW_COMMAND){
 			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
 		} else {
-			if(is_Set_Relay_Timeout()){
+			if(is_Set_Relay_Timeout() && !Is_Update_Firmware()){
 //				if(Get_Is_Receive_Data_From_Server() == SET){
 //					Set_Is_Receive_Data_From_Server(RESET);
 //					SCH_Delete_Task(ping_Request_TimeoutIndex);

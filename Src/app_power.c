@@ -17,7 +17,7 @@
 #include <math.h>
 
 
-#define		DEBUG_POWER(X)							X
+#define		DEBUG_POWER(X)							//X
 
 #define		MAX_CURRENT								500000
 //for distrist

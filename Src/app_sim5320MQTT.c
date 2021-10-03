@@ -80,7 +80,7 @@ const uint8_t PASSWORD[] 			= "";
 //const uint8_t SUBSCRIBE_TOPIC_2[] 	= "eBox/saves1";
 
 uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH];
-uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
+uint8_t SUBSCRIBE_UPDATE_FIRMWARE[MAX_TOPIC_LENGTH];
 
 uint8_t SUBSCRIBE_TOPIC_3[MAX_TOPIC_LENGTH];
 //const uint8_t PUBLISH_TOPIC_STATUS[] 		= "eBox/status";
@@ -93,9 +93,9 @@ uint8_t PUBLISH_TOPIC_VOLTAGE[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
 
+uint8_t PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[MAX_TOPIC_LENGTH];
 
-uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
-uint8_t publish_message_length = 0;
+
 
 uint8_t mqttMessageLength;
 uint8_t mqttMessage[MQTT_MESSAGE_BUFFER_LENGTH];
@@ -104,7 +104,6 @@ uint8_t commandBufferIndex = 0;
 
 uint8_t mqttMessageIndex = 0;
 uint8_t subscribeTopicIndex = 0;
-uint8_t publishTopicIndex = 0;
 uint32_t mqtt_Timeout_Task_Index = NO_TASK_ID;
 
 uint32_t mqtt_Timeout_Subscribe_Task_Index = NO_TASK_ID;
@@ -199,18 +198,18 @@ void Set_Up_Topic_Names(void){
 	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 0;
 
 	indexTopicCharacter = 0;
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'U';
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'E';
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'b';
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'o';
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'x';
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = '_';
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = 'U';
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = 'E';
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = 'b';
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = 'o';
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = 'x';
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = '_';
 
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 0;
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	SUBSCRIBE_UPDATE_FIRMWARE[indexTopicCharacter++] = 0;
 
 	indexTopicCharacter = 0;
 	SUBSCRIBE_TOPIC_3[indexTopicCharacter++] = 'R';
@@ -308,6 +307,23 @@ void Set_Up_Topic_Names(void){
 	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
 	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
 	CLIENT_ID[indexTopicCharacter++] = 0;
+
+
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = 'A';
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = 'C';
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = 'K';
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = 'x';
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = '_';
+
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_UPDATE_FIRMWARE_ACK[indexTopicCharacter++] = 0;
+
 }
 
 
@@ -506,7 +522,7 @@ void SM_Mqtt_Subscribe (void) {
 		if(subscribeTopicIndex == 0){
 			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_TOPIC_1);
 		} else if(subscribeTopicIndex == 1){
-			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_TOPIC_2);
+			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_UPDATE_FIRMWARE);
 		} else if(subscribeTopicIndex == 2){
 			Setup_Mqtt_Subscribe_Message(SUBSCRIBE_TOPIC_3);
 		}

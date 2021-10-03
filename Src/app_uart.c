@@ -128,10 +128,10 @@ void UART3_Transmit(uint8_t * buffer, uint8_t buffer_len){
 	if(buffer_len == 0) {
 		return;
 	} else {
-		if(HAL_UART_Transmit_IT(&Uart3Handle, (uint8_t*)buffer, buffer_len)!= HAL_OK){
+		if(HAL_UART_Transmit(&Uart3Handle, (uint8_t *)buffer, buffer_len, 0xFFFFFFFF)!= HAL_OK){
 			Error_Handler();
 		}
-		UartTransmitReady = RESET;
+//		UartTransmitReady = RESET;
 	}
 	return;
 }
@@ -168,8 +168,8 @@ HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart)
   /* Check that a Rx process is ongoing */
   if (huart->RxState == HAL_UART_STATE_BUSY_RX)
   {
-	  huart->ErrorCode = HAL_UART_ERROR_NONE;
-	  huart->RxState = HAL_UART_STATE_BUSY_RX;
+//	  huart->ErrorCode = HAL_UART_ERROR_NONE;
+//	  huart->RxState = HAL_UART_STATE_BUSY_RX;
 	  aUART_RxBuffer[receiveBufferIndexHead] = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
 	  receiveBufferIndexHead = (receiveBufferIndexHead + 1) % RXBUFFERSIZE;
 	  return HAL_OK;

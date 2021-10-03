@@ -8,7 +8,9 @@
 #ifndef APP_UPDATE_FIRMWARE_H_
 #define APP_UPDATE_FIRMWARE_H_
 
-void FSM_For_Update_Firmware(void);
+
+void Reset_Update_Firmware_State(void);
+void Processing_Update_Firmware(void);
 
 
 

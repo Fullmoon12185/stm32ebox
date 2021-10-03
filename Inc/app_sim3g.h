@@ -75,7 +75,7 @@ uint8_t isConnestionLost(void);
 void ClearCounter(void);
 
 FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message);
-FlagStatus isReceivedData(const uint8_t * str);
+FlagStatus isReceivedData(uint8_t* buffer, const uint8_t * str);
 
 void FSM_Process_Data_Received_From_Sim3g(void);
 FlagStatus isGreaterThanSymbol(void);
@@ -90,6 +90,8 @@ void Clear_All_Uart_Receive_Flags(void);
 
 
 uint8_t isEndOfCommand(uint8_t pre, uint8_t cur);
+
+uint8_t Is_Update_Firmware(void);
 #endif /* APP_SIM3G_H_ */
 
 

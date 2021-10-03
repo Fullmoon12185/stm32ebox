@@ -23,6 +23,7 @@ extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
 
 extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
+
 uint8_t strTest[] = "                                                                                        ";
 void test1(void){
 
