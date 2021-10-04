@@ -7,10 +7,14 @@
 
 #include "main.h"
 #include "app_string.h"
+#include "app_uart.h"
+#include "app_pcf8574.h"
 #include "app_sim3g.h"
 
 #include "app_scheduler.h"
 #include "app_sim5320MQTT.h"
+
+
 
 #define		CLOUD_MQTT  	1
 #define		MOSQUITTO		0

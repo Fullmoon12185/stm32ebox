@@ -8,14 +8,7 @@
 #ifndef APP_SIM5320MQTT_H_
 #define APP_SIM5320MQTT_H_
 
-#include "main.h"
-
-#include "app_uart.h"
-#include "app_sim5320MQTT.h"
-#include "app_pcf8574.h"
-
-
-
+//#include "main.h"
 
 #define		MQTT_MESSAGE_BUFFER_LENGTH	128
 

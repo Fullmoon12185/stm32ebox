@@ -11,17 +11,21 @@
 #include "app_flash_internal.h"
 #include "app_uart.h"
 #include "app_sim3g.h"
-
+#include "app_scheduler.h"
 #include "app_string.h"
+
+#include "app_sim5320MQTT.h"
 
 #define	DEBUG_UPDATE_FIMWARE(X) 			X
 
 #define 	LENGTH_OF_IGNORED_DATA	10
 #define		TIME_OUT_FOR_UPDATE_FIRMWARE	10000
-
+#define 	TEMP_BUFFER_SIZE				200
 
 uint8_t	Flash_PageSize_Buffer_1[FLASH_PAGE_SIZE+1];
 uint8_t	Flash_PageSize_Buffer_2[FLASH_PAGE_SIZE+1];
+uint8_t tempBuffer[TEMP_BUFFER_SIZE];
+uint16_t tempBufferIndex = 0;
 uint16_t indexForUpdateFirmwareBuffer = 0;
 uint16_t indexForReceivedPackage = 0;
 
@@ -33,6 +37,15 @@ uint16_t packageIndex = 0;
 uint8_t updateFirmwareTimeoutFlag  = 0;
 uint32_t updateFirmwareTimeoutIndex = NO_TASK_ID;
 extern uint8_t SUBSCRIBE_UPDATE_FIRMWARE[MAX_TOPIC_LENGTH];
+extern const uint8_t OK[];
+extern const uint8_t ERROR_1[];
+extern const uint8_t GREATER_THAN_SYMBOL[];
+extern const uint8_t Send_ok[];
+extern const uint8_t RECV_FROM[];
+extern const uint8_t IP_CLOSE[];
+extern const uint8_t ISCIPSEND[];
+
+
 
 
 typedef enum{
@@ -43,10 +56,11 @@ typedef enum{
 	CHECK_TOPIC_NAME,
 	CHECK_PACKAGE_INDEX,
 	PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE_1,
-	PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE_2,
+	PREPARE_PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE,
 	START_WRITE_RECEIVED_DATA_TO_FLASH,
 	ASKING_RESEND_PREVIOUS_PACKAGE,
 	RETURN_ACK_FOR_UPDATE_FIRMWARE,
+	PREPARE_FOR_SENDING_ACK_FOR_UPDATE_FIRMWARE,
 	UPDATE_FIRMWARE_FINISHED,
 	MAX_NUMBER_STATE_OF_PROCESSING_FOR_UPDATE_FIRMWARE
 }PROCESS_UPDATE_FIRMWARE;
@@ -54,7 +68,7 @@ typedef enum{
 PROCESS_UPDATE_FIRMWARE processUpdateFirmwareState = CHECK_DATA_AVAILABLE_STATE_FOR_UPDATE_FIRMWARE;
 
 void FSM_For_Update_Firmware(void);
-void Send_ACK(const uint8_t * pubmes);
+void Send_ACK(uint8_t * pubmes);
 
 void Clear_Update_Firmware_Timeout_Flag(void);
 void Set_Update_Firmware_Timeout_Flag(void);
@@ -100,9 +114,6 @@ void Update_Firmware_State_Display(void){
 		case PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE_1:
 			DEBUG_UPDATE_FIMWARE(UART3_SendToHost((uint8_t*)"PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE_1\r\n"););
 			break;
-		case PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE_2:
-			DEBUG_UPDATE_FIMWARE(UART3_SendToHost((uint8_t*)"PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE_2\r\n"););
-			break;
 		case START_WRITE_RECEIVED_DATA_TO_FLASH:
 			DEBUG_UPDATE_FIMWARE(UART3_SendToHost((uint8_t*)"START_WRITE_RECEIVED_DATA_TO_FLASH\r\n"););
 			break;
@@ -125,24 +136,40 @@ void Update_Firmware_State_Display(void){
 	}
 
 }
-void Processing_Update_Firmware(void){
-	Clear_Update_Firmware_Timeout_Flag();
-	updateFirmwareTimeoutIndex = SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, TIME_OUT_FOR_UPDATE_FIRMWARE, 0);
-	Reset_Update_Firmware_State();
-	while(processUpdateFirmwareState != UPDATE_FIRMWARE_FINISHED){
-		Update_Firmware_State_Display();
-		FSM_For_Update_Firmware();
-		if(Is_Update_Firmware_Timeout_Flag()){
-			break;
+uint8_t Processing_Update_Firmware(void){
+	static uint8_t tempState = 0;
+
+	switch(tempState){
+	case 0:
+		Clear_Update_Firmware_Timeout_Flag();
+		updateFirmwareTimeoutIndex = SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, TIME_OUT_FOR_UPDATE_FIRMWARE, 0);
+		Reset_Update_Firmware_State();
+		tempState = 1;
+		break;
+	case 1:
+		if(processUpdateFirmwareState != UPDATE_FIRMWARE_FINISHED){
+			Update_Firmware_State_Display();
+			FSM_For_Update_Firmware();
+			if(Is_Update_Firmware_Timeout_Flag()){
+				return 1;
+			}
+		} else {
+			tempState = 0;
+			return 1;
 		}
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
+void Send_ACK(uint8_t * pubmes){
+	if(GetStringLength(pubmes) > 0){
+		Setup_Mqtt_Publish_Message(SUBSCRIBE_UPDATE_FIRMWARE, pubmes, GetStringLength(pubmes));
+		Set_Mqtt_State(MQTT_PUBLISH_STATE);
 	}
 }
-
-void Send_ACK(const uint8_t * pubmes){
-	if(GetStringLength(pubmes) > 0)
-		Setup_Mqtt_Publish_Message(SUBCRIBE_UPDATE_FIRMWARE, pubmes, GetStringLength(pubmes));
-}
-
 
 
 void FSM_For_Update_Firmware(void){
@@ -159,13 +186,15 @@ void FSM_For_Update_Firmware(void){
 		break;
 	case DETECT_SPECIAL_CHARACTER_FOR_UPDATE_FIRMWARE:
 		if(Uart1_Received_Buffer_Available()){
-
 			readCharacter_1 = readCharacter_2;
 			readCharacter_2 = readCharacter_3;
 			readCharacter_3 = readCharacter_4;
 			readCharacter_4 = Uart1_Read_Received_Buffer();
-			if(isEndOfCommand(readCharacter_3, readCharacter_4) == 1){
-				processUpdateFirmwareState = CHECK_DATA_AVAILABLE_STATE_FOR_UPDATE_FIRMWARE;
+			if(readCharacter_4 == '>'){
+				processUpdateFirmwareState = PREPARE_FOR_SENDING_ACK_FOR_UPDATE_FIRMWARE;
+			}
+			else if(isEndOfCommand(readCharacter_3, readCharacter_4) == 1){
+				processUpdateFirmwareState = PREPARE_PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE;
 			}
 			else if(readCharacter_2 == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
 					&& readCharacter_4 == GetStringLength((uint8_t*)SUBSCRIBE_UPDATE_FIRMWARE))
@@ -180,6 +209,14 @@ void FSM_For_Update_Firmware(void){
 				indexForReceivedPackage = 0;
 				receivedUpdateFirmwareDataLength = readCharacter_2 + (readCharacter_3 - 1)*128;
 				processUpdateFirmwareState = CHECK_TOPIC_NAME;
+			} else {
+				if(tempBufferIndex < TEMP_BUFFER_SIZE - 1){
+					tempBuffer[tempBufferIndex] = readCharacter_4;
+					tempBufferIndex++;
+					tempBuffer[tempBufferIndex] = 0;
+				} else {
+					tempBufferIndex = 0;
+				}
 			}
 		}
 		break;
@@ -241,8 +278,22 @@ void FSM_For_Update_Firmware(void){
 			}
 		}
 		break;
-	case PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE_2:
-
+	case PREPARE_PROCESSING_RECEIVED_DATA_FOR_UPDATE_FIRMWARE:
+			if(isReceivedData(tempBuffer, (uint8_t *)OK)){
+				Set_OKFlag(SET);
+			} else if(isReceivedData(tempBuffer, (uint8_t *)ERROR_1)){
+				Set_ErrorFlag(SET);
+			}else if(isReceivedData(tempBuffer, (uint8_t *)IP_CLOSE)){
+				Set_IPCloseFlag(SET);
+			} else if(isReceivedData(tempBuffer, (uint8_t *)RECV_FROM)){
+				Set_IsSendOKFlag(RESET);
+				Set_IsRecvFromFlag(SET);
+			} else if(isReceivedData(tempBuffer, (uint8_t *)Send_ok)){
+				Set_IsSendOKFlag(SET);
+			} else if(isReceivedData(tempBuffer, (uint8_t *)ISCIPSEND)){
+				Set_IsCipsend(SET);
+			}
+			processUpdateFirmwareState = CHECK_DATA_AVAILABLE_STATE_FOR_UPDATE_FIRMWARE;
 		break;
 	case START_WRITE_RECEIVED_DATA_TO_FLASH:
 		//start writing to flash
@@ -254,6 +305,9 @@ void FSM_For_Update_Firmware(void){
 	case ASKING_RESEND_PREVIOUS_PACKAGE:
 		Send_ACK((uint8_t*)"resend");
 		processUpdateFirmwareState = CHECK_DATA_AVAILABLE_STATE_FOR_UPDATE_FIRMWARE;
+		break;
+	case PREPARE_FOR_SENDING_ACK_FOR_UPDATE_FIRMWARE:
+		Set_Is_Ready_To_Send_Data_To_Server(SET);
 		break;
 	case RETURN_ACK_FOR_UPDATE_FIRMWARE:
 		//send ack back

@@ -10,7 +10,7 @@
 
 
 void Reset_Update_Firmware_State(void);
-void Processing_Update_Firmware(void);
+uint8_t Processing_Update_Firmware(void);
 
 
 

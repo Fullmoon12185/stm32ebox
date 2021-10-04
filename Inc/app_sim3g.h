@@ -83,9 +83,19 @@ FlagStatus isRecvFrom(void);
 FlagStatus isIPClose(void);
 FlagStatus isSendOK(void);
 
+void Set_OKFlag(FlagStatus status);
+void Set_ErrorFlag(FlagStatus status);
+
+void Set_IPCloseFlag(FlagStatus status);
+void Set_IsSendOKFlag(FlagStatus status);
+void Set_IsRecvFromFlag(FlagStatus status);
+void Set_IsCipsend(FlagStatus status);
 
 void Set_Is_Receive_Data_From_Server(FlagStatus status);
 FlagStatus Get_Is_Receive_Data_From_Server(void);
+
+void Set_Is_Ready_To_Send_Data_To_Server(FlagStatus status);
+FlagStatus Get_Is_Ready_To_Send_Data_To_Server(void);
 void Clear_All_Uart_Receive_Flags(void);
 
 

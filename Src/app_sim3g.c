@@ -778,9 +778,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			}
 			else {
 				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
-					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
-					sim3gDataProcessingBufferIndex++;
-					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0;
+					Update_Sim3gDataProcessingBuffer(readCharacter);
 				} else {
 					Clear_Sim3gDataProcessingBuffer();
 				}
@@ -848,9 +846,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			else
 			{
 				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
-					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
-					sim3gDataProcessingBufferIndex++;
-					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0; //for end of string
+//					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
+//					sim3gDataProcessingBufferIndex++;
+//					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0; //for end of string
+					Update_Sim3gDataProcessingBuffer(readCharacter);
 					if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH)
 					{
 						Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
@@ -875,9 +874,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				else
 				{
 					if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
-						Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
-						sim3gDataProcessingBufferIndex++;
-						Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0;
+//						Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
+//						sim3gDataProcessingBufferIndex++;
+//						Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0;
+						Update_Sim3gDataProcessingBuffer(readCharacter);
 						if(sim3gDataProcessingBufferIndex >= DATA_RETAINED_MESSAGE_LENGTH)
 						{
 							Processing_Received_Data_From_Retained_Message((uint8_t*)SUBSCRIBE_TOPIC_3, Get_Box_ID());
@@ -901,10 +901,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			else
 			{
 				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
-					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
-					sim3gDataProcessingBufferIndex++;
-					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0;
-
+//					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
+//					sim3gDataProcessingBufferIndex++;
+//					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0;
+					Update_Sim3gDataProcessingBuffer(readCharacter);
 					if(readCharacter == END_UPDATE_TOTAL_POWER_CONSUMPTION)
 					{
 						Processing_Update_Total_Power_Consumption((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
@@ -966,6 +966,32 @@ void UART3_SendReceivedBuffer(void){
 	UART3_SendToHost((uint8_t *)Sim3gDataProcessingBuffer);
 }
 
+
+
+void Set_OKFlag(FlagStatus status){
+	isOKFlag = status;
+}
+void Set_ErrorFlag(FlagStatus status){
+	isErrorFlag = status;
+}
+
+
+
+void Set_IPCloseFlag(FlagStatus status){
+	isIPCloseFlag = status;
+}
+
+void Set_IsSendOKFlag(FlagStatus status){
+	isSendOKFlag = status;
+}
+void Set_IsRecvFromFlag(FlagStatus status){
+	isRecvFromFlag = status;
+}
+void Set_IsCipsend(FlagStatus status){
+	isCipsend = status;
+}
+
+
 uint8_t isConnestionLost(void){
 	return (counterForResetChargingAfterDisconnection == TIME_OUT_FOR_STOP_CHARGING);
 }
@@ -989,6 +1015,16 @@ void Set_Is_Receive_Data_From_Server(FlagStatus status){
 FlagStatus Get_Is_Receive_Data_From_Server(void){
 	return isReceiveDataFromServer;
 }
+
+void Set_Is_Ready_To_Send_Data_To_Server(FlagStatus status){
+	isReadyToSendDataToServer = status;
+}
+
+FlagStatus Get_Is_Ready_To_Send_Data_To_Server(void){
+	return isReadyToSendDataToServer;
+}
+
+
 
 uint8_t Is_Update_Firmware(void){
 	return (processDataState == STARTING_UPDATE_FIRMWARE);
