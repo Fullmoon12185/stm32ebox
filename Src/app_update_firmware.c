@@ -308,15 +308,12 @@ void FSM_For_Update_Firmware(void){
 		break;
 	case PREPARE_FOR_SENDING_ACK_FOR_UPDATE_FIRMWARE:
 		Set_Is_Ready_To_Send_Data_To_Server(SET);
+		processUpdateFirmwareState = CHECK_DATA_AVAILABLE_STATE_FOR_UPDATE_FIRMWARE;
 		break;
 	case RETURN_ACK_FOR_UPDATE_FIRMWARE:
 		//send ack back
 		Send_ACK((uint8_t*)"ack");
-		if(indexForReceivedPackage < 128){
-			processUpdateFirmwareState = UPDATE_FIRMWARE_FINISHED;
-		} else {
-			processUpdateFirmwareState = CHECK_DATA_AVAILABLE_STATE_FOR_UPDATE_FIRMWARE;
-		}
+		processUpdateFirmwareState = CHECK_DATA_AVAILABLE_STATE_FOR_UPDATE_FIRMWARE;
 		break;
 	case UPDATE_FIRMWARE_FINISHED:
 
