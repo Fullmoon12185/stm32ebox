@@ -45,6 +45,7 @@
 
 #define		COMMAND_WITH_MAX_ENERGY				'3'
 
+
 extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH]; //CEbox_xxxx
 extern uint8_t SUBSCRIBE_UPDATE_FIRMWARE[MAX_TOPIC_LENGTH];
 extern uint8_t SUBSCRIBE_TOPIC_3[MAX_TOPIC_LENGTH]; //REbox_xxxx
@@ -84,7 +85,7 @@ const uint8_t OK[] = "OK\r";
 const uint8_t CONNECT_OK[] = "CONNECT OK\r";
 const uint8_t ERROR_1[] = "ERROR\r";
 const uint8_t GREATER_THAN_SYMBOL[] = ">";
-const uint8_t NETWORK_OPENED[] = "Network opened";
+const uint8_t NETWORK_OPENED[] = "+NETOPEN: 0\r";
 const uint8_t Send_ok[] = "Send ok\r";
 const uint8_t RECV_FROM[] = "RECV FROM";
 const uint8_t IP_CLOSE[] = "+IPCLOSE";
@@ -101,6 +102,7 @@ FlagStatus isReadyToSendDataToServer = RESET;
 FlagStatus isSendOKFlag = RESET;
 FlagStatus isReceiveDataFromServer = RESET;
 FlagStatus isCipsend = RESET;
+FlagStatus isNetopen = RESET;
 
 
 static uint8_t sim3g_TimeoutFlag = 0;
@@ -193,7 +195,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 };
 
 #define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G				8
-
+#define 	NETOPEN_INDEX						6
 const AT_COMMAND_ARRAY atCommandArrayForCheckingSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
@@ -360,33 +362,6 @@ void Sim3g_Enable(void){
 	HAL_GPIO_WritePin(PA8_3G_REG_EN_PORT, PA8_3G_REG_EN, GPIO_PIN_SET);
 #endif
 }
-//#endif
-void Check_Sim_3G_Available(void){
-	static CHECK_SIM_3G_STATE checkSim3G_State = SEND_AT_COMMAND;
-	switch(checkSim3G_State){
-	case SEND_AT_COMMAND:
-		SCH_Delete_Task(sim3g_Timeout_Task_Index);
-		Sim3g_Clear_Timeout_Flag();
-		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, 200,0);
-		isOKFlag = RESET;
-		isErrorFlag = RESET;
-		isIPCloseFlag = RESET;
-		ATcommandSending((uint8_t *)"AT\r\n");
-		checkSim3G_State = 1;
-		break;
-	case WAIT_FOR_RESPONSE_FROM_AT_COMMAND:
-		if(isOKFlag){
-			checkSim3G_State = 2;
-		}
-		if(is_Sim3g_Command_Timeout()){
-
-		}
-		break;
-	case 2:
-		break;
-	}
-}
-
 
 #if(VERSION_EBOX == 1)
 void Sim3g_WakeUp(void){
@@ -465,6 +440,7 @@ void SM_Power_On_Sim3g(void){
 	Clear_All_Uart_Receive_Flags();
 	Sim3g_Clear_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_ON_SIM3G_TIMEOUT,0);
+	processDataState = CHECK_DATA_AVAILABLE_STATE;
 	sim3gState = WAIT_FOR_SIM3G_POWER_ON;
 }
 
@@ -479,6 +455,7 @@ void SM_Reset_Sim3g(void){
 	SCH_Add_Task(Reset_Signal_High, TIMER_TO_RESET_SIM3G, 0);
 	Sim3g_Clear_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_RESET_SIM3G_TIMEOUT, 0);
+	processDataState = CHECK_DATA_AVAILABLE_STATE;
 	sim3gState = WAIT_FOR_SIM3G_RESET;
 }
 
@@ -566,8 +543,14 @@ void SM_Wait_For_Sim3g_Setting_Response(void){
 	if(isOKFlag){
 		isOKFlag = RESET;
 		sim3gState = SIM3G_SETTING;
-		Sim3g_Setting_Clear_Timeout_Flag();
-		sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT,0);
+
+		if(atCommandArrayIndex == NETOPEN_INDEX){ //check if current command is netopen, if yes, set timeout a bit longer
+			Sim3g_Setting_Clear_Timeout_Flag();
+			sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT*3,0);
+		} else {
+			Sim3g_Setting_Clear_Timeout_Flag();
+			sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT,0);
+		}
 		atCommandArrayIndex++;
 		if(atCommandArrayIndex == NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G){
 			sim3gState = MAX_SIM3G_NUMBER_STATES;
@@ -798,7 +781,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			isStin25 = SET;
 		} else if(isReceivedData(Sim3gDataProcessingBuffer, (uint8_t *)OK)){
 			isOKFlag = SET;
-		} else if(isReceivedData(Sim3gDataProcessingBuffer, (uint8_t *)ERROR_1)){
+		} else if(isReceivedData(Sim3gDataProcessingBuffer, (uint8_t *)NETWORK_OPENED)){
+			isNetopen = SET;
+		}
+		else if(isReceivedData(Sim3gDataProcessingBuffer, (uint8_t *)ERROR_1)){
 			isErrorFlag = SET;
 			if(counterForResetChargingAfterDisconnection < TIME_OUT_FOR_STOP_CHARGING){
 				counterForResetChargingAfterDisconnection ++;
@@ -932,6 +918,8 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 							&& readCharacter == END_UPDATE_FIRMWARE){
 						if(Checking_For_Update_Firmware(Sim3gDataProcessingBuffer, (uint8_t*)SUBSCRIBE_UPDATE_FIRMWARE, Get_Box_ID())){
 							processDataState = STARTING_UPDATE_FIRMWARE;
+							Reset_State_Processing_Update_Firmware();
+							UART3_SendToHost((uint8_t*)"START UPDATING FIRMARE\r\n");
 						} else {
 							processDataState = CHECK_DATA_AVAILABLE_STATE;
 						}
@@ -943,9 +931,9 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		}
 		break;
 	case STARTING_UPDATE_FIRMWARE:
-		UART3_SendToHost((uint8_t*)"START UPDATING FIRMARE\r\n");
-		Processing_Update_Firmware();
-		processDataState = CHECK_DATA_AVAILABLE_STATE;
+		if(Processing_Update_Firmware() == 0){
+			processDataState = CHECK_DATA_AVAILABLE_STATE;
+		}
 		break;
 	default:
 		break;

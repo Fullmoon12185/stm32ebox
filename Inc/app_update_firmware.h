@@ -8,8 +8,7 @@
 #ifndef APP_UPDATE_FIRMWARE_H_
 #define APP_UPDATE_FIRMWARE_H_
 
-
-void Reset_Update_Firmware_State(void);
+void Reset_State_Processing_Update_Firmware(void);
 uint8_t Processing_Update_Firmware(void);
 
 

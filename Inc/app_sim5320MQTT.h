@@ -61,5 +61,6 @@ MQTT_STATE Get_Mqtt_State(void);
 void Setup_Mqtt_Connect_Message(void);
 void Setup_Mqtt_Subscribe_Message(uint8_t * topic);
 void Setup_Mqtt_Publish_Message(uint8_t * topic, uint8_t * message, uint8_t lenOfMessage);
+void Setup_Mqtt_Publish_Message_No_Retain(uint8_t * topic, uint8_t * message, uint8_t lenOfMessage);
 
 #endif /* APP_SIM5320MQTT_H_ */

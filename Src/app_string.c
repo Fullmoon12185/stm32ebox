@@ -15,7 +15,7 @@ uint8_t GetStringLength(uint8_t* buffer){
 	}
 	while(*buffer != 0){
 		len ++;
-		if(*buffer == '\n') break;
+//		if(*buffer == '\n') break;
 		buffer ++;
 
 	}

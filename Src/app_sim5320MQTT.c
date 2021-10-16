@@ -955,6 +955,32 @@ void Setup_Mqtt_Publish_Message(uint8_t * topic, uint8_t * message, uint8_t lenO
 	SM_Send_Data(mqttMessageLength);
 
 }
+///////////////////////////////////////////////////////////////////////////
+void Setup_Mqtt_Publish_Message_No_Retain(uint8_t * topic, uint8_t * message, uint8_t lenOfMessage){
+	uint8_t i;
+	uint8_t lenOfTopic = GetStringLength((uint8_t*)topic);
+
+//	mqttMessageLength = 4 + lenTopic + lenMsg;
+	Clear_Mqtt_Message_Buffer();
+	// Write fixed header
+	mqttMessage[mqttMessageIndex++] = MQTT_MSG_PUBLISH;
+	mqttMessage[mqttMessageIndex++] = 2 + lenOfTopic + lenOfMessage;
+
+	// Write topic
+	mqttMessage[mqttMessageIndex++] = 0;         // lenTopic MSB
+	mqttMessage[mqttMessageIndex++] = lenOfTopic;  // lenTopic LSB
+	for (i = 0; i < lenOfTopic; i++){
+		mqttMessage[mqttMessageIndex++] = topic[i];
+	}
+
+	// Write msg
+	for (i = 0; i < lenOfMessage; i++){
+		mqttMessage[mqttMessageIndex++] = message[i];
+	}
+	mqttMessageLength = mqttMessageIndex;
+	SM_Send_Data(mqttMessageLength);
+
+}
 
 
 ///////////////////////////////////////////////////////////////////////////

@@ -168,8 +168,8 @@ HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart)
   /* Check that a Rx process is ongoing */
   if (huart->RxState == HAL_UART_STATE_BUSY_RX)
   {
-//	  huart->ErrorCode = HAL_UART_ERROR_NONE;
-//	  huart->RxState = HAL_UART_STATE_BUSY_RX;
+	  huart->ErrorCode = HAL_UART_ERROR_NONE;
+	  huart->RxState = HAL_UART_STATE_BUSY_RX;
 	  aUART_RxBuffer[receiveBufferIndexHead] = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
 	  receiveBufferIndexHead = (receiveBufferIndexHead + 1) % RXBUFFERSIZE;
 	  return HAL_OK;
