@@ -46,27 +46,27 @@ uint8_t OTA_hasSucceeded()
 
 
 uint8_t Jump_To_Bootloader_To_Update_Firmware(void){
-	if (((*(__IO uint32_t*)BOOTLOADER_ADDRESS) & 0x2FFE0000 ) == 0x20000000)
-		{
-
-			printf("---> Bootloader available!\r\n");
-			if (OTA_hasRequested() == 1)
-			{
-				printf("---> OTA requested. Jump to bootloader!\r\n");
-				HAL_Delay(1000);
-
-				/* Jump to user application */
-				JumpAddress = *(__IO uint32_t*) (BOOTLOADER_ADDRESS + 4);
-				JumpToApplication = (pFunction) JumpAddress;
-				/* Initialize user application's Stack Pointer */
-				__set_MSP(*(__IO uint32_t*) BOOTLOADER_ADDRESS);
-				JumpToApplication();
-			}
-		}
-		else
-		{
-			printf("---> Bootloader not found!\r\n");
-		}
+//	if (((*(__IO uint32_t*)BOOTLOADER_ADDRESS) & 0x2FFE0000 ) == 0x20000000)
+//		{
+//
+//			printf("---> Bootloader available!\r\n");
+//			if (OTA_hasRequested() == 1)
+//			{
+//				printf("---> OTA requested. Jump to bootloader!\r\n");
+//				HAL_Delay(1000);
+//
+//				/* Jump to user application */
+//				JumpAddress = *(__IO uint32_t*) (BOOTLOADER_ADDRESS + 4);
+//				JumpToApplication = (pFunction) JumpAddress;
+//				/* Initialize user application's Stack Pointer */
+//				__set_MSP(*(__IO uint32_t*) BOOTLOADER_ADDRESS);
+//				JumpToApplication();
+//			}
+//		}
+//		else
+//		{
+//			printf("---> Bootloader not found!\r\n");
+//		}
 	return 0;
 }
 

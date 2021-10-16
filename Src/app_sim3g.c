@@ -12,7 +12,7 @@
 #include "app_string.h"
 #include "app_power.h"
 #include "app_pcf8574.h"
-#include "app_update_firmware.h"
+//#include "app_update_firmware.h"
 
 #define DEBUG_SIM3G(X)    						X
 
@@ -753,12 +753,12 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
 				Clear_Sim3gDataProcessingBuffer();
 			}
-			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
-					&& (readCharacter == LEN_FOR_UPDATE_FIRMWARE)){
-				processDataState = PROCESSING_UPDATE_FIRMWARE;
-				Clear_Sim3gDataProcessingBuffer();
-				UART3_SendToHost((uint8_t*)"start processing\r\n");
-			}
+//			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
+//					&& (readCharacter == LEN_FOR_UPDATE_FIRMWARE)){
+//				processDataState = PROCESSING_UPDATE_FIRMWARE;
+//				Clear_Sim3gDataProcessingBuffer();
+//				UART3_SendToHost((uint8_t*)"start processing\r\n");
+//			}
 			else {
 				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
 					Update_Sim3gDataProcessingBuffer(readCharacter);
@@ -905,35 +905,35 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		}
 		break;
 	case PROCESSING_UPDATE_FIRMWARE:
-		if(Uart1_Received_Buffer_Available()){
-			preReadCharacter = readCharacter;
-			readCharacter = Uart1_Read_Received_Buffer();
-			if(isEndOfCommand(preReadCharacter, readCharacter)){
-				processDataState = CHECK_DATA_AVAILABLE_STATE;
-			}
-			else {
-				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
-					Update_Sim3gDataProcessingBuffer(readCharacter);
-					if(preReadCharacter == END_UPDATE_FIRMWARE
-							&& readCharacter == END_UPDATE_FIRMWARE){
-						if(Checking_For_Update_Firmware(Sim3gDataProcessingBuffer, (uint8_t*)SUBSCRIBE_UPDATE_FIRMWARE, Get_Box_ID())){
-							processDataState = STARTING_UPDATE_FIRMWARE;
-							Reset_State_Processing_Update_Firmware();
-							UART3_SendToHost((uint8_t*)"START UPDATING FIRMARE\r\n");
-						} else {
-							processDataState = CHECK_DATA_AVAILABLE_STATE;
-						}
-					}
-				} else {
-					Clear_Sim3gDataProcessingBuffer();
-				}
-			}
-		}
+//		if(Uart1_Received_Buffer_Available()){
+//			preReadCharacter = readCharacter;
+//			readCharacter = Uart1_Read_Received_Buffer();
+//			if(isEndOfCommand(preReadCharacter, readCharacter)){
+//				processDataState = CHECK_DATA_AVAILABLE_STATE;
+//			}
+//			else {
+//				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
+//					Update_Sim3gDataProcessingBuffer(readCharacter);
+//					if(preReadCharacter == END_UPDATE_FIRMWARE
+//							&& readCharacter == END_UPDATE_FIRMWARE){
+//						if(Checking_For_Update_Firmware(Sim3gDataProcessingBuffer, (uint8_t*)SUBSCRIBE_UPDATE_FIRMWARE, Get_Box_ID())){
+//							processDataState = STARTING_UPDATE_FIRMWARE;
+//							Reset_State_Processing_Update_Firmware();
+//							UART3_SendToHost((uint8_t*)"START UPDATING FIRMARE\r\n");
+//						} else {
+//							processDataState = CHECK_DATA_AVAILABLE_STATE;
+//						}
+//					}
+//				} else {
+//					Clear_Sim3gDataProcessingBuffer();
+//				}
+//			}
+//		}
 		break;
 	case STARTING_UPDATE_FIRMWARE:
-		if(Processing_Update_Firmware() == 0){
-			processDataState = CHECK_DATA_AVAILABLE_STATE;
-		}
+//		if(Processing_Update_Firmware() == 0){
+//			processDataState = CHECK_DATA_AVAILABLE_STATE;
+//		}
 		break;
 	default:
 		break;

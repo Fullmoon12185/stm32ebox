@@ -191,7 +191,7 @@ void Error_Handler(void);
 /* Size of Trasmission buffer */
 #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
 /* Size of Reception buffer */
-#define RXBUFFERSIZE                      FLASH_PAGE_SIZE + 10
+#define RXBUFFERSIZE                      200 + 10
 
 
 
