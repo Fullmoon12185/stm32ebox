@@ -28,9 +28,9 @@
 #define TIMER_TO_RESET_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_RESET_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
 #define COMMAND_TIME_OUT						(20000/INTERRUPT_TIMER_PERIOD)
-#define SETTING_TIME_OUT						(2000/INTERRUPT_TIMER_PERIOD)
+#define SETTING_TIME_OUT						(500/INTERRUPT_TIMER_PERIOD)
 
-#define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(30000/INTERRUPT_TIMER_PERIOD) //10s
+#define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(20000/INTERRUPT_TIMER_PERIOD) //10s
 
 #define MAX_RETRY_NUMBER						3
 
@@ -245,32 +245,32 @@ void Sim3g_State_Display(void){
 		pre_sim3gState = sim3gState;
 		switch(sim3gState){
 		case SIM3G_START_UP:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"CHECK_SIM3G_START_UP"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"CHECK_SIM3G_START_UP\r\n"););
 
 			break;
 		case WAIT_FOR_SIM3G_STARTUP_RESPONSE:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_STARTUP_RESPONSE"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_STARTUP_RESPONSE\r\n"););
 			break;
 		case POWER_ON_SIM3G:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_ON_SIM3G\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_ON_SIM3G\r\n"););
 			break;
 		case WAIT_FOR_SIM3G_POWER_ON:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_ON\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_ON\r\n"););
 
 			break;
 		case POWER_OFF_SIM3G:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_OFF_SIM3G\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_OFF_SIM3G\r\n"););
 			break;
 
 		case WAIT_FOR_SIM3G_POWER_OFF:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_OFF\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_OFF\r\n"););
 			break;
 
 		case RESET_SIM3G:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RESET_SIM3G\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RESET_SIM3G\r\n"););
 			break;
 		case WAIT_FOR_SIM3G_RESET:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_RESET\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_RESET\r\n"););
 			break;
 		default:
 			break;

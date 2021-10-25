@@ -17,7 +17,7 @@
 #include <math.h>
 
 
-#define		DEBUG_POWER(X)							X
+#define		DEBUG_POWER(X)							//X
 
 #define		MAX_CURRENT								500000
 //for distrist
@@ -27,7 +27,7 @@
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
 #define		MIN_CURRENT								30000
-#define		MIN_CURRENT_FOR_START_CHARGING			70000
+#define		MIN_CURRENT_FOR_START_CHARGING			60000
 #define 	CURRENT_CHANGING_THRESHOLD				30000
 #define 	MIN_PF									30
 
