@@ -41,7 +41,7 @@
 #define 	MIN_PF									25
 #endif
 
-
+#define		TIME_OUT_STABABILITY					(5000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_UNPLUG					(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE		(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY		(20000/INTERRUPT_TIMER_PERIOD)
@@ -235,10 +235,8 @@ static void Node_Setup(void) {
 				UART3_SendToHost((uint8_t *)ConvertUint64ToString((uint64_t)Main.energy));
 				Main.limitEnergy = 0xffffffff;
 			}
-
-
 		} else {
-			Main.nodes[outletID].voltage = 230;
+			Main.nodes[outletID].voltage = 235;
 			Main.nodes[outletID].powerFactor = 100;
 //			if(Eeprom_Read_Outlet(outletID,
 //					&Main.nodes[outletID].nodeStatus,
@@ -402,8 +400,6 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
 		}
-
-
 	}
 }
 
@@ -599,15 +595,27 @@ void Process_Outlets(void){
 	} else {
 		switch(outletState[tempOutletID]){
 		case 0:
-			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT_FOR_START_CHARGING) {
-				Main.nodes[tempOutletID].nodeStatus = CHARGING;
-				outletCounter[tempOutletID] = 0;
-				outletState[tempOutletID] = 1;
+			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
+//				Main.nodes[tempOutletID].nodeStatus = CHARGING;
+//				outletCounter[tempOutletID] = 0;
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_STABABILITY);
+				outletState[tempOutletID] = 4;
 			} else {
 				if(Get_Relay_Status(tempOutletID) == SET){
 					Main.nodes[tempOutletID].nodeStatus = NODE_READY;
 				} else {
 					Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
+				}
+			}
+			break;
+		case 4:
+			if(Is_Power_Timeout_Flag(tempOutletID)){
+				if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
+					Main.nodes[tempOutletID].nodeStatus = CHARGING;
+					outletCounter[tempOutletID] = 0;
+					outletState[tempOutletID] = 1;
+				} else {
+					outletState[tempOutletID] = 0;
 				}
 			}
 			break;

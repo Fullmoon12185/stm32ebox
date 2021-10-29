@@ -399,7 +399,7 @@ void Error_Handler(void);
 #define		NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION	(NUMBER_OF_RELAYS + 1)
 #define		MAIN_INPUT										(NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION - 1)
 
-#define		POWER_CONSUMPTION_OF_MCU						3
+#define		POWER_CONSUMPTION_OF_MCU						7
 
 #ifdef __cplusplus
 }
