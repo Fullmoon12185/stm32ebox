@@ -19,7 +19,7 @@
 
 #define		DEBUG_POWER(X)							X
 
-#define		MAX_CURRENT								500000
+#define		MAX_CURRENT								2000000
 //for distrist
 //#define		MAX_CURRENT_1							700000
 #define		MAX_CURRENT_1							700000
@@ -41,7 +41,7 @@
 #define 	MIN_PF									25
 #endif
 
-
+#define		TIME_OUT_FOR_INPUT_STABLE				(5000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_UNPLUG					(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE		(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY		(20000/INTERRUPT_TIMER_PERIOD)
@@ -103,9 +103,24 @@ uint32_t power_Timeout_Task_ID[NUMBER_OF_RELAYS]= {
 uint8_t power_Input_Source_TimeoutFlag = 0;
 uint32_t power_Input_Source_Task_ID = NO_TASK_ID;
 
-
-static uint8_t outletState[NUMBER_OF_RELAYS] = {
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+typedef enum{
+	OUTLET_IN_NORMAL_STATE = 0,
+	OUTLET_IN_CHARGING_STATE = 1,
+	OUTLET_IN_CHARGE_FULL_STATE = 2,
+	OUTLET_IN_ABNORMAL_STATE = 3,
+	OUTLET_WAIT_FOR_STABIBLITY_STATE = 4
+}OutletState;
+static OutletState outletState[NUMBER_OF_RELAYS] = {
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE,
+		OUTLET_IN_NORMAL_STATE
 };
 static uint32_t outletCounter[NUMBER_OF_RELAYS] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -386,22 +401,22 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID == 0){
-			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].workingTime););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-
-			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
-		}
+//		if(tempOutletID == 8){
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].workingTime););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].current););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].power););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\r\n", (int) Main.nodes[tempOutletID].energy););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
+//		}
 
 
 	}
@@ -554,6 +569,10 @@ void Display_OutLet_Status(uint8_t outletID){
 		}
 	}
 }
+
+
+
+
 void Process_Outlets(void){
 	static uint8_t tempOutletID = 0;
 	int32_t tempDefference;
@@ -562,7 +581,7 @@ void Process_Outlets(void){
 	if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x02) > 0) {	//return NOFUSE
 		Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
 		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_FUSE);
-		outletState[tempOutletID] = 3;
+		outletState[tempOutletID] = OUTLET_IN_ABNORMAL_STATE;
 
 	} else if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x01) > 0
 			&& (Get_Relay_Status(tempOutletID) == SET)
@@ -570,7 +589,7 @@ void Process_Outlets(void){
 
 		Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
 		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
-		outletState[tempOutletID] = 3;
+		outletState[tempOutletID] = OUTLET_IN_ABNORMAL_STATE;
 
 	} else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860
 		if(tempOutletID == 0 || tempOutletID == 1){
@@ -578,31 +597,30 @@ void Process_Outlets(void){
 				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
 				Reset_Relay(tempOutletID);
-				outletState[tempOutletID] = 3;
+				outletState[tempOutletID] = OUTLET_IN_ABNORMAL_STATE;
 			}
 		} else {
 			Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
 			Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
 			Reset_Relay(tempOutletID);
-			outletState[tempOutletID] = 3;
+			outletState[tempOutletID] = OUTLET_IN_ABNORMAL_STATE;
 		}
 	} else if (Main.nodes[tempOutletID].limitEnergy > 0
 			&& Main.nodes[tempOutletID].energy >= Main.nodes[tempOutletID].limitEnergy) {
 
 		Main.nodes[tempOutletID].nodeStatus = NODE_OVER_MONEY;
 		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_MONEY);
-		outletState[tempOutletID] = 3;
+		outletState[tempOutletID] = OUTLET_IN_ABNORMAL_STATE;
 
 	} else if (Main.nodes[tempOutletID].limitEnergy == 0) {
 		Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
-		outletState[tempOutletID] = 0;
+		outletState[tempOutletID] = OUTLET_IN_NORMAL_STATE;
 	} else {
 		switch(outletState[tempOutletID]){
-		case 0:
-			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT_FOR_START_CHARGING) {
-				Main.nodes[tempOutletID].nodeStatus = CHARGING;
-				outletCounter[tempOutletID] = 0;
-				outletState[tempOutletID] = 1;
+		case OUTLET_IN_NORMAL_STATE:
+			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
+				 Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_FOR_INPUT_STABLE);
+				 outletState[tempOutletID] = OUTLET_WAIT_FOR_STABIBLITY_STATE;
 			} else {
 				if(Get_Relay_Status(tempOutletID) == SET){
 					Main.nodes[tempOutletID].nodeStatus = NODE_READY;
@@ -611,40 +629,49 @@ void Process_Outlets(void){
 				}
 			}
 			break;
-		case 1:
+		case OUTLET_WAIT_FOR_STABIBLITY_STATE:
+			if(Is_Power_Timeout_Flag(tempOutletID)){
+				if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
+					Main.nodes[tempOutletID].nodeStatus = CHARGING;
+					outletCounter[tempOutletID] = 0;
+					outletState[tempOutletID] = OUTLET_IN_CHARGING_STATE;
+				} else {
+					outletState[tempOutletID] = OUTLET_IN_NORMAL_STATE;
+				}
+			}
+			break;
+		case OUTLET_IN_CHARGING_STATE:
 			if (Main.nodes[tempOutletID].current < MIN_CURRENT){
 				tempDefference = (int32_t)(Main.nodes[tempOutletID].previousCurrent - Main.nodes[tempOutletID].current);
 				if (tempDefference > CURRENT_CHANGING_THRESHOLD) {
 					Main.nodes[tempOutletID].nodeStatus = UNPLUG;
 					Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_UNPLUG);
-					outletState[tempOutletID] = 3;
+					outletState[tempOutletID] = OUTLET_IN_ABNORMAL_STATE;
 				} else {
 					outletCounter[tempOutletID]++;
 					if(outletCounter[tempOutletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
 						Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
 						outletCounter[tempOutletID] = 0;
 						Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
-						outletState[tempOutletID] = 2;
+						outletState[tempOutletID] = OUTLET_IN_CHARGE_FULL_STATE;
 					}
 				}
 			}
 			break;
-		case 2:
+		case OUTLET_IN_CHARGE_FULL_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
-//				Reset_Relay(tempOutletID);
-				outletState[tempOutletID] = 0;
+				outletState[tempOutletID] = OUTLET_IN_NORMAL_STATE;
 			}
 			break;
-		case 3:
+		case OUTLET_IN_ABNORMAL_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
-//				Reset_Relay(tempOutletID);
-				outletState[tempOutletID] = 0;
+				outletState[tempOutletID] = OUTLET_IN_NORMAL_STATE;
 			} else if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
-				outletState[tempOutletID] = 0;
+				outletState[tempOutletID] = OUTLET_IN_NORMAL_STATE;
 			}
 			break;
 		default:
-			outletState[tempOutletID] = 0;
+			outletState[tempOutletID] = OUTLET_IN_NORMAL_STATE;
 			break;
 		}
 	}

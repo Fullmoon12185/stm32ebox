@@ -12,6 +12,7 @@
 #include "app_string.h"
 #include "app_power.h"
 #include "app_pcf8574.h"
+#include "app_i2c_lcd.h"
 //#include "app_update_firmware.h"
 
 #define DEBUG_SIM3G(X)    						X
@@ -31,7 +32,7 @@
 #define COMMAND_TIME_OUT						(20000/INTERRUPT_TIMER_PERIOD)
 #define SETTING_TIME_OUT						(2000/INTERRUPT_TIMER_PERIOD)
 
-#define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(30000/INTERRUPT_TIMER_PERIOD) //10s
+#define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(20000/INTERRUPT_TIMER_PERIOD) //10s
 
 #define MAX_RETRY_NUMBER						3
 
@@ -607,12 +608,14 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 	uint8_t relayIndex;
 	uint8_t relayStatus;
 	uint16_t tempBoxID;
-
+	uint8_t strtmp3g[] = "                                      ";
+	UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer);
 	tempBoxID = (Sim3gDataProcessingBuffer[8+0] - 0x30)*1000;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+1] - 0x30)*100;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+2] - 0x30)*10;
 	tempBoxID += (Sim3gDataProcessingBuffer[8+3] - 0x30);
-
+	sprintf((char*) strtmp3g, "tempBoxID = %d\r\n", (int) tempBoxID);
+	UART3_SendToHost((uint8_t *)strtmp3g);
 	if(boxID == tempBoxID){
 		if(Sim3gDataProcessingBuffer[2 + lentopic] == COMMAND_ONLY){
 			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
@@ -644,6 +647,7 @@ void Processing_Update_Total_Power_Consumption(uint8_t * sub_topic, uint16_t box
 				updateTotalPowerConsumption = updateTotalPowerConsumption*10 + (Sim3gDataProcessingBuffer[2 + lentopic + idx] - 0x30);
 			}
 			Set_Main_Power_Consumption(updateTotalPowerConsumption);
+			Lcd_Clear_Display();
 		}
 	}
 }
@@ -741,17 +745,15 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1
 						|| readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
 				processDataState = PROCESSING_RECEIVED_DATA;
-				Clear_Sim3gDataProcessingBuffer();
+				UART3_SendToHost((uint8_t*)"PROCESSING_RECEIVED_DATA123\r\n");
 			}
 			else if((preReadCharacter == SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)){
 				processDataState = PROCESSING_RETAINED_DATA;
-				Clear_Sim3gDataProcessingBuffer();
 			}
 			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 					&& (readCharacter == LEN_FOR_UPDATE_POWER_CONSUPMPTION)){ //For update total power consumption
 				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
-				Clear_Sim3gDataProcessingBuffer();
 			}
 //			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 //					&& (readCharacter == LEN_FOR_UPDATE_FIRMWARE)){
@@ -832,12 +834,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			else
 			{
 				if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
-//					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
-//					sim3gDataProcessingBufferIndex++;
-//					Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0; //for end of string
 					Update_Sim3gDataProcessingBuffer(readCharacter);
 					if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH)
 					{
+						UART3_SendToHost((uint8_t*)"end PROCESSING_RECEIVED_DATA123\r\n");
 						Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_1, Get_Box_ID());
 						processDataState = CHECK_DATA_AVAILABLE_STATE;
 					}
@@ -860,9 +860,6 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				else
 				{
 					if(sim3gDataProcessingBufferIndex < RXBUFFERSIZE - 1){
-//						Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = readCharacter;
-//						sim3gDataProcessingBufferIndex++;
-//						Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0;
 						Update_Sim3gDataProcessingBuffer(readCharacter);
 						if(sim3gDataProcessingBufferIndex >= DATA_RETAINED_MESSAGE_LENGTH)
 						{
@@ -943,6 +940,9 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 
 void Update_Sim3gDataProcessingBuffer(uint8_t data){
 	if(data == 0) return;
+	if(sim3gDataProcessingBufferIndex >= RXBUFFERSIZE) {
+		sim3gDataProcessingBufferIndex = 0;
+	}
 	Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = data;
 	sim3gDataProcessingBufferIndex++;
 	Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex] = 0;
