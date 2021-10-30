@@ -648,6 +648,7 @@ void Processing_Update_Total_Power_Consumption(uint8_t * sub_topic, uint16_t box
 			}
 			Set_Main_Power_Consumption(updateTotalPowerConsumption);
 			Lcd_Clear_Display();
+			Show_Box_ID(Get_Box_ID());
 		}
 	}
 }

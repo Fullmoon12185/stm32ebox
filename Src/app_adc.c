@@ -642,19 +642,19 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 
-   			if(i == 8)
-				{
-					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-				}
+//   			if(i == 8)
+//				{
+//					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//				}
 
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
-				uint8_t voltage = 230;
+				uint8_t voltage = 235;
 				if(tempIrmsADCValue >= THRESHOLD_1){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				} else if(tempIrmsADCValue >= THRESHOLD_2){
