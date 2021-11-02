@@ -209,7 +209,7 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
 #elif (VERSION_EBOX == 2)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
-#elif (VERSION_EBOX == 3)
+#elif (VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
 #endif
 		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
@@ -401,7 +401,7 @@ void Reset_Signal_Low(void){
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #elif (VERSION_EBOX == 15)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
-#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3)
+#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3  || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #endif
 }
@@ -410,7 +410,7 @@ void Reset_Signal_High(void){
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #elif(VERSION_EBOX == 15) //sim5320
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);	
-#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3) //sim 7600
+#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3  || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A) //sim 7600
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #endif
 }
