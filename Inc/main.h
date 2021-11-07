@@ -63,7 +63,17 @@ void Error_Handler(void);
 
 #define		BOX_PLACE					BOX_GENERAL
 
-#define		VERSION_EBOX				3
+#define   VERSION_3_WITH_ALL_CT_5A       3
+#define   VERSION_4_WITH_8CT_5A_2CT_10A  4
+
+#define		VERSION_EBOX				VERSION_4_WITH_8CT_5A_2CT_10A
+
+
+#define   CT_10A_1                        8
+#define   CT_10A_2                        9
+
+
+#define   VOLTAGE_USAGE       			230
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
 #define		WATCHDOG_ENABLE 			1
 
@@ -71,7 +81,7 @@ void Error_Handler(void);
     #define		SIM5320	    				1
 #elif (VERSION_EBOX == 15)
     #define		SIM5320	    				1
-#elif(VERSION_EBOX == 2 || VERSION_EBOX == 3)
+#elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
     #define		SIM7600						1
 #endif
 //#define B1_Pin 							GPIO_PIN_13
@@ -229,7 +239,7 @@ void Error_Handler(void);
 #define 	NUMBER_OF_SAMPLES_PER_SECOND			275
 #define 	NUMBER_OF_ADC_CHANNELS					14
 
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
 #define 	ZERO_POINT_DETECTION_PORT				GPIOC
 #elif(VERSION_EBOX == 15)
@@ -368,7 +378,7 @@ void Error_Handler(void);
 #define RELAY_PORT_9						PB4_OUT9_PORT
 
 
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 #define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
 #define PD2_RELAY_ENABLE_PORT						GPIOD
 #endif
