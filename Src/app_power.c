@@ -48,7 +48,7 @@
 #endif
 
 #define		TIME_OUT_1_SECOND						(1000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_STABABILITY					(3000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_STABABILITY					(5000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_UNPLUG					(5000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE		(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY		(20000/INTERRUPT_TIMER_PERIOD)
@@ -624,7 +624,7 @@ void Process_Outlets(void){
 	} else {
 		switch(outletState[tempOutletID]){
 		case 0:
-			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT_FOR_START_CHARGING) {
+			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
 //				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 				outletCounter[tempOutletID] = 0;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_STABABILITY);

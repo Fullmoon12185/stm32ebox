@@ -66,7 +66,7 @@ void Error_Handler(void);
 #define   VERSION_3_WITH_ALL_CT_5A       3
 #define   VERSION_4_WITH_8CT_5A_2CT_10A  4
 
-#define		VERSION_EBOX				VERSION_4_WITH_8CT_5A_2CT_10A
+#define		VERSION_EBOX				VERSION_3_WITH_ALL_CT_5A
 
 
 #define   CT_10A_1                        8
