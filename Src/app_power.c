@@ -47,8 +47,9 @@
 #define 	MIN_PF									25
 #endif
 
-#define		TIME_OUT_STABABILITY					(5000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_UNPLUG					(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_1_SECOND						(1000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_STABABILITY					(3000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_UNPLUG					(5000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE		(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY		(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_CHARGE_FULL				(10000/INTERRUPT_TIMER_PERIOD)
@@ -57,7 +58,7 @@
 #define	    TIME_OUT_AFTER_DETECTING_OVER_MONEY		(10000/INTERRUPT_TIMER_PERIOD)
 #define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT		(5000/INTERRUPT_TIMER_PERIOD)
 
-#define			COUNT_FOR_DECIDE_CHARGE_FULL		10
+#define			COUNT_FOR_DECIDE_CHARGE_FULL		30
 
 
 typedef struct PowerNodes {
@@ -624,10 +625,10 @@ void Process_Outlets(void){
 		switch(outletState[tempOutletID]){
 		case 0:
 			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT_FOR_START_CHARGING) {
-				Main.nodes[tempOutletID].nodeStatus = CHARGING;
+//				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 				outletCounter[tempOutletID] = 0;
-//				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_STABABILITY);
-				outletState[tempOutletID] = 1;
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_STABABILITY);
+				outletState[tempOutletID] = 4;
 			} else {
 				if(Get_Relay_Status(tempOutletID) == SET){
 					Main.nodes[tempOutletID].nodeStatus = NODE_READY;
@@ -636,47 +637,52 @@ void Process_Outlets(void){
 				}
 			}
 			break;
-//		case 4:
-//			if(Is_Power_Timeout_Flag(tempOutletID)){
-//				if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
-//					Main.nodes[tempOutletID].nodeStatus = CHARGING;
-//					outletCounter[tempOutletID] = 0;
-//					outletState[tempOutletID] = 1;
-//				} else {
-//					outletState[tempOutletID] = 0;
-//				}
-//			}
-//			break;
+		case 4:
+			if(Is_Power_Timeout_Flag(tempOutletID)){
+				if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
+					Main.nodes[tempOutletID].nodeStatus = CHARGING;
+					outletCounter[tempOutletID] = 0;
+					outletState[tempOutletID] = 1;
+				} else {
+					outletState[tempOutletID] = 0;
+				}
+			}
+			break;
 		case 1:
 			if (Main.nodes[tempOutletID].current < MIN_CURRENT){
-				tempDefference = (int32_t)(Main.nodes[tempOutletID].previousCurrent - Main.nodes[tempOutletID].current);
-				if (tempDefference > CURRENT_CHANGING_THRESHOLD) {
-					Main.nodes[tempOutletID].nodeStatus = UNPLUG;
-					Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_UNPLUG);
-					outletState[tempOutletID] = 3;
-				} else {
-					outletCounter[tempOutletID]++;
-					if(outletCounter[tempOutletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
-						Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
-						outletCounter[tempOutletID] = 0;
-						Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
-						outletState[tempOutletID] = 2;
-					}
-				}
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_1_SECOND);
+				outletState[tempOutletID] = 5;
+			} else {
+				outletCounter[tempOutletID] = 0;
 			}
 			break;
 		case 2:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
-//				Reset_Relay(tempOutletID);
 				outletState[tempOutletID] = 0;
 			}
+
 			break;
-		case 3:
+//		case 3:
+//			if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
+//				outletState[tempOutletID] = 0;
+//			} else if(Is_Power_Timeout_Flag(tempOutletID)){
+//				Main.nodes[tempOutletID].nodeStatus = UNPLUG;
+//				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_UNPLUG*2);
+//				outletState[tempOutletID] = 2;
+//			}
+//			break;
+		case 5:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
-//				Reset_Relay(tempOutletID);
-				outletState[tempOutletID] = 0;
-			} else if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
-				outletState[tempOutletID] = 0;
+				outletCounter[tempOutletID]++;
+				if(outletCounter[tempOutletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
+					Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
+					outletCounter[tempOutletID] = 0;
+					Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
+					outletState[tempOutletID] = 2;
+				} else {
+					outletState[tempOutletID] = 1;
+				}
+
 			}
 			break;
 		default:

@@ -70,16 +70,22 @@
 #define		COEFFICIENT_8								1785
 
 //This is for CT 10 A
+
 #define		CT_10A_THRESHOLD_1							300
 #define		CT_10A_COEFF_1								2410
-#define		CT_10A_THRESHOLD_2							250
-#define		CT_10A_COEFF_2								2385
+#define		CT_10A_THRESHOLD_2A							280
+#define		CT_10A_COEFF_2A								2400
+#define		CT_10A_THRESHOLD_2B							260
+#define		CT_10A_COEFF_2B								2370
+
+#define		CT_10A_THRESHOLD_2							240
+#define		CT_10A_COEFF_2								2320
 
 #define		CT_10A_THRESHOLD_3							200
-#define		CT_10A_COEFF_3								2200
+#define		CT_10A_COEFF_3								2226
 
 #define		CT_10A_THRESHOLD_4							180
-#define		CT_10A_COEFF_4								2100
+#define		CT_10A_COEFF_4								2165
 
 #define		CT_10A_THRESHOLD_5							158
 #define		CT_10A_COEFF_5								2134
@@ -764,6 +770,10 @@ void PowerConsumption_FSM(void){
 				if(i == CT_10A_1 || i == CT_10A_2){
 					if(tempIrmsADCValue >= CT_10A_THRESHOLD_1){
 						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_2A){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_2A)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_2B){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_2B)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_2){
 						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_3){
