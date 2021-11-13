@@ -48,8 +48,8 @@
 #endif
 
 #define		TIME_OUT_1_SECOND						(1000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_STABABILITY					(5000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_UNPLUG					(5000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_STABABILITY					(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_UNPLUG					(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE		(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY		(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_CHARGE_FULL				(10000/INTERRUPT_TIMER_PERIOD)
@@ -625,7 +625,7 @@ void Process_Outlets(void){
 		switch(outletState[tempOutletID]){
 		case 0:
 			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
-//				Main.nodes[tempOutletID].nodeStatus = CHARGING;
+				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 				outletCounter[tempOutletID] = 0;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_STABABILITY);
 				outletState[tempOutletID] = 4;
@@ -640,7 +640,6 @@ void Process_Outlets(void){
 		case 4:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
 				if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
-					Main.nodes[tempOutletID].nodeStatus = CHARGING;
 					outletCounter[tempOutletID] = 0;
 					outletState[tempOutletID] = 1;
 				} else {
@@ -650,39 +649,32 @@ void Process_Outlets(void){
 			break;
 		case 1:
 			if (Main.nodes[tempOutletID].current < MIN_CURRENT){
-				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_1_SECOND);
-				outletState[tempOutletID] = 5;
-			} else {
-				outletCounter[tempOutletID] = 0;
+				tempDefference = (int32_t)(Main.nodes[tempOutletID].previousCurrent - Main.nodes[tempOutletID].current);
+				if (tempDefference > CURRENT_CHANGING_THRESHOLD) {
+					Main.nodes[tempOutletID].nodeStatus = UNPLUG;
+					Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_UNPLUG);
+					outletState[tempOutletID] = 3;
+				} else {
+					outletCounter[tempOutletID]++;
+					if(outletCounter[tempOutletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
+						Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
+						outletCounter[tempOutletID] = 0;
+						Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
+						outletState[tempOutletID] = 2;
+					}
+				}
 			}
 			break;
 		case 2:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
 				outletState[tempOutletID] = 0;
 			}
-
 			break;
-//		case 3:
-//			if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
-//				outletState[tempOutletID] = 0;
-//			} else if(Is_Power_Timeout_Flag(tempOutletID)){
-//				Main.nodes[tempOutletID].nodeStatus = UNPLUG;
-//				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_UNPLUG*2);
-//				outletState[tempOutletID] = 2;
-//			}
-//			break;
-		case 5:
+		case 3:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
-				outletCounter[tempOutletID]++;
-				if(outletCounter[tempOutletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
-					Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
-					outletCounter[tempOutletID] = 0;
-					Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
-					outletState[tempOutletID] = 2;
-				} else {
-					outletState[tempOutletID] = 1;
-				}
-
+				outletState[tempOutletID] = 0;
+			} else if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
+				outletState[tempOutletID] = 0;
 			}
 			break;
 		default:
