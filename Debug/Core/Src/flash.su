@@ -1,0 +1,9 @@
+flash.c:5:6:deleteBuffer	24	static
+flash.c:14:6:Flash_Lock	8	static
+flash.c:19:6:Flash_Unlock	8	static
+flash.c:24:6:Flash_Erase	16	static
+flash.c:35:6:Flash_Write_Int	16	static
+flash.c:46:10:Flash_Read_Int	24	static
+flash.c:52:6:Flash_Write_Char	24	static
+flash.c:70:6:Flash_ReadChar	40	static
+flash.c:88:6:Flash_ProgramPage	32	static
