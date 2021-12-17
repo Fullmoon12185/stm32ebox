@@ -22,7 +22,7 @@
 #define		MAX_CURRENT								700000
 //for distrist
 //#define		MAX_CURRENT_1							700000
-#define		MAX_CURRENT_1							700000
+#define		MAX_CURRENT_1							950000
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 #define		MAX_CURRENT								700000
 //for distrist
