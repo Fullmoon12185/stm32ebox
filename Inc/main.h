@@ -61,12 +61,12 @@ void Error_Handler(void);
 #define 	BOX_AT_XI					1
 #define	    BOX_GENERAL					2
 
-#define		BOX_PLACE					BOX_AT_XI
+#define		BOX_PLACE					BOX_GENERAL
 
 #define   VERSION_3_WITH_ALL_CT_5A       3
 #define   VERSION_4_WITH_8CT_5A_2CT_10A  4
 
-#define		VERSION_EBOX				VERSION_3_WITH_ALL_CT_5A
+#define		VERSION_EBOX				VERSION_4_WITH_8CT_5A_2CT_10A
 
 
 #define   CT_10A_1                        8
