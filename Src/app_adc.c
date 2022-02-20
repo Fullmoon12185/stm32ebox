@@ -706,7 +706,26 @@ void PowerConsumption_FSM(void){
 						coefficientForPF = 320;
 					}
 				}
+#elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+				if(i == CT_10A_1 || i == CT_10A_2){
+					if(tempIrmsADCValue > 230){
+						coefficientForPF = 270;
+					} if(tempIrmsADCValue > 100)
+						coefficientForPF = 300;
+					else {
+						coefficientForPF = 320;
+					}
 
+				} else {
+					if(tempIrmsADCValue > 230){
+						coefficientForPF = 300;
+					}
+					else if(tempIrmsADCValue > 140){
+						coefficientForPF = 290;
+					} else {
+						coefficientForPF = 320;
+					}
+				}
 #endif
 				tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
 
@@ -842,7 +861,83 @@ void PowerConsumption_FSM(void){
 						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_8)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 					}
 				}
-				
+#elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+				uint8_t voltage = VOLTAGE_USAGE;
+				if(i == CT_10A_1 || i == CT_10A_2){
+					if(tempIrmsADCValue >= CT_10A_THRESHOLD_1){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_2A){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_2A)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_2B){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_2B)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_2){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_3){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_3)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_4){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_5){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_6){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_7){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_7)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_8){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_8)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_9){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_9)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_10){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_10)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_11){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_11)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_12){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_12)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_13){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_13)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_14){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_14)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_15){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_15)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else {
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_16)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					}
+				} else {
+					if(tempIrmsADCValue >= THRESHOLD_1){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_2){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_A){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_A1){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_A2){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_A3){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A3)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_A4){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_A5){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_A6){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_A6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_B){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_B)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_3_BB){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_3_BB)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if(tempIrmsADCValue >= THRESHOLD_4){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if (tempIrmsADCValue >= THRESHOLD_5){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else if (tempIrmsADCValue >= THRESHOLD_6){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					}else if (tempIrmsADCValue >= THRESHOLD_7){
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_7)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					} else {
+						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* COEFFICIENT_8)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+					}
+				}				
 #else
 				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];
 				if(tempIrmsADCValue > 1000){
@@ -857,7 +952,7 @@ void PowerConsumption_FSM(void){
 
 
 			adcState = ADC_REPORT_POWER_DATA;
-			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
+//			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
 		} else {
 			externalInterruptCounter = 0;
 			adcState = ADC_FIND_ZERO_VOLTAGE_POINT;
@@ -870,7 +965,7 @@ void PowerConsumption_FSM(void){
 
 	case ADC_REPORT_POWER_DATA:
 		if(is_Adc_Reading_Timeout()){
-			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
+//			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
 			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; channelIndex++) {
 				array_Of_Vrms_ADC_Values[channelIndex]  = 0;
 				array_Of_Average_Vrms_ADC_Values[channelIndex] = 0;

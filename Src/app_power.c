@@ -28,10 +28,15 @@
 //for distrist
 //#define		MAX_CURRENT_1							700000
 #define		MAX_CURRENT_1							1000000
+#elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+#define		MAX_CURRENT								1000000
+//for distrist
+//#define		MAX_CURRENT_1							700000
+#define		MAX_CURRENT_1							1500000
 
 #endif
 
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 #define		MIN_CURRENT								30000
 #define		MIN_CURRENT_FOR_START_CHARGING			60000
 #define 	CURRENT_CHANGING_THRESHOLD				30000
@@ -86,9 +91,9 @@ typedef struct PowerSystems {
 	uint8_t internalTemp;
 
 	uint8_t powerFactor;
-	uint32_t previousEnergy;
-	uint32_t energy;
-	uint32_t limitEnergy;
+	uint64_t previousEnergy;
+	uint64_t energy;
+	uint64_t limitEnergy;
 	uint32_t workingTime;
 
 } PowerSystem;
@@ -296,13 +301,13 @@ void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 //		Eeprom_Update_LimitEnergy(outletID, limit_energy);
 	}
 }
-uint32_t Get_Main_Power_Consumption(void){
+uint64_t Get_Main_Power_Consumption(void){
 //	uint_t derivativeEnergy = Main.energy - Main.previousEnergy;
 //	Main.previousEnergy = Main.energy;
-	return (uint32_t)(Main.energy);
+	return (uint64_t)(Main.energy);
 }
 void Set_Main_Power_Consumption(uint64_t totalPowerConsumption){
-	Main.energy = (uint32_t)totalPowerConsumption;
+	Main.energy = (uint64_t)totalPowerConsumption;
 	Eeprom_Update_Main_Energy_Immediately(Main.energy);
 }
 
@@ -609,7 +614,22 @@ void Process_Outlets(void){
 			outletState[tempOutletID] = 3;
 		}
 	}
-
+#elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+	else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860
+		if(tempOutletID == CT_10A_1 || tempOutletID == CT_10A_2){
+			if (Main.nodes[tempOutletID].current > MAX_CURRENT_1){
+				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
+				Reset_Relay(tempOutletID);
+				outletState[tempOutletID] = 3;
+			}
+		} else {
+			Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
+			Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
+			Reset_Relay(tempOutletID);
+			outletState[tempOutletID] = 3;
+		}
+	}
 #endif
 	else if (Main.nodes[tempOutletID].limitEnergy > 0
 			&& Main.nodes[tempOutletID].energy >= Main.nodes[tempOutletID].limitEnergy) {

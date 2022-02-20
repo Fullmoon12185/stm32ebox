@@ -65,8 +65,9 @@ void Error_Handler(void);
 
 #define   VERSION_3_WITH_ALL_CT_5A       3
 #define   VERSION_4_WITH_8CT_5A_2CT_10A  4
+#define   VERSION_5_WITH_8CT_10A_2CT_20A 5
 
-#define		VERSION_EBOX				VERSION_4_WITH_8CT_5A_2CT_10A
+#define		VERSION_EBOX				VERSION_5_WITH_8CT_10A_2CT_20A
 
 
 #define   CT_10A_1                        8
@@ -82,6 +83,8 @@ void Error_Handler(void);
 #elif (VERSION_EBOX == 15)
     #define		SIM5320	    				1
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
+    #define		SIM7600						1
+#elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
     #define		SIM7600						1
 #endif
 //#define B1_Pin 							GPIO_PIN_13
@@ -239,7 +242,7 @@ void Error_Handler(void);
 #define 	NUMBER_OF_SAMPLES_PER_SECOND			275
 #define 	NUMBER_OF_ADC_CHANNELS					14
 
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
 #define 	ZERO_POINT_DETECTION_PORT				GPIOC
 #elif(VERSION_EBOX == 15)
@@ -339,11 +342,18 @@ void Error_Handler(void);
 #define PB9_OUT3_PORT					GPIOB
 #define PA15_OUT4						GPIO_PIN_15
 #define PA15_OUT4_PORT					GPIOA
+#if(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+	#define PC10_OUT5						GPIO_PIN_14
+	#define PC10_OUT5_PORT					GPIOC
+	#define PC11_OUT6						GPIO_PIN_15
+	#define PC11_OUT6_PORT					GPIOC
+#else
+	#define PC10_OUT5						GPIO_PIN_10
+	#define PC10_OUT5_PORT					GPIOC
+	#define PC11_OUT6						GPIO_PIN_11
+	#define PC11_OUT6_PORT					GPIOC
+#endif
 
-#define PC10_OUT5						GPIO_PIN_10
-#define PC10_OUT5_PORT					GPIOC
-#define PC11_OUT6						GPIO_PIN_11
-#define PC11_OUT6_PORT					GPIOC
 #define PC12_OUT7						GPIO_PIN_12
 #define PC12_OUT7_PORT					GPIOC
 
@@ -378,7 +388,7 @@ void Error_Handler(void);
 #define RELAY_PORT_9						PB4_OUT9_PORT
 
 
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 #define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
 #define PD2_RELAY_ENABLE_PORT						GPIOD
 #endif

@@ -77,7 +77,7 @@ typedef struct Commands {
 
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period);
 
-uint32_t Get_Main_Power_Consumption(void);
+uint64_t Get_Main_Power_Consumption(void);
 void Set_Main_Power_Consumption(uint64_t totalPowerConsumption);
 
 uint8_t Get_Main_Power_Factor(void);

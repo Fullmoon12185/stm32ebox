@@ -29,9 +29,9 @@ void Setup_Eeprom(void);
 void Write_First_Byte(uint8_t value);
 uint8_t Read_First_Byte(void);
 
-uint32_t Eeprom_Get_Main_Energy(void);
-void Eeprom_Update_Main_Energy(uint32_t main_energy);
-void Eeprom_Update_Main_Energy_Immediately(uint32_t main_energy);
+uint64_t Eeprom_Get_Main_Energy(void);
+void Eeprom_Update_Main_Energy(uint64_t main_energy);
+void Eeprom_Update_Main_Energy_Immediately(uint64_t main_energy);
 //boolean eeprom_is_channel_change(uint8_t outletIndex);
 void Eeprom_Initialize();
 uint8_t Eeprom_Read_Outlet  (uint8_t outletIndex, uint8_t * status, uint32_t * energy, uint32_t * limitEnergy, uint32_t *workingTime);
