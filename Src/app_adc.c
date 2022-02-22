@@ -952,7 +952,7 @@ void PowerConsumption_FSM(void){
 
 
 			adcState = ADC_REPORT_POWER_DATA;
-//			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
+			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
 		} else {
 			externalInterruptCounter = 0;
 			adcState = ADC_FIND_ZERO_VOLTAGE_POINT;
@@ -960,12 +960,13 @@ void PowerConsumption_FSM(void){
 
 		if(is_Adc_Reading_Timeout()){
 			adcState = ADC_REPORT_POWER_DATA;
+
 		}
 		break;
 
 	case ADC_REPORT_POWER_DATA:
 		if(is_Adc_Reading_Timeout()){
-//			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
+			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
 			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; channelIndex++) {
 				array_Of_Vrms_ADC_Values[channelIndex]  = 0;
 				array_Of_Average_Vrms_ADC_Values[channelIndex] = 0;
@@ -975,7 +976,6 @@ void PowerConsumption_FSM(void){
 			adcState = ADC_SETUP_TIMER_ONE_SECOND;
 		}
 		break;
-
 	default:
 		adcState = ADC_REPORT_POWER_DATA;
 		break;

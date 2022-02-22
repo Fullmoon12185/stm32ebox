@@ -319,73 +319,75 @@ void Error_Handler(void);
 #define SAC29				19
 
 //Relay
-#define	NUMBER_OF_RELAYS	10
-#define RELAY_0				0
-#define RELAY_1				1
-#define RELAY_2				2
-#define RELAY_3				3
-#define RELAY_4				4
-#define RELAY_5				5
-#define RELAY_6				6
-#define RELAY_7				7
-#define RELAY_8				8
-#define RELAY_9				9
+#define	NUMBER_OF_RELAYS				10
+#define RELAY_0							0
+#define RELAY_1							1
+#define RELAY_2							2
+#define RELAY_3							3
+#define RELAY_4							4
+#define RELAY_5							5
+#define RELAY_6							6
+#define RELAY_7							7
+#define RELAY_8							8
+#define RELAY_9				      		9
 
 //Relay control pins and ports
-#define PA11_OUT0						GPIO_PIN_11
-#define PA11_OUT0_PORT					GPIOA
-#define PA12_OUT1						GPIO_PIN_12
-#define PA12_OUT1_PORT					GPIOA
-#define PB8_OUT2						GPIO_PIN_8
-#define PB8_OUT2_PORT					GPIOB
-#define PB9_OUT3						GPIO_PIN_9
-#define PB9_OUT3_PORT					GPIOB
-#define PA15_OUT4						GPIO_PIN_15
-#define PA15_OUT4_PORT					GPIOA
+#define PA11_OUT0							GPIO_PIN_11
+#define PA11_OUT0_PORT						GPIOA
+#define PA12_OUT1							GPIO_PIN_12
+#define PA12_OUT1_PORT						GPIOA
+#define PB8_OUT2							GPIO_PIN_8
+#define PB8_OUT2_PORT						GPIOB
+#define PB9_OUT3							GPIO_PIN_9
+#define PB9_OUT3_PORT						GPIOB
+#define PA15_OUT4							GPIO_PIN_15
+#define PA15_OUT4_PORT						GPIOA
+
 #if(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	#define PC10_OUT5						GPIO_PIN_14
-	#define PC10_OUT5_PORT					GPIOC
-	#define PC11_OUT6						GPIO_PIN_15
-	#define PC11_OUT6_PORT					GPIOC
+	#define PC10_OUT5							GPIO_PIN_14
+	#define PC10_OUT5_PORT						GPIOC
+	#define PC11_OUT6							GPIO_PIN_15
+	#define PC11_OUT6_PORT						GPIOC
 #else
-	#define PC10_OUT5						GPIO_PIN_10
-	#define PC10_OUT5_PORT					GPIOC
-	#define PC11_OUT6						GPIO_PIN_11
-	#define PC11_OUT6_PORT					GPIOC
+	#define PC10_OUT5							GPIO_PIN_10
+	#define PC10_OUT5_PORT						GPIOC
+	#define PC11_OUT6							GPIO_PIN_11
+	#define PC11_OUT6_PORT						GPIOC
 #endif
 
-#define PC12_OUT7						GPIO_PIN_12
-#define PC12_OUT7_PORT					GPIOC
+#define PC12_OUT7								GPIO_PIN_12
+#define PC12_OUT7_PORT							GPIOC
 
-#define PB3_OUT8						GPIO_PIN_3
-#define PB3_OUT8_PORT					GPIOB
+#define PB3_OUT8								GPIO_PIN_3
+#define PB3_OUT8_PORT							GPIOB
 
-#define PB4_OUT9						GPIO_PIN_4
-#define PB4_OUT9_PORT					GPIOB
+#define PB4_OUT9								GPIO_PIN_4
+#define PB4_OUT9_PORT							GPIOB
 
 
 
-#define RELAY_PIN_0						PA11_OUT0
-#define RELAY_PIN_1						PA12_OUT1
-#define RELAY_PIN_2						PB8_OUT2
-#define RELAY_PIN_3						PB9_OUT3
-#define RELAY_PIN_4						PA15_OUT4
-#define RELAY_PIN_5						PC10_OUT5
-#define RELAY_PIN_6						PC11_OUT6
-#define RELAY_PIN_7						PC12_OUT7
-#define RELAY_PIN_8						PB3_OUT8
-#define RELAY_PIN_9						PB4_OUT9
 
-#define RELAY_PORT_0						PA11_OUT0_PORT
-#define RELAY_PORT_1						PA12_OUT1_PORT
-#define RELAY_PORT_2						PB8_OUT2_PORT
-#define RELAY_PORT_3						PB9_OUT3_PORT
-#define RELAY_PORT_4						PA15_OUT4_PORT
-#define RELAY_PORT_5						PC10_OUT5_PORT
-#define RELAY_PORT_6						PC11_OUT6_PORT
-#define RELAY_PORT_7						PC12_OUT7_PORT
-#define RELAY_PORT_8						PB3_OUT8_PORT
-#define RELAY_PORT_9						PB4_OUT9_PORT
+	#define RELAY_PIN_0							PA11_OUT0
+	#define RELAY_PIN_1							PA12_OUT1
+	#define RELAY_PIN_2							PB8_OUT2
+	#define RELAY_PIN_3							PB9_OUT3
+	#define RELAY_PIN_4							PA15_OUT4
+	#define RELAY_PIN_5							PC10_OUT5
+	#define RELAY_PIN_6							PC11_OUT6
+	#define RELAY_PIN_7							PC12_OUT7
+	#define RELAY_PIN_8							PB3_OUT8
+	#define RELAY_PIN_9							PB4_OUT9
+
+	#define RELAY_PORT_0						PA11_OUT0_PORT
+	#define RELAY_PORT_1						PA12_OUT1_PORT
+	#define RELAY_PORT_2						PB8_OUT2_PORT
+	#define RELAY_PORT_3						PB9_OUT3_PORT
+	#define RELAY_PORT_4						PA15_OUT4_PORT
+	#define RELAY_PORT_5						PC10_OUT5_PORT
+	#define RELAY_PORT_6						PC11_OUT6_PORT
+	#define RELAY_PORT_7						PC12_OUT7_PORT
+	#define RELAY_PORT_8						PB3_OUT8_PORT
+	#define RELAY_PORT_9						PB4_OUT9_PORT
 
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
@@ -394,8 +396,8 @@ void Error_Handler(void);
 #endif
 
 #if(VERSION_EBOX == 15)
-#define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
-#define PD2_RELAY_ENABLE_PORT						GPIOD
+#define PD2_RELAY_ENABLE_PIN						           GPIO_PIN_2
+#define PD2_RELAY_ENABLE_PORT						           GPIOD
 #endif
 
 
@@ -409,17 +411,17 @@ void Error_Handler(void);
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2 				17
 
 
-#define 	LEN_FOR_UPDATE_POWER_CONSUPMPTION 				24
+#define 	LEN_FOR_UPDATE_POWER_CONSUPMPTION 				    24
 
 #define 	SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE				49
 #define		DATA_RETAINED_MESSAGE_LENGTH						51
 #define 	LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE			51
 
 
-#define		NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION	(NUMBER_OF_RELAYS + 1)
-#define		MAIN_INPUT										(NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION - 1)
+#define		NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION	    (NUMBER_OF_RELAYS + 1)
+#define		MAIN_INPUT										    (NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION - 1)
 
-#define		POWER_CONSUMPTION_OF_MCU						7
+#define		POWER_CONSUMPTION_OF_MCU						    7
 
 #ifdef __cplusplus
 }

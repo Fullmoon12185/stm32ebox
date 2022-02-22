@@ -15,7 +15,33 @@ WorkingStatus array_Of_Fuse_Statuses[NUMBER_OF_RELAYS];
 FlagStatus isUpdateRelayStatus = RESET;
 
 void Update_Relay_Physical_Status(void);
+#if(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+uint16_t array_Of_Relay_Pins[NUMBER_OF_RELAYS] = {
+		RELAY_PIN_0,
+		RELAY_PIN_1,
+		RELAY_PIN_2,
+		RELAY_PIN_3,
+		RELAY_PIN_4,
+		RELAY_PIN_5,
+		RELAY_PIN_6,
+		RELAY_PIN_7,
+		RELAY_PIN_8,
+		RELAY_PIN_9
+};
 
+GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
+		RELAY_PORT_0,
+		RELAY_PORT_1,
+		RELAY_PORT_2,
+		RELAY_PORT_3,
+		RELAY_PORT_4,
+		RELAY_PORT_5,
+		RELAY_PORT_6,
+		RELAY_PORT_7,
+		RELAY_PORT_8,
+		RELAY_PORT_9
+};
+#else
 uint16_t array_Of_Relay_Pins[NUMBER_OF_RELAYS] = {
 		RELAY_PIN_6,
 		RELAY_PIN_5,
@@ -42,7 +68,7 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 		RELAY_PORT_7
 };
 
-
+#endif
 static uint32_t relay_TimeoutFlag_Index = NO_TASK_ID;
 uint8_t set_Relay_TimeoutFlag = 1;
 
