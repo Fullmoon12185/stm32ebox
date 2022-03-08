@@ -1,0 +1,16 @@
+app_uart.c:34:19:UART_SIM7600_Init	8	static
+app_uart.c:69:6:UART_SIM7600_Transmit	24	static
+app_uart.c:97:6:UART_SIM7600_Transmit_Size	16	static
+app_uart.c:121:9:UART_SIM7600_Received_Buffer_Available	4	static
+app_uart.c:136:9:UART_SIM7600_Read_Received_Buffer	16	static
+app_uart.c:151:19:UART_DEBUG_Init	8	static
+app_uart.c:185:6:UART_DEBUG_Transmit	24	static
+app_uart.c:203:6:UART_DEBUG_Transmit_Size	16	static
+app_uart.c:217:6:Start_Receive_IT	8	static
+app_uart.c:230:6:Stop_Receive_IT	8	static
+app_uart.c:242:6:HAL_UART_RxCpltCallback	16	static
+app_uart.c:256:6:HAL_UART_TxCpltCallback	16	static
+app_uart.c:268:6:Clear_Reiceive_Buffer	8	static
+app_uart.c:274:11:Get_rxHead_Address	4	static
+app_uart.c:278:11:Get_rxTail_Address	4	static
+app_uart.c:282:11:Get_RxBuffer_Address	4	static
