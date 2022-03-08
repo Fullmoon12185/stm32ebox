@@ -1,9 +1,0 @@
-app_relay.c:49:6:Clear_Relay_Timeout_Flag	4	static
-app_relay.c:52:6:Set_Relay_Timeout_Flag	4	static
-app_relay.c:55:9:is_Set_Relay_Timeout	4	static
-app_relay.c:59:6:Relay_Init	16	static
-app_relay.c:67:6:Set_Relay	16	static
-app_relay.c:80:6:Reset_Relay	16	static
-app_relay.c:93:6:Update_Relay_Physical_Status	16	static
-app_relay.c:100:12:Get_Relay_Status	16	static
-app_relay.c:103:12:Get_Is_Update_Relay_Status	4	static

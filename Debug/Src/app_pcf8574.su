@@ -1,6 +1,0 @@
-app_pcf8574.c:33:6:PCF_Init	8	static
-app_pcf8574.c:38:9:PCF_Scan	16	static
-app_pcf8574.c:59:10:Get_All_Relay_Fuse_Statuses	4	static
-app_pcf8574.c:63:6:PCF_read	16	static
-app_pcf8574.c:96:9:PCF_read1	24	static
-app_pcf8574.c:112:6:Set_Input_PCF_Pins	24	static
