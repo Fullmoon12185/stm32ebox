@@ -69,10 +69,13 @@ void Error_Handler(void);
 
 #define		VERSION_EBOX				VERSION_5_WITH_8CT_10A_2CT_20A
 
-
-#define   CT_10A_1                        8
-#define   CT_10A_2                        9
-
+#if(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
+	#define   CT_10A_1                        8
+	#define   CT_10A_2                        9
+#elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+	#define   CT_20A_1                        0
+	#define   CT_20A_2                        1
+#endif
 
 #define   VOLTAGE_USAGE       			230
 #define		INTERRUPT_TIMER_PERIOD		10 //ms

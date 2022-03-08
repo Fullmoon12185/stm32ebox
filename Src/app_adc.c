@@ -707,15 +707,15 @@ void PowerConsumption_FSM(void){
 					}
 				}
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-				if(i == CT_10A_1 || i == CT_10A_2){
-					if(tempIrmsADCValue > 230){
-						coefficientForPF = 270;
-					} if(tempIrmsADCValue > 100)
-						coefficientForPF = 300;
-					else {
-						coefficientForPF = 320;
-					}
-
+				if(i == CT_20A_1 || i == CT_20A_2){
+//					if(tempIrmsADCValue > 230){
+//						coefficientForPF = 270;
+//					} if(tempIrmsADCValue > 100)
+//						coefficientForPF = 300;
+//					else {
+//						coefficientForPF = 320;
+//					}
+					coefficientForPF = 269;
 				} else {
 					if(tempIrmsADCValue > 230){
 						coefficientForPF = 300;
@@ -734,7 +734,7 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 
-				if(i == 9)
+				if(i == 0)
 				{
 					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
 					UART3_SendToHost((uint8_t *)strtmp);
@@ -863,7 +863,7 @@ void PowerConsumption_FSM(void){
 				}
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 				uint8_t voltage = VOLTAGE_USAGE;
-				if(i == CT_10A_1 || i == CT_10A_2){
+				if(i == CT_20A_1 || i == CT_20A_2){
 					if(tempIrmsADCValue >= CT_10A_THRESHOLD_1){
 						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_10A_COEFF_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 					} else if(tempIrmsADCValue >= CT_10A_THRESHOLD_2A){

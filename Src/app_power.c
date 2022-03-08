@@ -32,7 +32,7 @@
 #define		MAX_CURRENT								1000000
 //for distrist
 //#define		MAX_CURRENT_1							700000
-#define		MAX_CURRENT_1							1500000
+#define		MAX_CURRENT_1							3000000
 
 #endif
 
@@ -397,7 +397,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID == 9){
+		if(tempOutletID == 0){
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
@@ -616,7 +616,7 @@ void Process_Outlets(void){
 	}
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860
-		if(tempOutletID == CT_10A_1 || tempOutletID == CT_10A_2){
+		if(tempOutletID == CT_20A_1 || tempOutletID == CT_20A_2){
 			if (Main.nodes[tempOutletID].current > MAX_CURRENT_1){
 				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
