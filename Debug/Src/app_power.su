@@ -1,0 +1,7 @@
+app_power.c:52:6:Node_Setup	16	static
+app_power.c:81:6:Node_Check	24	static
+app_power.c:145:6:Set_Limit_Energy	16	static
+app_power.c:151:10:Get_Power_Consumption	16	static
+app_power.c:158:6:Node_Update	24	static
+app_power.c:194:6:Power_Setup	8	static
+app_power.c:200:6:Power_Loop	16	static

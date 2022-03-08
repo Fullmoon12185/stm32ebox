@@ -1,0 +1,11 @@
+app_25LC512.c:21:6:MC25LC512_CS	16	static
+app_25LC512.c:37:6:MC25LC512_WriteEnableOrDisable	24	static
+app_25LC512.c:53:9:MC25LC512_ReleaseDeepPowerDownMode	16	static
+app_25LC512.c:74:6:MC25LC512_Initilize	8	static
+app_25LC512.c:83:6:MC25LC512_Write_Bytes	24	static
+app_25LC512.c:102:6:MC25LC512_Write_HalfWords	24	static
+app_25LC512.c:127:6:MC25LC512_Write_Words	32	static
+app_25LC512.c:153:9:MC25LC512_ReadStatusRegister	16	static
+app_25LC512.c:168:9:MC25LC512_Read_Bytes	24	static
+app_25LC512.c:190:9:MC25LC512_Read_HalfWords	24	static
+app_25LC512.c:215:10:MC25LC512_Read_Words	24	static

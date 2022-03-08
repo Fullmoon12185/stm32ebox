@@ -1,0 +1,7 @@
+app_test.c:23:6:test1	8	static
+app_test.c:42:6:test3	8	static
+app_test.c:48:6:test2	8	static
+app_test.c:52:6:test4	8	static
+app_test.c:63:6:test5	8	static
+app_test.c:68:6:test6	4	static
+app_test.c:71:6:test7	8	static

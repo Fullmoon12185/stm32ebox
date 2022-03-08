@@ -1,0 +1,4 @@
+app_spi.c:19:6:SPI1_Init	4	static
+app_spi.c:24:6:SPI2_Init	8	static
+app_spi.c:59:6:ResetChipSelect	8	static
+app_spi.c:63:6:SetChipSelect	8	static

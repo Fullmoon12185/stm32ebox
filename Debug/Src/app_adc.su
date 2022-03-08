@@ -1,0 +1,13 @@
+app_adc.c:86:6:HAL_ADC_ConvCpltCallback	16	static
+app_adc.c:96:6:ADC1_Init	24	static
+app_adc.c:238:6:HAL_GPIO_EXTI_Callback	16	static
+app_adc.c:246:6:ADC_DMA_Init	16	static
+app_adc.c:258:6:ADC_Start_Getting_Values	8	static
+app_adc.c:262:6:ADC_Stop_Getting_Values	8	static
+app_adc.c:267:6:Adc_Clear_Timeout_Flag	4	static
+app_adc.c:270:6:Adc_Reading_Timeout	4	static
+app_adc.c:273:9:is_Adc_Reading_Timeout	4	static
+app_adc.c:279:6:Zero_Point_Detection	8	static
+app_adc.c:296:12:Is_Done_Getting_ADC	4	static
+app_adc.c:305:6:PowerConsumption_FSM	40	static
+app_adc.c:809:6:Adc_State_Display	8	static

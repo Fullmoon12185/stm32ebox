@@ -1,0 +1,2 @@
+app_string.c:11:9:GetStringLength	24	static
+app_string.c:32:10:Buffercmp	24	static

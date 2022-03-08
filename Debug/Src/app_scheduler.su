@@ -1,0 +1,5 @@
+app_scheduler.c:10:6:SCH_Update	16	static
+app_scheduler.c:30:9:SCH_Add_Task	32	static
+app_scheduler.c:48:6:SCH_Dispatch_Tasks	16	static
+app_scheduler.c:63:9:SCH_Delete_Task	24	static
+app_scheduler.c:79:12:isTaskDone	16	static
