@@ -66,6 +66,31 @@ void Error_Handler(void);
 #define   VERSION_3_WITH_ALL_CT_5A       3
 #define   VERSION_4_WITH_8CT_5A_2CT_10A  4
 
+/*
+ * Firmware Choosen
+ */
+#define FOTA_FIRMWARE_CHOOSEN		0
+#define FACTORY_FIRMWARE_CHOOSEN	1
+#define CURRENT_FIRMWARE_CHOOSEN	2
+/*
+ * Update Firmware Status
+ */
+#define UPDATE_SUCCESS				0
+#define UPDATE_FAILED				1
+/* USER CODE END ET */
+
+/* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+#define BOOTLOADER_FIRMWARE_ADDR	0x08000000			// Address of Bootloader Firmware
+#define FOTA_FIRMWARE_ADDR			0x08005000			// Factory have 100KBytes from 0x08005800
+#define CURRENT_FIRMWARE_ADDR		0x08020000			// Bootloader have 20KBytes from 0x08000000
+#define FACTORY_FIRMWARE_ADDR		0x08040000			// FOTA have 50Kbytes from 0x0801E000
+#define FIRMWARE_CHOOSEN			0x08060000			// Address for choose what firmware MCU will run
+#define FACTORY_VERSION_ADDR		0x08070000			// Address contain FACTORY Firmware Version
+#define CURRENT_VERSION_ADDR		0x08075000			// Address contain CURRENT Firmware Version
+#define UPDATE_STATUS_ADDR			0x08076000			// Address contain FACTORY Firmware Version
+
+
 #define		VERSION_EBOX				VERSION_3_WITH_ALL_CT_5A
 
 
