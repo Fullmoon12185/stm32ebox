@@ -46,7 +46,7 @@ void AT_Processing(){
 	}
 	else if(UART_SIM7600_Received_Buffer_Available()){
 		data_respone[data_respone_index]=UART_SIM7600_Read_Received_Buffer();
-//		UART_DEBUG_Transmit_Size(data_respone + data_respone_index, 1);
+		UART_DEBUG_Transmit_Size(data_respone + data_respone_index, 1);
 //		LOG("1");
 		data_respone_index++;
 

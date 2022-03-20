@@ -17,12 +17,10 @@ static uint8_t ret;
 
 void Start_Simcom();
 void Version_Checking_Http();
-void Copy_New_Firmware();
 
 FSM_Machine_TypeDef fsm_state_machine[]={
 		{START_SIMCOM				, 		Start_Simcom				},
 		{VERSION_CHECKING_HTTP		, 		Version_Checking_Http		},
-		{COPY_NEW_FIRMWARE			,	 	Copy_New_Firmware			},
 };
 
 /**
@@ -38,9 +36,6 @@ void FSM_Display_State(void){
 				break;
 			case VERSION_CHECKING_HTTP:
 				LOG("\r\nVERSION CHECKING HTTP\r\n");
-				break;
-			case COPY_NEW_FIRMWARE:
-				LOG("\r\nCOPY NEW FIRMWARE\r\n");
 				break;
 			default:
 				break;
@@ -72,16 +67,16 @@ void Start_Simcom(){
 }
 void Version_Checking_Http(){
 	ret = HTTP_Run();
-//	LOG("1");
 	if(ret == 1){
 		LOG("Get into\r\n");
 		if(Get_Update_Firmware_Status() == UPDATE_FAILED){
 			LOG("Get into Update Failed\r\n");
-			Jump_To_Current_Firmware();
+			Jump_To_Factory_Firmware();
 		}
 		else{
 			LOG("Get into Update Success\r\n");
 			fsm_curr_state = COPY_NEW_FIRMWARE;
+			Jump_To_Current_Firmware();
 		}
 	}
 	else if(ret == 2){
@@ -91,13 +86,6 @@ void Version_Checking_Http(){
 	}
 }
 
-void Copy_New_Firmware(){
-	for (uint16_t var = 0; var < FIRMWARE_PAGE_LENGTH; ++var) {
-		Flash_Erase( CURRENT_FIRMWARE_ADDR + var * PAGESIZE, PAGESIZE);
-		Flash_Write_Char(CURRENT_FIRMWARE_ADDR + var * PAGESIZE, TEMP_FIRMWARE_ADDR + var * PAGESIZE, PAGESIZE);
-	}
-	Jump_To_Current_Firmware();
-}
 
 FSM_State_Typedef FSM_Get_State(){
 	return fsm_curr_state;

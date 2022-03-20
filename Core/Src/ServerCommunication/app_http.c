@@ -45,7 +45,7 @@ uint16_t firmware_checksum = 0;
 uint8_t checksum = 0;
 uint32_t http_response_remain = 0;
 uint8_t firmware_data[PAGESIZE*2];
-uint32_t firmware_address = TEMP_FIRMWARE_ADDR;
+uint32_t firmware_address = CURRENT_FIRMWARE_ADDR;
 uint16_t firmware_index = 0;
 uint32_t firmware_size = 0;
 uint16_t one_kb_index = 0;
@@ -334,19 +334,20 @@ void HTTP_Wait_For_Read(){
 						sprintf(log,"\r\nchecksum : %d\r\n",checksum);
 						LOG(log);
 						if(checksum == firmware_checksum){
+							LOG("Checksum is correct");
+							Update_Firmware_Success();
+							Jump_To_Current_Firmware();
 							http_state = HTTP_DONE;
 							started_record_firmware = RESET;
-							Update_Firmware_Success();
-							LOG("After Erase done\r\n");
 						}
 						else{
+							LOG("Checksum is incorrect");
+							Update_Firmware_Failed();
+							Jump_To_Factory_Firmware();
 							http_state = HTTP_DONE;
 							started_record_firmware = RESET;
-							Update_Firmware_Failed();
 						}
-						LOG("a");
 					}
-					LOG("b");
 				}
 			}
 			break;
@@ -398,16 +399,17 @@ void HTTP_Wait_For_Read(){
 					sprintf(log,"\r\nchecksum : %d\r\n",checksum);
 					LOG(log);
 					if(checksum == firmware_checksum){
+						LOG("checksum_ok");
 						http_state = HTTP_DONE;
 						started_record_firmware = RESET;
 						Update_Firmware_Success();
 					}
 					else{
 						http_state = HTTP_DONE;
+						LOG("checksum_error");
 						started_record_firmware = RESET;
 						Update_Firmware_Failed();
 					}
-
 				}
 			}
 			break;
@@ -510,17 +512,18 @@ uint16_t Get_IntegerValue_From_HTTP_Respone(){
 	if(UART_SIM7600_Received_Buffer_Available()){
 		uint8_t val_of_character = UART_SIM7600_Read_Received_Buffer();
 		if(data_index_2 ++< 2){
-//			UART_DEBUG_Transmit("1");
+			UART_DEBUG_Transmit("1");
 			return 0xFFFF;
 		}
 		if(val_of_character!=','){
-//			UART_DEBUG_Transmit("2");
+			UART_DEBUG_Transmit("2");
 			result = result *10 + (uint8_t)val_of_character-48;
 			return 0xFFFF;
 		}
 		else{
-//			sprintf(log,"\r\n%d",result);
-//			UART_DEBUG_Transmit(log);
+			sprintf(log,"\r\n%d",result);
+			UART_DEBUG_Transmit("3\r\n");
+			UART_DEBUG_Transmit(log);
 			data_index_2 = 0;
 			return result;
 		}

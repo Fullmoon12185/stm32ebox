@@ -41,7 +41,7 @@ extern "C" {
  * Firmware Choosen
  */
 #define FOTA_FIRMWARE_CHOOSEN		0
-#define TEMP_FIRMWARE_CHOOSEN	1
+#define FACTORY_FIRMWARE_CHOOSEN	1
 #define CURRENT_FIRMWARE_CHOOSEN	2
 /*
  * Update Firmware Status
@@ -52,16 +52,19 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+
+
 #define BOOTLOADER_FIRMWARE_ADDR	0x08000000			// Address of Bootloader Firmware
-#define FOTA_FIRMWARE_ADDR			0x08005000			// Factory have 100KBytes from 0x08005800
-#define CURRENT_FIRMWARE_ADDR		0x08020000			// Bootloader have 20KBytes from 0x08000000
-#define TEMP_FIRMWARE_ADDR			0x08040000			// FOTA have 50Kbytes from 0x0801E000
+#define FACTORY_FIRMWARE_ADDR		0x08005000			// Bootloader have 20KBytes from 0x08000000
+#define FOTA_FIRMWARE_ADDR			0x0801E000			// Factory have 100KBytes from 0x08005800
+#define CURRENT_FIRMWARE_ADDR		0x08040000			// FOTA have 50Kbytes from 0x0801E000
 #define FIRMWARE_CHOOSEN			0x08060000			// Address for choose what firmware MCU will run
-#define TEMP_VERSION_ADDR			0x08070000			// Address contain FACTORY Firmware Version
+#define FACTORY_VERSION_ADDR		0x08070000			// Address contain FACTORY Firmware Version
 #define CURRENT_VERSION_ADDR		0x08075000			// Address contain CURRENT Firmware Version
 #define UPDATE_STATUS_ADDR			0x08076000			// Address contain FACTORY Firmware Version
 
-#define FIRMWARE_READ_SIZE_PER_TIME	256
+
+#define FIRMWARE_READ_SIZE_PER_TIME	1024
 #define TEMP_BUFFER_SIZE			2048
 #define FIRMWARE_PAGE_LENGTH		50					// 50Pages
 /* USER CODE END EC */
