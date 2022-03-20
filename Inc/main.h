@@ -82,9 +82,9 @@ void Error_Handler(void);
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 #define BOOTLOADER_FIRMWARE_ADDR	0x08000000			// Address of Bootloader Firmware
-#define FOTA_FIRMWARE_ADDR			0x08005000			// Factory have 100KBytes from 0x08005800
-#define CURRENT_FIRMWARE_ADDR		0x08020000			// Bootloader have 20KBytes from 0x08000000
-#define FACTORY_FIRMWARE_ADDR		0x08040000			// FOTA have 50Kbytes from 0x0801E000
+#define FACTORY_FIRMWARE_ADDR		0x08005000			// Bootloader have 20KBytes from 0x08000000
+#define FOTA_FIRMWARE_ADDR			0x0801E000			// Factory have 100KBytes from 0x08005800
+#define CURRENT_FIRMWARE_ADDR		0x08040000			// FOTA have 50Kbytes from 0x0801E000
 #define FIRMWARE_CHOOSEN			0x08060000			// Address for choose what firmware MCU will run
 #define FACTORY_VERSION_ADDR		0x08070000			// Address contain FACTORY Firmware Version
 #define CURRENT_VERSION_ADDR		0x08075000			// Address contain CURRENT Firmware Version
@@ -422,9 +422,11 @@ void Error_Handler(void);
 #define		DATA_RECEIVE_LENGTH									15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 				15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2 				17
+#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA					50 	// '2'
 
 
 #define 	LEN_FOR_UPDATE_POWER_CONSUPMPTION 				24
+
 
 #define 	SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE				49
 #define		DATA_RETAINED_MESSAGE_LENGTH						51
