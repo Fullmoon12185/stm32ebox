@@ -37,6 +37,8 @@
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
 
+static uint8_t log[100];
+
 typedef enum {
 	POWER_CONSUMPTION_CALCULATION = 0,
 	POST_DATA_TO_SERVER,
@@ -56,6 +58,8 @@ int main(void)
 
 	System_Initialization();
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
+	sprintf(log,"Ebox Version: %d\r\n",VERSION_EBOX);
+	UART3_SendToHost((uint8_t*)log);
 
 	PCF_Init();
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
