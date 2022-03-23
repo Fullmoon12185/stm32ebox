@@ -18,3 +18,10 @@ C_DEPS += \
 Core/Src/Utility/%.o: ../Core/Src/Utility/%.c Core/Src/Utility/subdir.mk
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xE -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@"
 
+clean: clean-Core-2f-Src-2f-Utility
+
+clean-Core-2f-Src-2f-Utility:
+	-$(RM) ./Core/Src/Utility/app_string.d ./Core/Src/Utility/app_string.o
+
+.PHONY: clean-Core-2f-Src-2f-Utility
+

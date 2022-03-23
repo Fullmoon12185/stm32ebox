@@ -16,7 +16,6 @@ RM := rm -rf
 -include Core/Src/Peripheral/subdir.mk
 -include Core/Src/Component/subdir.mk
 -include Core/Src/subdir.mk
--include subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -68,8 +67,8 @@ all: main-build
 main-build: fota-f103.elf secondary-outputs
 
 # Tool invocations
-fota-f103.elf: $(OBJS) $(USER_OBJS) D:\Work\ from\ home\eboost\fota\stm32ebox\STM32F103RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "fota-f103.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\Work from home\eboost\fota\stm32ebox\STM32F103RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="fota-f103.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+fota-f103.elf: $(OBJS) $(USER_OBJS) C:\Users\DO\ XUAN\ THO\STM32CubeIDE\workspace_1.7.0\fota-f103\STM32F103RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "fota-f103.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\DO XUAN THO\STM32CubeIDE\workspace_1.7.0\fota-f103\STM32F103RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="fota-f103.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -95,7 +94,7 @@ fota-f103.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 
 # Other Targets
 clean:
-	-$(RM) $(OBJCOPY_HEX)$(SIZE_OUTPUT)$(OBJDUMP_LIST)$(EXECUTABLES)$(OBJS)$(S_DEPS)$(S_UPPER_DEPS)$(C_DEPS)$(OBJCOPY_BIN) fota-f103.elf
+	-$(RM) default.size.stdout fota-f103.bin fota-f103.elf fota-f103.hex fota-f103.list
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
@@ -107,6 +106,6 @@ fail-specified-linker-script-missing:
 warn-no-linker-script-specified:
 	@echo 'Warning: No linker script specified. Check the linker settings in the build configuration.'
 
-.PHONY: all clean dependents fail-specified-linker-script-missing warn-no-linker-script-specified
+.PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified
 
 -include ../makefile.targets
