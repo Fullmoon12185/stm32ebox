@@ -39,11 +39,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  17 .debug_line   000184d0  00000000  00000000  00058c72  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0009f113  00000000  00000000  00071142  2**0
+ 18 .debug_str    0009f0ff  00000000  00000000  00071142  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000053  00000000  00000000  00110255  2**0
+ 19 .comment      00000053  00000000  00000000  00110241  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  0000554c  00000000  00000000  001102a8  2**2
+ 20 .debug_frame  0000554c  00000000  00000000  00110294  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -447,12 +447,12 @@ uint8_t Sim7600_Run(void){
 void Power_Signal_Low(void){
  801e438:	b580      	push	{r7, lr}
  801e43a:	af00      	add	r7, sp, #0
-//	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_SET);
- 801e43c:	2201      	movs	r2, #1
+	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_RESET);
+ 801e43c:	2200      	movs	r2, #0
  801e43e:	f44f 7180 	mov.w	r1, #256	; 0x100
  801e442:	4802      	ldr	r0, [pc, #8]	; (801e44c <Power_Signal_Low+0x14>)
  801e444:	f003 f8ca 	bl	80215dc <HAL_GPIO_WritePin>
+//	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_SET);
 }
  801e448:	bf00      	nop
  801e44a:	bd80      	pop	{r7, pc}
@@ -467,12 +467,12 @@ void Power_Signal_Low(void){
 void Power_Signal_High(void){
  801e450:	b580      	push	{r7, lr}
  801e452:	af00      	add	r7, sp, #0
-//	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_RESET);
- 801e454:	2200      	movs	r2, #0
+	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_SET);
+ 801e454:	2201      	movs	r2, #1
  801e456:	f44f 7180 	mov.w	r1, #256	; 0x100
  801e45a:	4802      	ldr	r0, [pc, #8]	; (801e464 <Power_Signal_High+0x14>)
  801e45c:	f003 f8be 	bl	80215dc <HAL_GPIO_WritePin>
+//	HAL_GPIO_WritePin(SIM7600_4G_PWRON_PORT, SIM7600_4G_PWRON, GPIO_PIN_RESET);
 }
  801e460:	bf00      	nop
  801e462:	bd80      	pop	{r7, pc}
@@ -487,12 +487,12 @@ void Power_Signal_High(void){
 void Reset_Signal_Low(void){
  801e468:	b580      	push	{r7, lr}
  801e46a:	af00      	add	r7, sp, #0
-//	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_SET);
- 801e46c:	2201      	movs	r2, #1
+	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_RESET);
+ 801e46c:	2200      	movs	r2, #0
  801e46e:	f44f 7100 	mov.w	r1, #512	; 0x200
  801e472:	4802      	ldr	r0, [pc, #8]	; (801e47c <Reset_Signal_Low+0x14>)
  801e474:	f003 f8b2 	bl	80215dc <HAL_GPIO_WritePin>
+//	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_SET);
 }
  801e478:	bf00      	nop
  801e47a:	bd80      	pop	{r7, pc}
@@ -507,12 +507,12 @@ void Reset_Signal_Low(void){
 void Reset_Signal_High(void){
  801e480:	b580      	push	{r7, lr}
  801e482:	af00      	add	r7, sp, #0
-//	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_RESET);
- 801e484:	2200      	movs	r2, #0
+	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_SET);
+ 801e484:	2201      	movs	r2, #1
  801e486:	f44f 7100 	mov.w	r1, #512	; 0x200
  801e48a:	4802      	ldr	r0, [pc, #8]	; (801e494 <Reset_Signal_High+0x14>)
  801e48c:	f003 f8a6 	bl	80215dc <HAL_GPIO_WritePin>
+//	HAL_GPIO_WritePin(SIM7600_4G_PERST_PORT, SIM7600_4G_PERST, GPIO_PIN_RESET);
 
 }
  801e490:	bf00      	nop
