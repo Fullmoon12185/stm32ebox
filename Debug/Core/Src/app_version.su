@@ -2,8 +2,9 @@ core_cm3.h:1762:34:__NVIC_SystemReset	4	static,ignoring_inline_asm
 app_version.c:19:7:Get_Current_Version	8	static
 app_version.c:24:9:Set_Current_Version	16	static
 app_version.c:30:6:Jump_To_Current_Firmware	8	static
-app_version.c:38:6:Jump_To_Fota_Firmware	8	static
-app_version.c:46:6:Update_Firmware_Failed	4	static
-app_version.c:51:6:Update_Firmware_Success	4	static
-app_version.c:57:9:Get_Update_Firmware_Status	4	static
-app_version.c:61:6:Clear_Update_Firmware_Status	8	static
+app_version.c:38:6:Jump_To_Factory_Firmware	8	static
+app_version.c:46:6:Jump_To_Fota_Firmware	8	static
+app_version.c:54:6:Update_Firmware_Failed	8	static
+app_version.c:58:6:Update_Firmware_Success	8	static
+app_version.c:63:9:Get_Update_Firmware_Status	4	static
+app_version.c:67:6:Clear_Update_Firmware_Status	8	static

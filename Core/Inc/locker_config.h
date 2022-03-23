@@ -19,6 +19,7 @@
  * Version Control
  */
 #define VERSION				"v0.0.0"
+#define VERSION_LENGTH		6
 #define ENVIRONMENT			DEV
 
 #if ENVIRONMENT == DEV

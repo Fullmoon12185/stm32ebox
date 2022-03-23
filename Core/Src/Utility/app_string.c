@@ -44,8 +44,8 @@ FlagStatus isReceiveData(char *buffer , uint16_t buffer_len , const char * data)
 
 
 FlagStatus isReceiveData_New(char *buffer , uint16_t buffer_len , uint16_t buffer_size , const char * data){
-	uint8_t tmpLen = strlen((char*)data);
-	for (uint8_t index = 0; index < tmpLen; index++) {
+	uint16_t tmpLen = strlen((char*)data);
+	for (uint16_t index = 0; index < tmpLen; index++) {
 		if(buffer[buffer_len -tmpLen <0 ? (buffer_size + buffer_len - tmpLen + index)%buffer_size :(buffer_len - tmpLen + index)%buffer_size ] != data[index]){
 			return RESET;
 		}

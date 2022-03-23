@@ -1,7 +1,6 @@
-fota_fsm.c:32:6:FSM_Display_State	8	static
-fota_fsm.c:56:9:FSM_Run	8	static
-fota_fsm.c:68:6:Start_Simcom	8	static
-fota_fsm.c:73:6:Version_Checking_Http	8	static
-fota_fsm.c:94:6:Copy_New_Firmware	16	static
-fota_fsm.c:102:19:FSM_Get_State	4	static
-fota_fsm.c:105:6:FSM_Set_State	16	static
+fota_fsm.c:30:6:FSM_Display_State	8	static
+fota_fsm.c:51:9:FSM_Run	8	static
+fota_fsm.c:63:6:Start_Simcom	8	static
+fota_fsm.c:68:6:Version_Checking_Http	8	static
+fota_fsm.c:90:19:FSM_Get_State	4	static
+fota_fsm.c:93:6:FSM_Set_State	16	static

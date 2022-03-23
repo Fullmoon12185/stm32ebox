@@ -13,10 +13,16 @@
 
 
 #define ACTION_TIMEOUT					200		/*!< Timeout for action command : Get, post ,put ,...*/
+#define TEMP_VERSION_BUFFER_LENGTH 		100
+#define LINE_BUFFER_LENGTH				300
 
 FlagStatus http_timeout_flag = SET;
 FlagStatus para_timeout = RESET;
 FlagStatus default_atcommand = SET;
+FlagStatus fota_check_version = SET;
+FlagStatus checksum_correct = SET;
+uint8_t version[VERSION_LENGTH];
+uint8_t version_index= 0;
 
 // Get Content Length
 uint8_t http_num_ignore = 0;
@@ -58,7 +64,9 @@ uint8_t	cabinet_attribute = 0;
 char logMsg[50];
 
 void HTTP_Done();
-FlagStatus HTTP_Firmware_Data(FlagStatus first_time);
+FlagStatus is_Firmware_Line_Data_Correct(uint8_t *buffer, uint16_t buffer_len);
+FlagStatus HTTP_Firmware_Version();
+FlagStatus HTTP_Firmware_Data();
 
 
 HTTP_Machine_TypeDef http_state_machine[]={
@@ -167,7 +175,7 @@ void HTTP_Init(){
 
 /**
  * HTTP_Wait_For_Init()
- * @brief This is function for waiting respone from initiating Http service
+ * @brief This is function for waiting respond from initiating Http service
  */
 void HTTP_Wait_For_Init(){
 //	Wait_For_Respone(AT_OK);
@@ -192,7 +200,12 @@ void HTTP_Wait_For_Init(){
  */
 void HTTP_Para(){
 	if (default_atcommand) {
-		sprintf(http_at_command,"AT+HTTPPARA=\"URL\",\"https://%s-%s.cloudfunctions.net/handle_firmware_request?lockerid=%s&current_version=%s&checking=%d&update_status=%d\"\r\n",CLOUDFUNCTION_REGION,CLOUDFUNCTION_PROJECTID,Sim7600_Get_IMEI(),"v0.0.1",0,Get_Update_Firmware_Status());
+		if(fota_check_version){
+			sprintf(http_at_command,"AT+HTTPPARA=\"URL\",\"http://ota.chipfc.com/ebox_firmware/version.txt\"\r\n");
+		}
+		else{
+			sprintf(http_at_command,"AT+HTTPPARA=\"URL\",\"http://ota.chipfc.com/ebox_firmware/%s/eBoxK2.hex\"\r\n",version);
+		}
 	}
 	UART_SIM7600_Transmit((uint8_t*)http_at_command);
 	Clear_Http_Command();
@@ -280,18 +293,27 @@ void HTTP_Wait_For_Action(){
  */
 void HTTP_Read(){
 	uint32_t read_size;
-	if(http_response_remain > (FIRMWARE_READ_SIZE_PER_TIME)){
-		read_size = FIRMWARE_READ_SIZE_PER_TIME;
-		http_response_remain = http_response_remain -  (FIRMWARE_READ_SIZE_PER_TIME);
-	}
-	else if (http_response_remain > 0 && http_response_remain < (FIRMWARE_READ_SIZE_PER_TIME)){
+	if(fota_check_version){
 		read_size = http_response_remain;
-		http_response_remain = 0;
+	}
+	else{
+		if(http_response_remain > (FIRMWARE_READ_SIZE_PER_TIME)){
+			read_size = FIRMWARE_READ_SIZE_PER_TIME;
+			http_response_remain = http_response_remain -  (FIRMWARE_READ_SIZE_PER_TIME);
+		}
+		else if (http_response_remain > 0 && http_response_remain < (FIRMWARE_READ_SIZE_PER_TIME)){
+			read_size = http_response_remain;
+			http_response_remain = 0;
+		}
 	}
 	if (default_atcommand) {
 		sprintf(http_at_command,"AT+HTTPREAD=0,%d\r\n",read_size);
 	}
 //	Clear_Reiceive_Buffer();
+	sprintf(logMsg,"http_response_remain: %ld\r\n",http_response_remain);
+	LOG(logMsg);
+	sprintf(logMsg,"firmware_index: %ld\r\n",firmware_index);
+	LOG(logMsg);
 	UART_SIM7600_Transmit((uint8_t *)http_at_command);
 	Clear_Http_Timeout_Flag();
 	SCH_Add_Task(Set_Http_Timeout_Flag, 100, 0);
@@ -313,112 +335,46 @@ char log[50];
 uint32_t firmware_index_end;
 void HTTP_Wait_For_Read(){
 	FlagStatus flag_ret;
-	switch (Get_AT_Result()){
-		case AT_OK:
-//			LOG("b");
-			if(!started_record_firmware){
-				Clear_AT_Result();
-			}
-			else{
-				flag_ret = HTTP_Firmware_Data(RESET);
+	if(fota_check_version){
+		switch (Get_AT_Result()) {
+			case AT_OK:
+				flag_ret = HTTP_Firmware_Version();
 				if(flag_ret){
+					fota_check_version = RESET;
 					Clear_AT_Result();
-					// If still have firmware data
-					char log[10];
-					sprintf(logMsg,"\r\nhttp_response_remain: %d\r\n",http_response_remain);
-					LOG(logMsg);
-					if(http_response_remain > 0){
-						http_state = HTTP_READ;
+					http_state = HTTP_PARA;
+					return;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	else{
+		switch (Get_AT_Result()) {
+			case AT_OK:
+				flag_ret = HTTP_Firmware_Data();
+				if(flag_ret){
+					if(checksum_correct){
+						if(http_response_remain == 0){
+							LOG("Jump To Current Firmware");
+							Jump_To_Current_Firmware();
+						}
 					}
 					else{
-						sprintf(log,"\r\nchecksum : %d\r\n",checksum);
-						LOG(log);
-						if(checksum == firmware_checksum){
-							LOG("Checksum is correct");
-							Update_Firmware_Success();
-							Jump_To_Current_Firmware();
-							http_state = HTTP_DONE;
-							started_record_firmware = RESET;
-						}
-						else{
-							LOG("Checksum is incorrect");
-							Update_Firmware_Failed();
-							Jump_To_Factory_Firmware();
-							http_state = HTTP_DONE;
-							started_record_firmware = RESET;
-						}
+						LOG("Jump To Factory Firmware");
+						Jump_To_Factory_Firmware();
 					}
-				}
-			}
-			break;
-		case AT_FIRMWARE_VERSION:
-			firmware_version_check = Get_IntegerValue_From_HTTP_Respone();
-			if(firmware_version_check != 0xFFFF){
-				Clear_AT_Result();
-				Reset_Result();
-				if(firmware_version_check  == 0){
-					Clear_AT_Result();
-					LOG("DON'T HAVE NEW VERSION\r\n");
-					Update_Firmware_Success();
-					Jump_To_Current_Firmware();
 
-				}
-				else{
-					Flash_Erase(firmware_address, http_response_remain);
-					LOG("HAVE NEW VERSION\r\n");
-				}
-			}
-			break;
-		case AT_FIRMWARE_CHECKSUM:
-			firmware_checksum = Get_IntegerValue_From_HTTP_Respone();
-			if(firmware_checksum != 0xFFFF){
-				sprintf(log,"\r\nChecksum : %d\r\n",firmware_checksum);
-				LOG(log);
-				Clear_AT_Result();
-				Reset_Result();
-			}
-			break;
-		// Receive from UART Buffer and Save to Flash
-		case AT_FIRMWARE_DATA:
-			// If dont have new version
-			// If have new Version
-			started_record_firmware = SET;
-			flag_ret = HTTP_Firmware_Data(SET);
-			// If Get done
-			if(flag_ret){
-				Clear_AT_Result();
-				one_kb_index++;
-				// If still have firmware data
-				sprintf(log,"firmware_index : %d\r\n",firmware_index);
-				LOG(log);
-				if(http_response_remain > 0){
+					Clear_AT_Result();
 					http_state = HTTP_READ;
 				}
-				// If done write data to firmware -> Jump to Current Firmware
-				else{
-					sprintf(log,"\r\nchecksum : %d\r\n",checksum);
-					LOG(log);
-					if(checksum == firmware_checksum){
-						LOG("checksum_ok");
-						http_state = HTTP_DONE;
-						started_record_firmware = RESET;
-						Update_Firmware_Success();
-					}
-					else{
-						http_state = HTTP_DONE;
-						LOG("checksum_error");
-						started_record_firmware = RESET;
-						Update_Firmware_Failed();
-					}
-				}
-			}
-			break;
-		case AT_ERROR:
-			Clear_AT_Result();
-			break;
-		default:
-			break;
+				break;
+			default:
+				break;
+		}
 	}
+
 }
 
 
@@ -533,20 +489,82 @@ uint16_t Get_IntegerValue_From_HTTP_Respone(){
 	}
 }
 
+
+uint8_t temp_version_name_buffer[TEMP_VERSION_BUFFER_LENGTH];
+uint8_t temp_version_name_index = 0;
+FlagStatus prepare_record_version_name = RESET;
+FlagStatus start_record_version_name = RESET;
+FlagStatus HTTP_Firmware_Version(){
+	if(UART_SIM7600_Received_Buffer_Available()){
+		temp_version_name_buffer[temp_version_name_index] = UART_SIM7600_Read_Received_Buffer();
+//		UART_DEBUG_Transmit_Size(temp_version_name_buffer + temp_version_name_index, 1);
+		if(isReceiveData_New(temp_version_name_buffer, temp_version_name_index + 1, TEMP_VERSION_BUFFER_LENGTH, "+HTTPREAD: DATA")){
+			prepare_record_version_name = SET;
+		}
+		if(prepare_record_version_name){
+			if(start_record_version_name){
+				//Check whether stop record version name
+				if(temp_version_name_buffer[temp_version_name_index]=='\r'){
+					start_record_version_name = RESET;
+					prepare_record_version_name = RESET;
+					return SET;
+				}
+				else{
+					version[version_index++] = temp_version_name_buffer[temp_version_name_index];
+				}
+			}
+			if(isReceiveData_New(temp_version_name_buffer, temp_version_name_index + 1, TEMP_VERSION_BUFFER_LENGTH, "\r\n")){
+				start_record_version_name = SET;
+			}
+
+		}
+		temp_version_name_index = (temp_version_name_index + 1)% TEMP_VERSION_BUFFER_LENGTH;
+	}
+	return RESET;
+}
+
+/*
+ * Line is: ":0101010101010 and checksum :01, last is "\r\n""
+ * We ignore ':' character and calculate checksum from 01....010 and ignore checksum value
+ */
+FlagStatus is_Firmware_Line_Data_Correct(uint8_t *buffer, uint16_t buffer_len){
+	FlagStatus flag_ret;
+	checksum = 0;
+
+	for (uint16_t var = 0; var < buffer_len - 3 - 2; var=var+2) {
+		sprintf(log,"%c-%c\r\n",buffer[var],buffer[var+1]);
+		LOG(log);
+		checksum = checksum + (Char2Hex(buffer[var]) << 4) + Char2Hex(buffer[var+1]);
+	}
+	checksum =~checksum;
+	checksum += 1;
+	uint8_t checksum_inline = (Char2Hex(buffer[buffer_len -3-2 ]) << 4) + Char2Hex(buffer[buffer_len -3-2 +1 ]);
+	sprintf(log,"Check sum %x\r\n",checksum);
+	LOG(log);
+	sprintf(log,"Calculated Check sum %x\r\n",checksum_inline);
+	LOG(log);
+	flag_ret = (checksum == checksum_inline);
+	return flag_ret;
+}
 /*
  * Return Size of Firmware Data which Received from UART
  */
-FlagStatus prepare_record = RESET;
-FlagStatus start_record = RESET;
+FlagStatus prepare_record_firmware_data = RESET;
+FlagStatus start_record_firmware_data = RESET;
 uint16_t count = 0;
 uint8_t temp_hex_1 ;
 uint8_t temp_hex_2 ;
 uint8_t offset = 0;
-uint8_t temp_buffer[TEMP_BUFFER_SIZE];
-uint16_t temp_index = 0;
+uint8_t temp_firmware_data_buffer[TEMP_BUFFER_SIZE];
+uint16_t temp_firmware_data_index = 0;
+uint8_t line_buffer[LINE_BUFFER_LENGTH];
+uint16_t line_buffer_index;
+uint8_t temp_at_response_buffer[LINE_BUFFER_LENGTH];
+uint16_t temp_at_response_index = 0;
 uint8_t temp_char;
 char new_log[10];
-FlagStatus HTTP_Firmware_Data(FlagStatus first_time){
+FlagStatus first_http_read = SET;
+FlagStatus HTTP_Firmware_Data(){
 	/*
 	 * The first time get data pattern is
 	 * {
@@ -557,150 +575,77 @@ FlagStatus HTTP_Firmware_Data(FlagStatus first_time){
 	 *  			01231291512925192"
 	 *  So We need seperate "new_version" and "checksum" field out of "data"
 	 */
-	if(first_time){
-		if(UART_SIM7600_Received_Buffer_Available()){
-			temp_buffer[temp_index] = UART_SIM7600_Read_Received_Buffer();
-			//If get '"' so start record firmware data
-			if(temp_buffer[temp_index] == '"'){
-				start_record = SET;
-				return RESET;
+	if(UART_SIM7600_Received_Buffer_Available()){
+		temp_at_response_buffer[temp_at_response_index] = UART_SIM7600_Read_Received_Buffer();
+//		UART_DEBUG_Transmit_Size(line_buffer + line_buffer_index, 1);
+		//Check if end of SIM respond
+		if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "\r\n+HTTPREAD: 0")){
+//			LOG("1");
+			if(firmware_index >= PAGESIZE){
+				Flash_Write_Char(firmware_address, firmware_data, PAGESIZE);
+//				LOG("3");
+				firmware_address+= PAGESIZE;
+				memcpy(firmware_data,firmware_data+PAGESIZE,firmware_index-PAGESIZE);
+				firmware_index-=PAGESIZE;
+//				for (int var = PAGESIZE; var < firmware_index; ++var) {
+//					firmware_data[var-PAGESIZE] = firmware_data[var];
+//				}
+				LOG("4");
 			}
-			else if(start_record){
-				// If get '\r' so done get partial firmware data from UART
-				if(temp_buffer[temp_index] == '\r'){
-					start_record = RESET;
-					return SET;
+			else if(http_response_remain == 0){
+				Flash_Write_Char(firmware_address, firmware_data, firmware_index);
+				firmware_address+= firmware_index;
+				firmware_index = 0;
+			}
+			line_buffer_index = line_buffer_index - strlen("\r\n+HTTPREAD: 0") + 1;
+			start_record_firmware_data = RESET;
+			return SET;
+		}
+		// Check whether start of SIM Respond
+		if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "HTTPREAD: DATA")){
+//			LOG("2");
+			prepare_record_firmware_data = SET;
+		}
+		if(prepare_record_firmware_data){
+//			LOG("3");
+			if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "\r\n")){
+				start_record_firmware_data = SET;
+				prepare_record_firmware_data = RESET;
+				temp_at_response_index = 0;
+				// reset line_index
+			}
+		}
+		if(start_record_firmware_data){
+//			LOG("4");
+			// Check whether that data is not end of HTTP READ
+			line_buffer[line_buffer_index] = temp_at_response_buffer[temp_at_response_index];
+			line_buffer_index = (line_buffer_index +1)%LINE_BUFFER_LENGTH;
+			if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index +1, LINE_BUFFER_LENGTH, "\r\n:")){
+//				UART_DEBUG_Transmit_Size(line_buffer, line_buffer_index+1);
+				// Calculator checksum
+				if(first_http_read){
+					first_http_read = RESET;
+					line_buffer_index = 0;
 				}
-				// If get '"' so done get total firmware data from UART
-				if(temp_buffer[temp_index] == '"'){
-					Flash_Write_Char(firmware_address, firmware_data, firmware_index);
-					start_record = RESET;
-					return SET;
-				}
-				// Else record firmware data to buffer to save into Flash Memory
 				else{
-					// Assign temp buffer to firmware buffer
-					firmware_data[firmware_index] = temp_buffer[temp_index];
-//					sprintf(log,"%d\r\n",firmware_data[firmware_index]);
-//					LOG(log);
-					/*
-					 * If uart data is 0ABC5FDE so firmware_data is [0x0A,0xBC,0x5F,0xDE]
-					 * In offset = 0 is 0,B,5,D, convert it from Char to Hex and assign to temp_hex_1
-					 * ex: firmware_data[0] = [0x0]
-					 */
-					if(offset == 0){
-						temp_hex_1 = Char2Hex(firmware_data[firmware_index]);
-						firmware_index++;
-					}
-					/*
-					 * In offset = 1 is A,C,F,E, convert it from Char to Hex and assign to temp_hex_2
-					 * ex: firmware_data[1] = [0xA]
-					 * So calculate and reassigin to firmware_data[0] = 0<<4|A = 0x0A
-					 * and Calculate checksum = checksum ^ firmware_data[0]
-					 */
-					else if(offset == 1){
-						temp_hex_2 = Char2Hex(firmware_data[firmware_index]);
-						firmware_data[firmware_index==0?(PAGESIZE-1):(firmware_index-1)] = (temp_hex_1<<4)|temp_hex_2;
-						checksum = checksum ^ firmware_data[firmware_index==0?(PAGESIZE-1):(firmware_index-1)];
-//						sprintf(log,"check sum %d\r\n",checksum);
-//						LOG(log);
-					}
-					// Increase Offset after get and assign to firmware_data
-					offset= (offset+1)%2;
-					/*
-					 * Check whether offset == 0 so Check firmware_index
-					 * If firmware_index == FIRMWARE_DATA_BUFFER_SIZE so save it to Flash, reset firmware_index and increase firmware_address
-					 */
-					if(offset==0){
-						if(firmware_index == PAGESIZE){
-							char log[10];
-							Flash_Write_Char(firmware_address, firmware_data, firmware_index);
-							firmware_address += PAGESIZE;
-							firmware_index = 0;
-							return RESET;
+					if(is_Firmware_Line_Data_Correct(line_buffer, line_buffer_index)){
+						// Check whether that line is the firmware data or not
+						if(Char2Hex(line_buffer[9])==0){
+							for (int var = 10; var < line_buffer_index -4 -2; var=var+2) {
+								//Save line to firmware data
+								firmware_data[firmware_index++] = Char2Hex(line_buffer[var])<<4 + Char2Hex(line_buffer[var+1]);
+							}
 						}
+						line_buffer_index = 0;
+					}
+					else{
+						checksum_correct = RESET;
+						LOG("Checksum is Wrong");
 					}
 				}
 			}
-			temp_index = (temp_index +1)%TEMP_BUFFER_SIZE;
 		}
-	}
-	else{
-		if(UART_SIM7600_Received_Buffer_Available()){
-			temp_buffer[temp_index] = UART_SIM7600_Read_Received_Buffer();
-			// If get response "+HTTPREAD: DATA," from UART switch to Prepare Record
-			if(isReceiveData_New(temp_buffer, temp_index + 1,TEMP_BUFFER_SIZE, "+HTTPREAD: DATA,")){
-				prepare_record = SET;
-				return RESET;
-			}
-			// Prepare Record wait to get "\r\n" to get data
-			else if(prepare_record){
-				// If get "\r\n" so set start_record to record hex data
-				if(isReceiveData_New(temp_buffer, temp_index  + 1,TEMP_BUFFER_SIZE, "\r\n")){
-					prepare_record = RESET;
-					start_record = SET;
-					return RESET;
-				}
-			}
-			// start_record firmware data from UART
-			else if(start_record){
-				// If get '\r' so done get partial firmware data from UART
-				if(temp_buffer[temp_index] == '\r'){
-					start_record = RESET;
-					return SET;
-				}
-				// If get '"' so done get total firmware data from UART
-				else if(temp_buffer[temp_index] == '"'){
-					Flash_Write_Char(firmware_address, firmware_data, firmware_index);
-					start_record = RESET;
-					return SET;
-				}
-				// Else record firmware data to buffer to save into Flash Memory
-				else {
-					// Assign temp buffer to firmware buffer
-					firmware_data[firmware_index] = temp_buffer[temp_index];
-					/*
-					 * If uart data is 0ABC5FDE so firmware_data is [0x0A,0xBC,0x5F,0xDE]
-					 * In offset = 0 is 0,B,5,D, convert it from Char to Hex and assign to temp_hex_1
-					 * ex: firmware_data[0] = [0x0]
-					 */
-					if(offset == 0){
-						temp_hex_1 = Char2Hex(firmware_data[firmware_index]);
-						firmware_index++;
-					}
-					/*
-					 * In offset = 1 is A,C,F,E, convert it from Char to Hex and assign to temp_hex_2
-					 * ex: firmware_data[1] = [0xA]
-					 * So calculate and reassigin to firmware_data[0] = 0<<4|A = 0x0A
-					 * and Calculate checksum = checksum ^ firmware_data[0]
-					 */
-					else if(offset == 1){
-						temp_hex_2 = Char2Hex(firmware_data[firmware_index]);
-						firmware_data[firmware_index==0?(PAGESIZE-1):(firmware_index-1)] = (temp_hex_1<<4)|temp_hex_2;
-						checksum = checksum ^ firmware_data[firmware_index==0?(PAGESIZE-1):(firmware_index-1)];
-//						sprintf(log,"check sum %d\r\n ",checksum);
-//						LOG(log);
-					}
-					// Increase Offset after get and assign to firmware_data
-					offset= (offset+1)%2;
-					/*
-					 * Check whether offset == 0 so Check firmware_index
-					 * If firmware_index == FIRMWARE_DATA_BUFFER_SIZE so save it to Flash, reset firmware_index and increase firmware_address
-					 */
-					if(offset==0){
-						if(firmware_index == PAGESIZE){
-							sprintf(logMsg,"\r\n%x\r\n",firmware_address);
-							LOG((uint8_t*)logMsg);
-							Flash_Write_Char(firmware_address, firmware_data, firmware_index);
-							firmware_address += PAGESIZE;
-							firmware_index = 0;
-							return RESET;
-						}
-					}
-				}
-			}
-			temp_index = (temp_index +1)%TEMP_BUFFER_SIZE;
-		}
+		temp_at_response_index = (temp_at_response_index +1)%LINE_BUFFER_LENGTH;
 	}
 	return RESET;
 }
