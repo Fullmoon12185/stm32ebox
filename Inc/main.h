@@ -77,6 +77,7 @@ void Error_Handler(void);
  */
 #define UPDATE_SUCCESS				0
 #define UPDATE_FAILED				1
+#define DONT_UPDATE					0xFF
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

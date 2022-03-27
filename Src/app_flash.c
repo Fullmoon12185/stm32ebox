@@ -35,7 +35,7 @@ void Flash_Erase(uint32_t addr,uint32_t num_bytes)
 	Flash_Lock();
 }
 
-void Flash_Write_Int(uint32_t addr, int data)
+void Flash_Write_Int(uint32_t addr, uint16_t data)
 {
 	Flash_Unlock();
 	FLASH->CR |= FLASH_CR_PG;				/*!< Programming */
@@ -57,7 +57,6 @@ void Flash_Write_Char(uint32_t addr, char* data)
 	Flash_Unlock();
 	int i;
   FLASH->CR |= FLASH_CR_PG;
-	int var = 0;
 	lengthPage = strlen(data);
   for(i=0; i<lengthPage; i+=2)
   {

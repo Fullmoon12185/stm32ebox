@@ -6,7 +6,7 @@ void deleteBuffer(char* data);
 void 	Flash_Lock(void);
 void 	Flash_Unlock(void);
 void 	Flash_Erase(uint32_t addr,uint32_t num_bytes);
-void 	Flash_Write_Int(uint32_t addr, int data);
+void 	Flash_Write_Int(uint32_t addr, uint16_t data);
 uint16_t Flash_Read_Int(uint32_t addr);
 void 	Flash_Write_Char(uint32_t addr, char* data);
 void 	Flash_ReadChar(uint32_t addr1 , char* dataOut, uint32_t data_length);

@@ -9,8 +9,6 @@
 #include "main.h"
 #include "app_flash.h"
 
-char log[50];
-
 
 
 uint16_t Get_Current_Version(){
@@ -28,7 +26,7 @@ uint16_t Get_Factory_Version(){
 
 void Set_Factory_Version(uint16_t version){
 	Flash_Erase(FACTORY_VERSION_ADDR,1);
-	Flash_Write_Char(FACTORY_VERSION_ADDR, version);
+	Flash_Write_Int(FACTORY_VERSION_ADDR, (int)version);
 }
 
 uint8_t Have_Current_Firmware(){
