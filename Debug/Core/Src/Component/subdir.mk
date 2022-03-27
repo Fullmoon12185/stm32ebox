@@ -6,14 +6,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../Core/Src/Component/app_25LC512.c \
+../Core/Src/Component/app_i2c_lcd.c \
 ../Core/Src/Component/app_sim7600.c 
 
 OBJS += \
 ./Core/Src/Component/app_25LC512.o \
+./Core/Src/Component/app_i2c_lcd.o \
 ./Core/Src/Component/app_sim7600.o 
 
 C_DEPS += \
 ./Core/Src/Component/app_25LC512.d \
+./Core/Src/Component/app_i2c_lcd.d \
 ./Core/Src/Component/app_sim7600.d 
 
 

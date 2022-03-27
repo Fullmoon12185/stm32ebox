@@ -83,6 +83,8 @@ int main(void)
   /* USER CODE BEGIN SysInit */
   UART_SIM7600_Init();
   UART_DEBUG_Init();
+  I2C_Init();
+  Lcd_Initialization();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -96,7 +98,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  UART_DEBUG_Transmit("Fota Firmware Start\r\n");
+  UART_DEBUG_Transmit("Fota Start\r\n");
+  Lcd_Clear_Display();
+  Lcd_Show_String("FOTA START", 0, 0);
   while (1)
   {
     /* USER CODE END WHILE */

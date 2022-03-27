@@ -272,6 +272,7 @@ void HTTP_Wait_For_Action(){
 				// Get Content-Length:
 				if(HTTP_Get_Content_Length()){
 					http_response_remain = HTTP_Return_Content_Length();
+					firmware_size = http_response_remain;
 					content_length = 0;
 					sprintf(logMsg,"\r\n%d\r\n",http_response_remain);
 					LOG(logMsg);
@@ -300,6 +301,18 @@ void HTTP_Read(){
 		read_size = http_response_remain;
 	}
 	else{
+		static uint8_t num_show_lcd = 0;
+		if(http_response_remain == 0){
+			sprintf(logMsg,"Complete 100%");
+			Lcd_Clear_Display();
+			Lcd_Show_String(logMsg, 0, 0);
+		}
+		else if((firmware_size - http_response_remain) > 10240 * num_show_lcd){
+			sprintf(logMsg,"Complete %ld\%",(firmware_size- http_response_remain) * 100 / firmware_size);
+			Lcd_Clear_Display();
+			Lcd_Show_String(logMsg, 0, 0);
+			num_show_lcd ++;
+		}
 		if(http_response_remain > (FIRMWARE_READ_SIZE_PER_TIME)){
 			read_size = FIRMWARE_READ_SIZE_PER_TIME;
 			http_response_remain = http_response_remain -  (FIRMWARE_READ_SIZE_PER_TIME);
@@ -312,7 +325,7 @@ void HTTP_Read(){
 	if (default_atcommand) {
 		sprintf(http_at_command,"AT+HTTPREAD=0,%d\r\n",read_size);
 	}
-//	Clear_Reiceive_Buffer();
+
 	sprintf(logMsg,"http_response_remain: %ld\r\n",http_response_remain);
 	LOG(logMsg);
 	sprintf(logMsg,"firmware_index: %ld\r\n",firmware_index);
