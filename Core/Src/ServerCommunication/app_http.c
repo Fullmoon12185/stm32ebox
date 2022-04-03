@@ -70,7 +70,7 @@ char logMsg[50];
 void HTTP_Done();
 FlagStatus is_Firmware_Line_Data_Correct(uint8_t *buffer, uint16_t buffer_len);
 FlagStatus HTTP_Firmware_Version();
-FlagStatus HTTP_Firmware_Data();
+Firmware_Data_State HTTP_Firmware_Data();
 
 
 HTTP_Machine_TypeDef http_state_machine[]={
@@ -351,8 +351,8 @@ void HTTP_Read(){
 char log[50];
 uint32_t firmware_index_end;
 void HTTP_Wait_For_Read(){
-	static FlagStatus flag_ret;
 	if(fota_check_version){
+		FlagStatus flag_ret;
 		switch (Get_AT_Result()) {
 			case AT_OK:
 				flag_ret = HTTP_Firmware_Version();
@@ -368,23 +368,52 @@ void HTTP_Wait_For_Read(){
 		}
 	}
 	else{
+		Firmware_Data_State firmware_state;
 		switch (Get_AT_Result()) {
 			case AT_OK:
-				flag_ret = HTTP_Firmware_Data();
-				if(flag_ret){
-					if(checksum_correct){
+				firmware_state = HTTP_Firmware_Data();
+				switch (firmware_state) {
+					case DONE:
 						if(http_response_remain == 0){
-							LOG("Jump To Current Firmware");
+							LOG("\r\nJump To Current Firmware\r\n");
 							Jump_To_Current_Firmware();
 						}
-					}
-					else{
-						LOG("Jump To Factory Firmware");
+						else{
+							Clear_AT_Result();
+							http_state = HTTP_READ;
+						}
+						break;
+					case PROCESSING:
+						/*Continuous Firmware Process*/
+						break;
+					case ERR_CHECKSUM:
+						LOG("\r\nChecksum Error\r\n");
+						LOG("\r\nJump To Factory Firmware\r\n");
 						Jump_To_Factory_Firmware();
-					}
-					Clear_AT_Result();
-					http_state = HTTP_READ;
+						break;
+
+					case ERR_CURRENT_FIRMWARE_WRONG:
+						LOG("\r\nCURRENT FIRMWARE ADDRESS WRONG\r\n");
+						LOG("\r\nJump To Current Firmware\r\n");
+						Jump_To_Current_Firmware();
+						break;
+					default:
+						break;
 				}
+//				if(flag_ret){
+//					if(checksum_correct){
+//						if(http_response_remain == 0){
+//							LOG("Jump To Current Firmware");
+//							Jump_To_Current_Firmware();
+//						}
+//					}
+//					else{
+//						LOG("Jump To Factory Firmware");
+//						Jump_To_Factory_Firmware();
+//					}
+//					Clear_AT_Result();
+//					http_state = HTTP_READ;
+//				}
 				break;
 			default:
 				break;
@@ -580,7 +609,9 @@ uint16_t temp_at_response_index = 0;
 uint8_t temp_char;
 char new_log[10];
 FlagStatus first_http_read = SET;
-FlagStatus HTTP_Firmware_Data(){
+uint32_t firmware_address_of_hexfile;
+static FlagStatus get_2bytes_firmware_address = SET;
+Firmware_Data_State HTTP_Firmware_Data(){
 	/*
 	 * The first time get data pattern is
 	 * {
@@ -595,7 +626,8 @@ FlagStatus HTTP_Firmware_Data(){
 		temp_at_response_buffer[temp_at_response_index] = UART_SIM7600_Read_Received_Buffer();
 //		UART_DEBUG_Transmit_Size(temp_at_response_buffer + temp_at_response_index, 1);
 		//Check if end of SIM respond
-		if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "\r\n+HTTPREAD:0")){
+		if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "\r\n+HTTPREAD: 0")||
+				isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "\r\n+HTTPREAD:0")){
 //			LOG("1");
 			if(firmware_index >= PAGESIZE){
 				Flash_Erase(firmware_address, 1);
@@ -614,15 +646,20 @@ FlagStatus HTTP_Firmware_Data(){
 				firmware_address+= firmware_index;
 				firmware_index = 0;
 			}
-			line_buffer_index = line_buffer_index - strlen("\r\n+HTTPREAD:0") + 1;
+			if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "\r\n+HTTPREAD: 0")){
+				line_buffer_index = line_buffer_index - strlen("\r\n+HTTPREAD: 0") + 1;
+			}
+			else{
+				line_buffer_index = line_buffer_index - strlen("\r\n+HTTPREAD:0") + 1;
+			}
 			start_record_firmware_data = RESET;
-			return SET;
+			return DONE;
 		}
 		// Check whether start of SIM Respond
 		else if(isReceiveData_New(temp_at_response_buffer, temp_at_response_index+1, LINE_BUFFER_LENGTH, "HTTPREAD: DATA")){
 //			LOG("2");
 			prepare_record_firmware_data = SET;
-			return RESET;
+			return PROCESSING;
 		}
 		else if(prepare_record_firmware_data){
 //			LOG("3");
@@ -630,7 +667,7 @@ FlagStatus HTTP_Firmware_Data(){
 				start_record_firmware_data = SET;
 				prepare_record_firmware_data = RESET;
 				// reset line_index
-				return RESET;
+				return PROCESSING;
 			}
 		}
 		else if(start_record_firmware_data){
@@ -651,39 +688,49 @@ FlagStatus HTTP_Firmware_Data(){
 //					LOG(log);
 					// Calculator checksum
 					if(first_http_read){
+						for (uint16_t var = 0; var < line_buffer_index; ++var) {
+							line_buffer[var] = line_buffer[var+1];
+						}
+						line_buffer_index --;
 						first_http_read = RESET;
+					}
+					if(is_Firmware_Line_Data_Correct(line_buffer, line_buffer_index)){
+						// Check whether that line is the firmware data or not
+						if(Char2Hex(line_buffer[7])==0){
+							firmware_address_curr_offet = ((uint16_t)(Char2Hex(line_buffer[2]))<<12) +((uint16_t)(Char2Hex(line_buffer[3]))<<8) +((uint16_t)(Char2Hex(line_buffer[4]))<<4)+(uint16_t)(Char2Hex(line_buffer[5]));
+							if(get_2bytes_firmware_address){
+								get_2bytes_firmware_address = RESET;
+								firmware_address_of_hexfile = (firmware_address_of_hexfile<<16) | (uint32_t)firmware_address_curr_offet;
+								if(firmware_address_of_hexfile != CURRENT_FIRMWARE_ADDR){
+									return ERR_CURRENT_FIRMWARE_WRONG;
+								}
+							}
+							if(firmware_address_prev_offet >= 0xFFF0){
+								num_byte_FF_add_to_end_buffer = 0xFFFF - firmware_address_prev_offet + 1 + firmware_address_curr_offet -  (uint16_t)prev_num_byte;
+							}
+							else{
+								num_byte_FF_add_to_end_buffer = firmware_address_curr_offet - firmware_address_prev_offet - prev_num_byte;
+							}
+							for (uint16_t var = 0; var < num_byte_FF_add_to_end_buffer; var++) {
+								firmware_data[firmware_index++] = 0xFF;
+							}
+							prev_num_byte = (Char2Hex(line_buffer[0])<<4) + Char2Hex(line_buffer[1]);
+							firmware_address_prev_offet = firmware_address_curr_offet;
+
+
+							for (uint16_t var = 8; var < line_buffer_index - 3 -2; var=var+2) {
+								//Save line to firmware data
+								firmware_data[firmware_index++] = (Char2Hex(line_buffer[var])<<4)+ Char2Hex(line_buffer[var+1]);
+							}
+						}
+						else if(Char2Hex(line_buffer[7])==4){
+							firmware_address_of_hexfile = ((uint16_t)(Char2Hex(line_buffer[8]))<<12) +((uint16_t)(Char2Hex(line_buffer[9]))<<8) + ((uint16_t)(Char2Hex(line_buffer[10]))<<4)+(uint16_t)(Char2Hex(line_buffer[11]));
+						}
 						line_buffer_index = 0;
 					}
 					else{
-						if(is_Firmware_Line_Data_Correct(line_buffer, line_buffer_index)){
-							// Check whether that line is the firmware data or not
-							if(Char2Hex(line_buffer[7])==0){
-								firmware_address_curr_offet = ((uint16_t)(Char2Hex(line_buffer[2]))<<12) +((uint16_t)(Char2Hex(line_buffer[3]))<<8) +((uint16_t)(Char2Hex(line_buffer[4]))<<4)+(uint16_t)(Char2Hex(line_buffer[5]));
-								if(firmware_address_prev_offet >= 0xFFF0){
-									num_byte_FF_add_to_end_buffer = 0xFFFF - firmware_address_prev_offet + 1 + firmware_address_curr_offet -  (uint16_t)prev_num_byte;
-								}
-								else{
-									num_byte_FF_add_to_end_buffer = firmware_address_curr_offet - firmware_address_prev_offet - prev_num_byte;
-								}
-								for (uint16_t var = 0; var < num_byte_FF_add_to_end_buffer; var++) {
-									firmware_data[firmware_index++] = 0xFF;
-								}
-								prev_num_byte = (Char2Hex(line_buffer[0])<<4) + Char2Hex(line_buffer[1]);
-								firmware_address_prev_offet = firmware_address_curr_offet;
-
-
-								for (uint16_t var = 8; var < line_buffer_index - 3 -2; var=var+2) {
-									//Save line to firmware data
-									firmware_data[firmware_index++] = (Char2Hex(line_buffer[var])<<4)+ Char2Hex(line_buffer[var+1]);
-								}
-							}
-							line_buffer_index = 0;
-						}
-						else{
-							checksum_correct = RESET;
-							LOG("\r\nChecksum is Wrong\r\n");
-							return SET;
-						}
+						checksum_correct = RESET;
+						return ERR_CHECKSUM;
 					}
 				}
 			}
@@ -696,53 +743,67 @@ FlagStatus HTTP_Firmware_Data(){
 //					sprintf(log,"\r\n line_buffer_index: %ld\r\n",line_buffer_index);
 //					LOG(log);
 					// Calculator checksum
+//						LOG("7");
 					if(first_http_read){
+						for (uint16_t var = 0; var < line_buffer_index; ++var) {
+							line_buffer[var] = line_buffer[var+1];
+						}
+						line_buffer_index --;
 						first_http_read = RESET;
+					}
+					if(is_Firmware_Line_Data_Correct(line_buffer, line_buffer_index)){
+						// Check whether that line is the firmware data or not
+//							LOG("8");
+						if(Char2Hex(line_buffer[7])==0){
+//								LOG("9");
+							firmware_address_curr_offet = ((uint16_t)(Char2Hex(line_buffer[2]))<<12) +((uint16_t)(Char2Hex(line_buffer[3]))<<8) + ((uint16_t)(Char2Hex(line_buffer[4]))<<4)+(uint16_t)(Char2Hex(line_buffer[5]));
+							if(get_2bytes_firmware_address){
+								get_2bytes_firmware_address = RESET;
+								firmware_address_of_hexfile = (firmware_address_of_hexfile<<16) | (uint32_t)firmware_address_curr_offet;
+								sprintf(log,"\r\n2 byte total :%x\r\n",firmware_address_of_hexfile);
+								LOG(log);
+								if(firmware_address_of_hexfile != CURRENT_FIRMWARE_ADDR){
+									return ERR_CURRENT_FIRMWARE_WRONG;
+								}
+							}
+							if(firmware_address_prev_offet >= 0xFFF0){
+								num_byte_FF_add_to_end_buffer = 0xFFFF - firmware_address_prev_offet + 1 + firmware_address_curr_offet - prev_num_byte;
+							}
+							else{
+								num_byte_FF_add_to_end_buffer = firmware_address_curr_offet - firmware_address_prev_offet - prev_num_byte;
+							}
+//								LOG("10");
+							for (uint16_t var = 0; var < num_byte_FF_add_to_end_buffer; var++) {
+								firmware_data[firmware_index++] = 0xFF;
+							}
+//								LOG("11");
+							prev_num_byte = (Char2Hex(line_buffer[0])<<4) + Char2Hex(line_buffer[1]);
+							firmware_address_prev_offet = firmware_address_curr_offet;
+//								LOG("12");
+							for (uint16_t var = 8; var < line_buffer_index - 3 -2; var=var+2) {
+								//Save line to firmware data
+								firmware_data[firmware_index++] = (Char2Hex(line_buffer[var])<<4)+ Char2Hex(line_buffer[var+1]);
+							}
+//								LOG("13");
+						}
+						else if(Char2Hex(line_buffer[7])==4){
+							firmware_address_of_hexfile = ((uint16_t)(Char2Hex(line_buffer[8]))<<12) +((uint16_t)(Char2Hex(line_buffer[9]))<<8) + ((uint16_t)(Char2Hex(line_buffer[10]))<<4)+(uint16_t)(Char2Hex(line_buffer[11]));
+							sprintf(log,"\r\n2 byte low :%x\r\n",firmware_address_of_hexfile);
+							LOG(log);
+						}
 						line_buffer_index = 0;
+//							LOG("14");
 					}
 					else{
-//						LOG("7");
-						if(is_Firmware_Line_Data_Correct(line_buffer, line_buffer_index)){
-							// Check whether that line is the firmware data or not
-//							LOG("8");
-							if(Char2Hex(line_buffer[7])==0){
-//								LOG("9");
-								firmware_address_curr_offet = ((uint16_t)(Char2Hex(line_buffer[2]))<<12) +((uint16_t)(Char2Hex(line_buffer[3]))<<8) + ((uint16_t)(Char2Hex(line_buffer[4]))<<4)+(uint16_t)(Char2Hex(line_buffer[5]));
-								if(firmware_address_prev_offet >= 0xFFF0){
-									num_byte_FF_add_to_end_buffer = 0xFFFF - firmware_address_prev_offet + 1 + firmware_address_curr_offet - prev_num_byte;
-								}
-								else{
-									num_byte_FF_add_to_end_buffer = firmware_address_curr_offet - firmware_address_prev_offet - prev_num_byte;
-								}
-//								LOG("10");
-								for (uint16_t var = 0; var < num_byte_FF_add_to_end_buffer; var++) {
-									firmware_data[firmware_index++] = 0xFF;
-								}
-//								LOG("11");
-								prev_num_byte = (Char2Hex(line_buffer[0])<<4) + Char2Hex(line_buffer[1]);
-								firmware_address_prev_offet = firmware_address_curr_offet;
-//								LOG("12");
-								for (uint16_t var = 8; var < line_buffer_index - 3 -2; var=var+2) {
-									//Save line to firmware data
-									firmware_data[firmware_index++] = (Char2Hex(line_buffer[var])<<4)+ Char2Hex(line_buffer[var+1]);
-								}
-//								LOG("13");
-							}
-							line_buffer_index = 0;
-//							LOG("14");
-						}
-						else{
-							checksum_correct = RESET;
-							LOG("\r\nChecksum is Wrong\r\n");
-							return SET;
-						}
+						checksum_correct = RESET;
+						return ERR_CHECKSUM;
 					}
 				}
 			}
 		}
 		temp_at_response_index = (temp_at_response_index +1)%LINE_BUFFER_LENGTH;
 	}
-	return RESET;
+	return PROCESSING;
 }
 
 

@@ -33,6 +33,14 @@ typedef enum{
 }HTTP_State;
 
 
+typedef enum{
+	DONE,
+	PROCESSING,
+	ERR_CHECKSUM,
+	ERR_CURRENT_FIRMWARE_WRONG
+}Firmware_Data_State;
+
+
 
 typedef struct{
 	HTTP_State http_state;		/*!< This is HTTP_State of State Machine. It help to manage state easier*/
