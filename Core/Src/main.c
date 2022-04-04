@@ -94,6 +94,8 @@ int main(void)
   Timer_Init();
   SPI2_Init();
   MC25LC512_Initialize();
+  I2C_Init();
+  PCF_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -101,6 +103,9 @@ int main(void)
   UART_DEBUG_Transmit("Fota Start\r\n");
   Lcd_Clear_Display();
   Lcd_Show_String("FOTA START", 0, 0);
+  char log[20];
+  sprintf(log,"BoxID: %d",Get_Box_ID());
+  Lcd_Show_String(log, 1, 0);
   while (1)
   {
     /* USER CODE END WHILE */

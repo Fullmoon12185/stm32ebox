@@ -5,13 +5,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Core/Src/ServerCommunication/app_http.c 
+../Core/Src/ServerCommunication/app_http.c \
+../Core/Src/ServerCommunication/app_mqtt.c 
 
 OBJS += \
-./Core/Src/ServerCommunication/app_http.o 
+./Core/Src/ServerCommunication/app_http.o \
+./Core/Src/ServerCommunication/app_mqtt.o 
 
 C_DEPS += \
-./Core/Src/ServerCommunication/app_http.d 
+./Core/Src/ServerCommunication/app_http.d \
+./Core/Src/ServerCommunication/app_mqtt.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

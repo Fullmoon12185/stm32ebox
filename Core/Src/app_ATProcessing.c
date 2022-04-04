@@ -21,7 +21,7 @@ const uint8_t PB_DONE[] = "PB DONE";				/*!< Simcom7600 will respond "PB DONE" w
 //const uint8_t OK[] = "OK";							/*!< Simcom7600 will respond "OK" when ATcommand valid*/
 const char* OK = "OK";
 const uint8_t ERROR_1[] = "ERROR";					/*!< Simcom7600 will respond "ERROR"  when ATcommand invalid*/
-//const uint8_t INPUT[] = ">";						/*!< Simcom7600 will respond ">" when SIMCOM7600 require input*/
+const uint8_t INPUT[] = ">";						/*!< Simcom7600 will respond ">" when SIMCOM7600 require input*/
 //const uint8_t HTTP_RESPONE_CHECK[] = "integerValue";/*!< Simcom7600 will respond "integerValue" when HTTP respond from Simcom7600 has "intergerValue" field*/
 //const uint8_t HTTP_NOT_FOUND[] = "NOT_FOUND";		/*!< Simcom7600 will respond "NOT_FOUND" when HTTP request invalid*/
 const uint8_t IMEI_CHECK[] = "+SIMEI: ";			/*!< Simcom7600 will respond "+SIMEI: " when ATcommand request IMEI number*/
@@ -46,7 +46,7 @@ void AT_Processing(){
 	}
 	else if(UART_SIM7600_Received_Buffer_Available()){
 		data_respone[data_respone_index]=UART_SIM7600_Read_Received_Buffer();
-//		UART_DEBUG_Transmit_Size(data_respone + data_respone_index, 1);
+		UART_DEBUG_Transmit_Size(data_respone + data_respone_index, 1);
 //		LOG("1");
 		data_respone_index++;
 
@@ -97,6 +97,12 @@ void AT_Processing(){
 			data_respone_length = data_respone_index;
 			data_respone_index = 0;
 			at_result = AT_FIRMWARE_CHECKSUM;
+		}
+		else if(isReceiveData((char*)data_respone, data_respone_index, (char*)INPUT)){
+			LOG("\r\nINPUT\r\n");
+			data_respone_length = data_respone_index;
+			data_respone_index = 0;
+			at_result = AT_INPUT;
 		}
 	}
 //	UART_DEBUG_Transmit_Size(aUART_RxBuffer, RXBUFFERSIZE);

@@ -14,3 +14,4 @@ app_uart.c:268:6:Clear_Reiceive_Buffer	8	static
 app_uart.c:274:11:Get_rxHead_Address	4	static
 app_uart.c:278:11:Get_rxTail_Address	4	static
 app_uart.c:282:11:Get_RxBuffer_Address	4	static
+app_uart.c:287:5:_write	24	static

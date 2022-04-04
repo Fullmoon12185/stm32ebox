@@ -1,6 +1,8 @@
-fota_fsm.c:30:6:FSM_Display_State	8	static
-fota_fsm.c:51:9:FSM_Run	8	static
-fota_fsm.c:63:6:Start_Simcom	8	static
-fota_fsm.c:68:6:Version_Checking_Http	8	static
-fota_fsm.c:90:19:FSM_Get_State	4	static
-fota_fsm.c:93:6:FSM_Set_State	16	static
+fota_fsm.c:39:6:FSM_Display_State	8	static
+fota_fsm.c:66:9:FSM_Run	8	static
+fota_fsm.c:78:6:Start_Simcom	8	static
+fota_fsm.c:84:6:Mqtt_Configuration	8	static
+fota_fsm.c:99:6:HTTP_Firmware_Processing	8	static
+fota_fsm.c:157:6:Update_Complete_Percent	8	static
+fota_fsm.c:189:19:FSM_Get_State	4	static
+fota_fsm.c:192:6:FSM_Set_State	16	static

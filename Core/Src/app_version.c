@@ -52,12 +52,10 @@ void Jump_To_Fota_Firmware(){
 }
 
 void Update_Firmware_Failed(){
-	Flash_Erase(UPDATE_STATUS_ADDR,1);
-    Flash_Write_Int(UPDATE_STATUS_ADDR, UPDATE_FAILED);
+	update_status = UPDATE_FAILED;
 }
 void Update_Firmware_Success(){
-	Flash_Erase(UPDATE_STATUS_ADDR,1);
-    Flash_Write_Int(UPDATE_STATUS_ADDR, UPDATE_SUCCESS);
+	update_status = UPDATE_SUCCESS;
 }
 
 uint8_t Get_Update_Firmware_Status(){

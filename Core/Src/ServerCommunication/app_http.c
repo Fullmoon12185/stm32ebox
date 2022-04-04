@@ -51,6 +51,8 @@ uint16_t firmware_version_check;
 uint16_t firmware_checksum = 0;
 uint8_t checksum = 0;
 uint32_t http_response_remain = 0;
+extern uint8_t pre_complete_percent;
+extern uint8_t complete_percent;
 uint8_t firmware_data[PAGESIZE*2];
 uint32_t firmware_address = CURRENT_FIRMWARE_ADDR;
 uint16_t firmware_address_prev_offet = (uint16_t)CURRENT_FIRMWARE_ADDR;
@@ -309,7 +311,8 @@ void HTTP_Read(){
 			Lcd_Show_String(logMsg, 0, 0);
 		}
 		else if((firmware_size - http_response_remain) > 10240 * num_show_lcd){
-			sprintf(logMsg,"Complete %ld%",(firmware_size- http_response_remain) * 100 / firmware_size);
+			complete_percent = (firmware_size- http_response_remain) * 100 / firmware_size;
+			sprintf(logMsg,"Complete %ld%", complete_percent);
 			Lcd_Clear_Display();
 			Lcd_Show_String(logMsg, 0, 0);
 			num_show_lcd ++;
@@ -350,6 +353,7 @@ void HTTP_Read(){
  */
 char log[50];
 uint32_t firmware_index_end;
+extern Firmware_Data_State firmware_state;
 void HTTP_Wait_For_Read(){
 	if(fota_check_version){
 		FlagStatus flag_ret;
@@ -368,7 +372,6 @@ void HTTP_Wait_For_Read(){
 		}
 	}
 	else{
-		Firmware_Data_State firmware_state;
 		switch (Get_AT_Result()) {
 			case AT_OK:
 				firmware_state = HTTP_Firmware_Data();
@@ -376,7 +379,9 @@ void HTTP_Wait_For_Read(){
 					case DONE:
 						if(http_response_remain == 0){
 							LOG("\r\nJump To Current Firmware\r\n");
-							Jump_To_Current_Firmware();
+							Update_Firmware_Success();
+							http_state = HTTP_DONE;
+//							Jump_To_Current_Firmware();
 						}
 						else{
 							Clear_AT_Result();
@@ -389,13 +394,17 @@ void HTTP_Wait_For_Read(){
 					case ERR_CHECKSUM:
 						LOG("\r\nChecksum Error\r\n");
 						LOG("\r\nJump To Factory Firmware\r\n");
-						Jump_To_Factory_Firmware();
+//						Jump_To_Factory_Firmware();
+						Update_Firmware_Failed();
+						http_state = HTTP_DONE;
 						break;
 
-					case ERR_CURRENT_FIRMWARE_WRONG:
+					case ERR_CURRENT_FIRMWARE_ADDRESS_WRONG:
 						LOG("\r\nCURRENT FIRMWARE ADDRESS WRONG\r\n");
 						LOG("\r\nJump To Current Firmware\r\n");
-						Jump_To_Current_Firmware();
+//						Jump_To_Current_Firmware();
+						Update_Firmware_Failed();
+						http_state = HTTP_DONE;
 						break;
 					default:
 						break;
@@ -702,7 +711,7 @@ Firmware_Data_State HTTP_Firmware_Data(){
 								get_2bytes_firmware_address = RESET;
 								firmware_address_of_hexfile = (firmware_address_of_hexfile<<16) | (uint32_t)firmware_address_curr_offet;
 								if(firmware_address_of_hexfile != CURRENT_FIRMWARE_ADDR){
-									return ERR_CURRENT_FIRMWARE_WRONG;
+									return ERR_CURRENT_FIRMWARE_ADDRESS_WRONG;
 								}
 							}
 							if(firmware_address_prev_offet >= 0xFFF0){
@@ -763,7 +772,7 @@ Firmware_Data_State HTTP_Firmware_Data(){
 								sprintf(log,"\r\n2 byte total :%x\r\n",firmware_address_of_hexfile);
 								LOG(log);
 								if(firmware_address_of_hexfile != CURRENT_FIRMWARE_ADDR){
-									return ERR_CURRENT_FIRMWARE_WRONG;
+									return ERR_CURRENT_FIRMWARE_ADDRESS_WRONG;
 								}
 							}
 							if(firmware_address_prev_offet >= 0xFFF0){

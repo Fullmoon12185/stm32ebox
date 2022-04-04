@@ -27,7 +27,9 @@ Core/Src/fota_fsm.o: ../Core/Src/fota_fsm.c ../Core/Inc/fota_fsm.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
  ../Core/Inc/locker_config.h ../Core/Inc/ServerCommunication/app_http.h \
- ../Core/Inc/main.h ../Core/Inc/app_version.h
+ ../Core/Inc/main.h ../Core/Inc/ServerCommunication/app_mqtt.h \
+ ../Core/Inc/Peripheral/app_uart.h ../Core/Inc/Component/app_sim7600.h \
+ ../Core/Inc/app_version.h
 
 ../Core/Inc/fota_fsm.h:
 
@@ -92,5 +94,11 @@ Core/Src/fota_fsm.o: ../Core/Src/fota_fsm.c ../Core/Inc/fota_fsm.h \
 ../Core/Inc/ServerCommunication/app_http.h:
 
 ../Core/Inc/main.h:
+
+../Core/Inc/ServerCommunication/app_mqtt.h:
+
+../Core/Inc/Peripheral/app_uart.h:
+
+../Core/Inc/Component/app_sim7600.h:
 
 ../Core/Inc/app_version.h:

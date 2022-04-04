@@ -283,4 +283,11 @@ uint16_t* Get_RxBuffer_Address(){
 	return aUART_RxBuffer;
 }
 
+#if defined(__GNUC__)
+int _write(int fd, char * ptr, int len)
+{
+  UART_DEBUG_Transmit_Size((uint8_t*)ptr, len);
+  return len;
+}
+#endif
 

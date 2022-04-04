@@ -43,11 +43,13 @@
 	#define DEPOSIT_TOPIC				"deposit"
 #endif
 
-#define MQTT_SERVER					"\"tcp://a2a8bfp9xqpfl6-ats.iot.ap-northeast-1.amazonaws.com:8883\""
+#define MQTT_SERVER					"\"tcp://35.240.158.2:8883\""
 //note that ClientID be differenced between lockers
-#define USER_NAME					"\"logUser\""
-#define PASS_WORD					"\"logPwd\""
+#define USER_NAME					"\"eboost-k2\""
+#define PASS_WORD					"\"ZbHzPb5W\""
 
+#define MAX_LENGTH_TOPIC				50
+#define MAX_LENGTH_PAYLOAD				50
 #define TIMER_CYCLE				 		10 /*!< 10ms*/
 
 /*

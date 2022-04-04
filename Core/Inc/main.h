@@ -71,7 +71,7 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-#define LOG(x)	UART_DEBUG_Transmit(x)
+#define LOG	UART_DEBUG_Transmit
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
