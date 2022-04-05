@@ -102,7 +102,7 @@ void HTTP_Firmware_Processing(){
 		case HTTP_DONE:
 			if(Get_Update_Firmware_Status() == UPDATE_SUCCESS){
 				sprintf(UPDATE_PERCENT_COMPLETE_TOPIC,"FOTA_%d",Get_Box_ID());
-				sprintf(PAYLOAD,"Success");
+				sprintf(PAYLOAD,"SUCCESS");
 			}
 			else{
 				sprintf(UPDATE_PERCENT_COMPLETE_TOPIC,"FOTA_%d",Get_Box_ID());
