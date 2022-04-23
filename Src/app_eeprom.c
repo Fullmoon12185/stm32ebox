@@ -23,7 +23,7 @@
 #define EEPROM_BLOCK_SIZE						17
 
 #define	EEPROM_MAIN_OUTLET_ENERGY_ADDRESS						(PAGE_0 + 0)
-#define	EEPROM_MAIN_OUTLET_ENERGY_SIZE							5
+#define	EEPROM_MAIN_OUTLET_ENERGY_SIZE							9
 
 
 #define	EEPROM_OUTLET_STATUS_ADDRESS					(PAGE_1 + 0)
@@ -60,7 +60,7 @@ uint32_t Eeprom_Get_LimitEnergy(uint8_t outletID);
 uint8_t Eeprom_Get_Status(uint8_t outletID);
 uint32_t Eeprom_Get_Energy(uint8_t outletID);
 
-void Eeprom_Reset_Main_Energy(uint32_t main_energy);
+void Eeprom_Reset_Main_Energy(uint64_t main_energy);
 
 void Eeprom_Initialize(){
 	MC25LC512_Initialize();
@@ -213,55 +213,85 @@ void Eeprom_Update_WorkingTime(uint8_t outletID, uint32_t workingTime){
 
 }
 
-uint32_t Eeprom_Get_Main_Energy(void){
-	uint8_t tempBuffer[5];
-	uint32_t mainEnergy = 0;
+uint64_t Eeprom_Get_Main_Energy(void){
+	uint8_t tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE];
+	uint8_t checkSum = 0;
+	uint64_t mainEnergy = 0;
+
 	MC25LC512_Read_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
-	if(tempBuffer[4] == (tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3])){
-		mainEnergy = (uint32_t)tempBuffer[0];
-		mainEnergy |= (uint32_t)(tempBuffer[1] << 8);
-		mainEnergy |= (uint32_t)(tempBuffer[2] << 16);
-		mainEnergy |= (uint32_t)(tempBuffer[3] << 24);
+	for(uint8_t idx = 0; idx < EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1; idx ++){
+		checkSum ^= tempBuffer[idx];
+	}
+	if(tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1] == checkSum){
+		mainEnergy = (uint64_t)tempBuffer[0];
+		mainEnergy |= (uint64_t)(tempBuffer[1]) << 8;
+		mainEnergy |= (uint64_t)(tempBuffer[2]) << 16;
+		mainEnergy |= (uint64_t)(tempBuffer[3]) << 24;
+
+		mainEnergy |= (uint64_t)(tempBuffer[4]) << 32;
+		mainEnergy |= (uint64_t)(tempBuffer[5]) << 40;
+		mainEnergy |= (uint64_t)(tempBuffer[6]) << 48;
+		mainEnergy |= (uint64_t)(tempBuffer[7]) << 56;
 	}
 	return mainEnergy;
 }
 
-void Eeprom_Update_Main_Energy(uint32_t main_energy){
-	uint8_t tempBuffer[5];
+void Eeprom_Update_Main_Energy(uint64_t main_energy){
+	uint8_t tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE];
+	uint8_t checkSum = 0;
 	static uint8_t countForUpdateMainEnergy = 0;
 	countForUpdateMainEnergy = (countForUpdateMainEnergy + 1)%60;
 	if(countForUpdateMainEnergy == 0){
 		tempBuffer[0] = (uint8_t)(main_energy & 0xff);
-		tempBuffer[1] = (uint8_t)(main_energy>>8 & 0xff);
-		tempBuffer[2] = (uint8_t)(main_energy>>16 & 0xff);
-		tempBuffer[3] = (uint8_t)(main_energy>>24 & 0xff);
-		tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+		tempBuffer[1] = (uint8_t)(main_energy >> 8 & 0xff);
+		tempBuffer[2] = (uint8_t)(main_energy >> 16 & 0xff);
+		tempBuffer[3] = (uint8_t)(main_energy >> 24 & 0xff);
+		tempBuffer[4] = (uint8_t)(main_energy >> 32 & 0xff);
+		tempBuffer[5] = (uint8_t)(main_energy >> 40 & 0xff);
+		tempBuffer[6] = (uint8_t)(main_energy >> 48 & 0xff);
+		tempBuffer[7] = (uint8_t)(main_energy >> 56 & 0xff);
+		for(uint8_t idx = 0; idx < EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1; idx ++){
+			checkSum ^= tempBuffer[idx];
+		}
+		tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1] = checkSum;
 		MC25LC512_Write_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
 	}
 }
 
-void Eeprom_Update_Main_Energy_Immediately(uint32_t main_energy){
-	uint8_t tempBuffer[5];
+void Eeprom_Update_Main_Energy_Immediately(uint64_t main_energy){
+	uint8_t tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE];
+	uint8_t checkSum = 0;
 	tempBuffer[0] = (uint8_t)(main_energy & 0xff);
-	tempBuffer[1] = (uint8_t)(main_energy>>8 & 0xff);
-	tempBuffer[2] = (uint8_t)(main_energy>>16 & 0xff);
-	tempBuffer[3] = (uint8_t)(main_energy>>24 & 0xff);
-	tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+	tempBuffer[1] = (uint8_t)(main_energy >> 8 & 0xff);
+	tempBuffer[2] = (uint8_t)(main_energy >> 16 & 0xff);
+	tempBuffer[3] = (uint8_t)(main_energy >> 24 & 0xff);
+	tempBuffer[4] = (uint8_t)(main_energy >> 32 & 0xff);
+	tempBuffer[5] = (uint8_t)(main_energy >> 40 & 0xff);
+	tempBuffer[6] = (uint8_t)(main_energy >> 48 & 0xff);
+	tempBuffer[7] = (uint8_t)(main_energy >> 56 & 0xff);
+	for(uint8_t idx = 0; idx < EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1; idx ++){
+		checkSum ^= tempBuffer[idx];
+	}
+	tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1] = checkSum;
 	MC25LC512_Write_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
 }
 
-void Eeprom_Reset_Main_Energy(uint32_t main_energy){
-	uint8_t tempBuffer[5];
-	static uint8_t countForUpdateMainEnergy = 0;
-	countForUpdateMainEnergy = 0;
-	main_energy  = 0;
-	if(countForUpdateMainEnergy == 0){
-		tempBuffer[0] = (uint8_t)(main_energy & 0xff);
-		tempBuffer[1] = (uint8_t)(main_energy>>8 & 0xff);
-		tempBuffer[2] = (uint8_t)(main_energy>>16 & 0xff);
-		tempBuffer[3] = (uint8_t)(main_energy>>24 & 0xff);
-		tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
-		MC25LC512_Write_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
-	}
+void Eeprom_Reset_Main_Energy(uint64_t main_energy){
+	uint8_t tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE];
+	uint8_t checkSum = 0;
 
+
+	tempBuffer[0] = (uint8_t)(main_energy & 0xff);
+	tempBuffer[1] = (uint8_t)(main_energy >> 8 & 0xff);
+	tempBuffer[2] = (uint8_t)(main_energy >> 16 & 0xff);
+	tempBuffer[3] = (uint8_t)(main_energy >> 24 & 0xff);
+	tempBuffer[4] = (uint8_t)(main_energy >> 32 & 0xff);
+	tempBuffer[5] = (uint8_t)(main_energy >> 40 & 0xff);
+	tempBuffer[6] = (uint8_t)(main_energy >> 48 & 0xff);
+	tempBuffer[7] = (uint8_t)(main_energy >> 56 & 0xff);
+	for(uint8_t idx = 0; idx < EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1; idx ++){
+		checkSum ^= tempBuffer[idx];
+	}
+	tempBuffer[EEPROM_MAIN_OUTLET_ENERGY_SIZE - 1] = checkSum;
+	MC25LC512_Write_Bytes(EEPROM_MAIN_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_MAIN_OUTLET_ENERGY_SIZE);
 }

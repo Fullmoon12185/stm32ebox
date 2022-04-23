@@ -28,9 +28,9 @@
 #define TIMER_TO_RESET_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_RESET_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
 #define COMMAND_TIME_OUT						(20000/INTERRUPT_TIMER_PERIOD)
-#define SETTING_TIME_OUT						(1000/INTERRUPT_TIMER_PERIOD)
+#define SETTING_TIME_OUT						(500/INTERRUPT_TIMER_PERIOD)
 
-#define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(10000/INTERRUPT_TIMER_PERIOD) //10s
+#define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(20000/INTERRUPT_TIMER_PERIOD) //10s
 
 #define MAX_RETRY_NUMBER						3
 
@@ -209,7 +209,7 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
 #elif (VERSION_EBOX == 2)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
-#elif (VERSION_EBOX == 3)
+#elif (VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
 #endif
 		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
@@ -245,32 +245,32 @@ void Sim3g_State_Display(void){
 		pre_sim3gState = sim3gState;
 		switch(sim3gState){
 		case SIM3G_START_UP:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"CHECK_SIM3G_START_UP"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"CHECK_SIM3G_START_UP\r\n"););
 
 			break;
 		case WAIT_FOR_SIM3G_STARTUP_RESPONSE:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_STARTUP_RESPONSE"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_STARTUP_RESPONSE\r\n"););
 			break;
 		case POWER_ON_SIM3G:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_ON_SIM3G\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_ON_SIM3G\r\n"););
 			break;
 		case WAIT_FOR_SIM3G_POWER_ON:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_ON\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_ON\r\n"););
 
 			break;
 		case POWER_OFF_SIM3G:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_OFF_SIM3G\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"POWER_OFF_SIM3G\r\n"););
 			break;
 
 		case WAIT_FOR_SIM3G_POWER_OFF:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_OFF\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_POWER_OFF\r\n"););
 			break;
 
 		case RESET_SIM3G:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RESET_SIM3G\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RESET_SIM3G\r\n"););
 			break;
 		case WAIT_FOR_SIM3G_RESET:
-			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_RESET\r"););
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"WAIT_FOR_SIM3G_RESET\r\n"););
 			break;
 		default:
 			break;
@@ -401,7 +401,7 @@ void Reset_Signal_Low(void){
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #elif (VERSION_EBOX == 15)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
-#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3)
+#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3  || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #endif
 }
@@ -410,7 +410,7 @@ void Reset_Signal_High(void){
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);
 #elif(VERSION_EBOX == 15) //sim5320
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_SET);	
-#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3) //sim 7600
+#elif (VERSION_EBOX == 2 || VERSION_EBOX == 3  || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A) //sim 7600
 	HAL_GPIO_WritePin(PC9_3G_PERST_PORT, PC9_3G_PERST, GPIO_PIN_RESET);
 #endif
 }

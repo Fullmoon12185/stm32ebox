@@ -434,6 +434,7 @@ void SM_Send_Data(uint8_t mesageLength){
 		commandBuffer[commandBufferIndex++] = tempMessageLength + 0x30;
 	}
 	commandBuffer[commandBufferIndex++] = CR;
+	commandBuffer[commandBufferIndex++] = LF;
 
 	isReadyToSendDataToServer = RESET;
 	MQTTCommandSending((uint8_t *)commandBuffer, commandBufferIndex);
