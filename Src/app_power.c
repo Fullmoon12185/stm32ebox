@@ -32,7 +32,7 @@
 #define		MAX_CURRENT								1000000
 //for distrist
 //#define		MAX_CURRENT_1							700000
-#define		MAX_CURRENT_1							3000000
+#define		MAX_CURRENT_1							2000000
 
 #endif
 
@@ -397,7 +397,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID == 0){
+		if(tempOutletID >= 0){
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) Main.nodes[tempOutletID].powerFactor););
