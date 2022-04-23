@@ -25,6 +25,7 @@
 
 
 extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_FOTA_STATUS[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_VOLTAGE[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
@@ -68,6 +69,7 @@ void Clear_Publish_Message_Timeout_Flag(void);
 uint8_t is_Publish_Message_Timeout(void);
 
 void Update_Publish_Status_Message(void);
+void Update_Publish_Fota_Status_Message(uint16_t fota_status);
 void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData);
 
 void Update_Publish_Power_Message_All_Outlets(void);
@@ -494,6 +496,17 @@ void Update_Publish_Status_Message(void){
 	publish_message_length = publishMessageIndex;
 }
 
+void Update_Publish_Fota_Status_Message(uint16_t fota_status){
+	uint8_t publishMessageIndex = 0;
+	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
+		publish_message[publishMessageIndex] = 0;
+	}
+	publishMessageIndex = 0;
+	publish_message[publishMessageIndex++] = fota_status >> 8;
+	publish_message[publishMessageIndex++] = fota_status;
+	publish_message_length = publishMessageIndex;
+}
+
 void Led_Status_Display(void){
 	static uint8_t ledState = 0;
 	static uint8_t ledDislayTaskIndex = SCH_MAX_TASKS;
@@ -588,27 +601,45 @@ void Server_Communication(void){
 //					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 
 				} else if (is_Publish_Message_Timeout()){
-					if(publishTopicIndex == 0){
-						publishTopicIndex = 1;
-						Update_Publish_Status_Message();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-					} else if(publishTopicIndex == 1){
-						publishTopicIndex = 2;
-						Update_Publish_Power_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER, publish_message, publish_message_length);
-					} else if(publishTopicIndex == 2){
-						publishTopicIndex = 3;
-						Update_Publish_Power_Factor_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR, publish_message, publish_message_length);
-					} else if(publishTopicIndex == 3){
-						publishTopicIndex = 4;
-						Update_Publish_Voltage_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE, publish_message, publish_message_length);
-					} else if(publishTopicIndex == 4){
-						publishTopicIndex = 0;
-						Update_Publish_Current_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT, publish_message, publish_message_length);
+					static uint8_t publish_fota_status = RESET;
+					if(!publish_fota_status){
+						/*
+						 * Brief: Publish FOTA status only 1 time.
+						 * FOTA Status have 3 States:
+						 * + UPDATE_FAILED: 0
+						 * + UPDATE_SUCCESS: 1
+						 * + DONT_UPDATE: 0xFFFF is status after publish FOTA Status or the not firmware update yet.
+						 */
+						uint16_t fota_status = Flash_Read_Int(UPDATE_STATUS_ADDR);
+						Update_Publish_Fota_Status_Message(fota_status);
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_FOTA_STATUS, publish_message, publish_message_length);
+						Flash_Erase(UPDATE_STATUS_ADDR, sizeof(fota_status));
+						publish_fota_status = SET;
 					}
+					else{
+						if(publishTopicIndex == 0){
+							publishTopicIndex = 1;
+							Update_Publish_Status_Message();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
+						} else if(publishTopicIndex == 1){
+							publishTopicIndex = 2;
+							Update_Publish_Power_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER, publish_message, publish_message_length);
+						} else if(publishTopicIndex == 2){
+							publishTopicIndex = 3;
+							Update_Publish_Power_Factor_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR, publish_message, publish_message_length);
+						} else if(publishTopicIndex == 3){
+							publishTopicIndex = 4;
+							Update_Publish_Voltage_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE, publish_message, publish_message_length);
+						} else if(publishTopicIndex == 4){
+							publishTopicIndex = 0;
+							Update_Publish_Current_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT, publish_message, publish_message_length);
+						}
+					}
+
 					Set_Mqtt_State(MQTT_PUBLISH_STATE);
 					Clear_Publish_Message_Timeout_Flag();
 					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);

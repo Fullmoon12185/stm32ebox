@@ -88,6 +88,7 @@ uint8_t SUBSCRIBE_TOPIC_3[MAX_TOPIC_LENGTH];
 
 
 uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
+uint8_t PUBLISH_TOPIC_FOTA_STATUS[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_VOLTAGE[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
@@ -199,7 +200,7 @@ void Set_Up_Topic_Names(void){
 	SUBSCRIBE_TOPIC_1[indexTopicCharacter++] = 0;
 
 	indexTopicCharacter = 0;
-	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'Z';
+	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'F';
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'E';
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'b';
 	SUBSCRIBE_TOPIC_2[indexTopicCharacter++] = 'o';
@@ -239,6 +240,20 @@ void Set_Up_Topic_Names(void){
 	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
 	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
 	PUBLISH_TOPIC_STATUS[indexTopicCharacter++] = 0;
+
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = 'F';
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = 'O';
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = 'E';
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = 'x';
+
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_FOTA_STATUS[indexTopicCharacter++] = 0;
 
 	indexTopicCharacter = 0;
 	PUBLISH_TOPIC_POWER[indexTopicCharacter++] = 'P';
