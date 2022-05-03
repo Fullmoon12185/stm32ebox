@@ -707,13 +707,15 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)){
 				processDataState = PROCESSING_RETAINED_DATA_TOPIC_3;
 				Clear_Sim3gDataProcessingBuffer();
-			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
+			}
+			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 					&& (readCharacter == LEN_FOR_UPDATE_POWER_CONSUPMPTION)){ //For update total power consumption
 				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
 				Clear_Sim3gDataProcessingBuffer();
 			}
 			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 				&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA)){ //For update total power consumption
+				UART3_SendToHost((uint8_t*)"PROCESSING_RECEIVED_DATA_TOPIC_2");
 			processDataState = PROCESSING_RECEIVED_DATA_TOPIC_2;
 			Clear_Sim3gDataProcessingBuffer();
 			}
@@ -808,6 +810,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 //				}
 //			}
 //		}
+		UART3_SendToHost((uint8_t*)"Jump_To_Fota_Firmware");
 		Jump_To_Fota_Firmware();
 		break;
 	case PROCESSING_RETAINED_DATA_TOPIC_3:

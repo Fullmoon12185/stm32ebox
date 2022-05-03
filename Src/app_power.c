@@ -29,10 +29,10 @@
 //#define		MAX_CURRENT_1							700000
 #define		MAX_CURRENT_1							1000000
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-#define		MAX_CURRENT								1000000
+#define		MAX_CURRENT								800000
 //for distrist
 //#define		MAX_CURRENT_1							700000
-#define		MAX_CURRENT_1							2000000
+#define		MAX_CURRENT_1							1500000
 
 #endif
 

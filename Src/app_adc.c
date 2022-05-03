@@ -124,46 +124,46 @@
 //This is for CT 10 A
 
 #define		CT_10A_THRESHOLD_1							300
-#define		CT_10A_COEFF_1								2410
+#define		CT_10A_COEFF_1								1755
 #define		CT_10A_THRESHOLD_2A							280
-#define		CT_10A_COEFF_2A								2400
+#define		CT_10A_COEFF_2A								1755
 #define		CT_10A_THRESHOLD_2B							260
-#define		CT_10A_COEFF_2B								1768
+#define		CT_10A_COEFF_2B								1755
 
 #define		CT_10A_THRESHOLD_2							240
-#define		CT_10A_COEFF_2								1768
+#define		CT_10A_COEFF_2								1755
 
 #define		CT_10A_THRESHOLD_3							200
-#define		CT_10A_COEFF_3								1768
+#define		CT_10A_COEFF_3								1755
 
 #define		CT_10A_THRESHOLD_4							180
 #define		CT_10A_COEFF_4								1768
 
 #define		CT_10A_THRESHOLD_5							158
-#define		CT_10A_COEFF_5								2134
+#define		CT_10A_COEFF_5								1755
 
 #define		CT_10A_THRESHOLD_6							154
-#define		CT_10A_COEFF_6								2106
+#define		CT_10A_COEFF_6								1755
 #define		CT_10A_THRESHOLD_7							145
-#define		CT_10A_COEFF_7								2077
+#define		CT_10A_COEFF_7								1755
 #define		CT_10A_THRESHOLD_8							137
-#define		CT_10A_COEFF_8								2044
+#define		CT_10A_COEFF_8								1755
 
 #define		CT_10A_THRESHOLD_9							134
-#define		CT_10A_COEFF_9								2002
+#define		CT_10A_COEFF_9								1755
 #define		CT_10A_THRESHOLD_10							129
-#define		CT_10A_COEFF_10								1971
+#define		CT_10A_COEFF_10								1755
 #define		CT_10A_THRESHOLD_11							119
-#define		CT_10A_COEFF_11								1954
+#define		CT_10A_COEFF_11								1755
 #define		CT_10A_THRESHOLD_12							115
-#define		CT_10A_COEFF_12								1905
+#define		CT_10A_COEFF_12								1755
 #define		CT_10A_THRESHOLD_13							110
-#define		CT_10A_COEFF_13								1859
+#define		CT_10A_COEFF_13								1755
 
 #define		CT_10A_THRESHOLD_14							103
-#define		CT_10A_COEFF_14								1830
+#define		CT_10A_COEFF_14								1755
 #define		CT_10A_THRESHOLD_15							100
-#define		CT_10A_COEFF_15								1788
+#define		CT_10A_COEFF_15								1755
 
 #define		CT_10A_COEFF_16								1757
 
@@ -173,13 +173,13 @@
 #define		CT_20A_COEFF_1								2790
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2780
+#define		CT_20A_COEFF_2								2750
 
 #define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2770
+#define		CT_20A_COEFF_3								2735
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2660
+#define		CT_20A_COEFF_4								2730
 
 #define		CT_20A_THRESHOLD_5							0
 #define		CT_20A_COEFF_5								2600
@@ -196,7 +196,7 @@ DMA_HandleTypeDef Hdma_adc1Handle;
 
 int32_t AdcDmaBuffer[NUMBER_OF_ADC_CHANNELS];
 
-int32_t PowerFactor[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
+uint32_t PowerFactor[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
 
 int32_t AdcBuffer[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_PER_SECOND];
 int32_t AdcBufferPeakPeak[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_FOR_SMA];
@@ -784,17 +784,20 @@ void PowerConsumption_FSM(void){
 
 				} else {
 					if(tempIrmsADCValue > 230){
-						coefficientForPF = 345;
+						coefficientForPF = 320;
 					} else if(tempIrmsADCValue > 100)
-						coefficientForPF = 345;
+						coefficientForPF = 320;
 					else {
-						coefficientForPF = 345;
+						coefficientForPF = 320;
 					}
 
 				}
 #endif
-				tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
-
+				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 15){
+					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
+				} else {
+					tempPowerFactor = 0.0;
+				}
 				PowerFactor[i] = (uint32_t)tempPowerFactor;
 				if(PowerFactor[i] >= 98){
 					PowerFactor[i] = 100;
@@ -804,8 +807,14 @@ void PowerConsumption_FSM(void){
 				{
 					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
 					UART3_SendToHost((uint8_t *)strtmp);
+					sprintf((char*) strtmp, "%d\t", (int) tempPowerFactor);
+					UART3_SendToHost((uint8_t *)strtmp);
 					sprintf((char*) strtmp, "%d\t", (int) tempIrmsADCValue);
 					UART3_SendToHost((uint8_t *)strtmp);
+
+					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i]);
+					UART3_SendToHost((uint8_t *)strtmp);
+
 					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
 					UART3_SendToHost((uint8_t *)strtmp);
 				}

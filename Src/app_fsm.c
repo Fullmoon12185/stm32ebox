@@ -474,16 +474,16 @@ void Update_Publish_Status_Message(void){
 		if(outletID < MAIN_INPUT){
 			publish_message[publishMessageIndex++] = outletID + 0x30;
 			publish_message[publishMessageIndex++] = '-';
-			if(Get_Relay_Status(outletID)){
+			// if(Get_Relay_Status(outletID)){
 				if((uint8_t)Get_Node_Status(outletID) <= 9){
 					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID) + 0x30;
 				} else {
 					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)/10 + 0x30;
 					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)%10 + 0x30;
 				}
-			} else {
-				publish_message[publishMessageIndex++] = 0x30;
-			}
+			// } else {
+			// 	publish_message[publishMessageIndex++] = 0x30;
+			// }
 		} else {
 			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
 			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
