@@ -8,6 +8,8 @@
 #include "main.h"
 #include "app_pcf8574.h"
 #include "app_scheduler.h"
+#include "app_relay.h"
+
 
 FlagStatus array_Of_Relay_Statuses[NUMBER_OF_RELAYS];
 WorkingStatus array_Of_Relay_Physical_Statuses[NUMBER_OF_RELAYS];
@@ -71,6 +73,20 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 #endif
 static uint32_t relay_TimeoutFlag_Index = NO_TASK_ID;
 uint8_t set_Relay_TimeoutFlag = 1;
+uint8_t latestRelay[NUMBER_OF_RELAYS] = {
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS,
+	NUMBER_OF_RELAYS
+};
+uint8_t latestRelayIndex = 0;
+static uint8_t timeoutForResetLatestRelayBuffer = 0;
 
 void Clear_Relay_Timeout_Flag(void){
 	set_Relay_TimeoutFlag = 0;
@@ -94,6 +110,7 @@ void Relay_Init(void){
 	uint8_t i;
 	for (i = 0; i < NUMBER_OF_RELAYS; i ++){
 		array_Of_Relay_Statuses[i] = RESET;
+		latestRelay[i] = NUMBER_OF_RELAYS;
 	}
 	Update_Relay_Physical_Status();
 	set_Relay_TimeoutFlag = 1;
@@ -101,7 +118,7 @@ void Relay_Init(void){
 }
 
 void Set_Relay1(uint8_t relayIndex){
-	if(relayIndex > 9) return;
+	if(relayIndex >= NUMBER_OF_RELAYS) return;
 	if(array_Of_Relay_Statuses[relayIndex] == RESET){
 		isUpdateRelayStatus = SET;
 	}
@@ -110,11 +127,13 @@ void Set_Relay1(uint8_t relayIndex){
 
 }
 void Set_Relay(uint8_t relayIndex){
-	if(relayIndex > 9) return;
+	if(relayIndex >= NUMBER_OF_RELAYS) return;
 	if(array_Of_Relay_Statuses[relayIndex] == RESET){
 		isUpdateRelayStatus = SET;
 	}
 	array_Of_Relay_Statuses[relayIndex] = SET;
+	Update_Latest_Relay(relayIndex);
+	Clear_Counter_For_Checking_Total_Current();
 	HAL_GPIO_WritePin(array_Of_Relay_Ports[relayIndex], array_Of_Relay_Pins[relayIndex], SET);
 
 	SCH_Delete_Task(relay_TimeoutFlag_Index);
@@ -123,7 +142,7 @@ void Set_Relay(uint8_t relayIndex){
 }
 
 void Reset_Relay(uint8_t relayIndex){
-	if(relayIndex > 9) return;
+	if(relayIndex >= NUMBER_OF_RELAYS) return;
 	if(array_Of_Relay_Statuses[relayIndex] == SET){
 		isUpdateRelayStatus = SET;
 	}
@@ -152,4 +171,46 @@ FlagStatus Get_Is_Update_Relay_Status(void){
 	} else {
 		return RESET;
 	}
+}
+
+
+
+//For latest Relay
+void Clear_Counter_For_Checking_Total_Current(void){
+	timeoutForResetLatestRelayBuffer = 0;
+}
+void Increase_Counter_For_Checking_Total_Current(void){
+	timeoutForResetLatestRelayBuffer = timeoutForResetLatestRelayBuffer + 1;
+}
+uint8_t Is_Timeout_For_Checking_Total_Current(void){
+	if(timeoutForResetLatestRelayBuffer >= 60){
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+void Clear_Latest_Relay_Buffer(void){
+	for (uint8_t index = 0; index < NUMBER_OF_RELAYS; index ++){
+		latestRelay[index] = NUMBER_OF_RELAYS;
+	}
+	latestRelayIndex = 0;
+}
+uint8_t Reset_Latest_Relay(void){
+	uint8_t relayIndex = latestRelay[latestRelayIndex];
+	Reset_Relay(latestRelay[latestRelayIndex]);
+	latestRelay[latestRelayIndex] = NUMBER_OF_RELAYS;
+	if(latestRelayIndex == 0){
+		latestRelayIndex = NUMBER_OF_RELAYS - 1;
+	} else {
+		latestRelayIndex = latestRelayIndex - 1;
+	}
+	return relayIndex;
+}
+
+void Update_Latest_Relay(uint8_t index){
+	if(index >= NUMBER_OF_RELAYS) return;
+	latestRelayIndex = (latestRelayIndex + 1)%NUMBER_OF_RELAYS;
+	latestRelay[latestRelayIndex] = index;
+	
 }

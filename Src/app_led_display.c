@@ -133,6 +133,8 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
 		} else if(status == NO_FUSE) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
+		} else if(status == TOTAL_OVER_CURRRENT) {
+			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
 		} else if(status == NO_RELAY) {
 			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_SLOW;
 		} else if(status == NODE_OVER_CURRENT) {

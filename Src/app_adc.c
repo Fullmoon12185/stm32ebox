@@ -27,8 +27,51 @@
 //#if (AVCC_OPAMP == 3)
 //#define		COEFFICIENT_0								1100
 //#define		COEFFICIENT_01								950
+#if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 
-#if(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
+//this is for CT 5A
+#define 	THRESHOLD_1									252
+#define 	THRESHOLD_2									250
+#define 	THRESHOLD_3_A								230
+#define 	THRESHOLD_3_A1								215
+#define 	THRESHOLD_3_A2								207
+#define 	THRESHOLD_3_A3								201
+#define 	THRESHOLD_3_A4								195
+#define 	THRESHOLD_3_A5								191
+#define 	THRESHOLD_3_A6								186
+
+#define 	THRESHOLD_3									170
+#define 	THRESHOLD_3_B								144
+#define 	THRESHOLD_3_BB								131
+
+#define 	THRESHOLD_4									124
+#define 	THRESHOLD_5									116
+#define 	THRESHOLD_6									109
+
+#define 	THRESHOLD_7									101
+#define 	THRESHOLD_8									93
+
+#define		COEFFICIENT_1								2330
+#define		COEFFICIENT_2								2307
+
+#define		COEFFICIENT_3_A								2250
+#define		COEFFICIENT_3_A1							2230
+#define		COEFFICIENT_3_A2							2196
+#define		COEFFICIENT_3_A3							2182
+#define		COEFFICIENT_3_A4							2165
+#define		COEFFICIENT_3_A5							2148
+#define		COEFFICIENT_3_A6							2123
+
+#define		COEFFICIENT_3								2178
+#define		COEFFICIENT_3_B								2080
+#define		COEFFICIENT_3_BB							2020
+#define		COEFFICIENT_4								1990
+#define		COEFFICIENT_5								1921
+#define		COEFFICIENT_6								1876
+#define		COEFFICIENT_7								1833
+#define		COEFFICIENT_8								1785
+
+#elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 
 //this is for CT 5A
 #define 	THRESHOLD_1									252

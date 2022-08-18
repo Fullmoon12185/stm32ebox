@@ -34,13 +34,22 @@
 //#define		MAX_CURRENT_1							700000
 #define		MAX_CURRENT_1							1500000
 
+//#define 	MAX_TOTAL_CURRENT						38000		//in miliampere
+
 #endif
+
+#define 	MAX_TOTAL_CURRENT						38000		//in miliampere
+
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 #define		MIN_CURRENT								30000
 #define		MIN_CURRENT_FOR_START_CHARGING			60000
 #define 	CURRENT_CHANGING_THRESHOLD				30000
-#define 	MIN_PF									30
+#if(BOX_PLACE == BOX_AT_XI)
+	#define 	MIN_PF									20
+#else
+	#define 	MIN_PF									30
+#endif
 
 #elif(VERSION_EBOX == 15)
 #define		MIN_CURRENT								10000
@@ -52,18 +61,19 @@
 #define 	MIN_PF									25
 #endif
 
-#define		TIME_OUT_1_SECOND						(1000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_STABABILITY					(20000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_UNPLUG					(20000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_DETECTING_NO_FUSE		(20000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_DETECTING_NO_RELAY		(20000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_CHARGE_FULL				(10000/INTERRUPT_TIMER_PERIOD)
-#define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   (1000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_1_SECOND											(1000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_STABABILITY										(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT					(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_UNPLUG										(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_DETECTING_NO_FUSE							(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_DETECTING_NO_RELAY							(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_CHARGE_FULL									(10000/INTERRUPT_TIMER_PERIOD)
+#define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(1000/INTERRUPT_TIMER_PERIOD)
 
-#define	    TIME_OUT_AFTER_DETECTING_OVER_MONEY		(10000/INTERRUPT_TIMER_PERIOD)
-#define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT		(5000/INTERRUPT_TIMER_PERIOD)
+#define	    TIME_OUT_AFTER_DETECTING_OVER_MONEY							(10000/INTERRUPT_TIMER_PERIOD)
+#define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT							(5000/INTERRUPT_TIMER_PERIOD)
 
-#define			COUNT_FOR_DECIDE_CHARGE_FULL		30
+#define			COUNT_FOR_DECIDE_CHARGE_FULL							30
 
 
 typedef struct PowerNodes {
@@ -139,11 +149,11 @@ void Power_Set_Timeout_Flag_7(void);
 void Power_Set_Timeout_Flag_8(void);
 void Power_Set_Timeout_Flag_9(void);
 uint8_t Is_Power_Timeout_Flag(uint8_t outletID);
-
+uint8_t Is_Main_Current_Over_Max_Current(void);
 
 void Process_Outlets(void);
 SystemStatus Process_Input_Source(void);
-
+void Process_Main_Currrent_Over_Max_Current(void);
 /////////////////////////////////////////////////////////////
 
 void Process_System_Power(void){
@@ -301,6 +311,7 @@ void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy){
 //		Eeprom_Update_LimitEnergy(outletID, limit_energy);
 	}
 }
+
 uint64_t Get_Main_Power_Consumption(void){
 //	uint_t derivativeEnergy = Main.energy - Main.previousEnergy;
 //	Main.previousEnergy = Main.energy;
@@ -314,9 +325,25 @@ void Set_Main_Power_Consumption(uint64_t totalPowerConsumption){
 uint8_t Get_Main_Power_Factor(void){
 	return Main.powerFactor;
 }
+//in milliampere
 uint32_t Get_Main_Current(void){
-	return Main.refTotalCurrent/100;
+	Main.currentTotal = 0;
+	for(uint8_t outletIndex = 0; outletIndex < NUMBER_OF_RELAYS; outletIndex ++){
+		Main.currentTotal = Main.currentTotal + Get_Current(outletIndex);
+	}
+	DEBUG_POWER(sprintf((char*) strtmpPower, "Get_Main_Current = %d\r\n", (int) Main.currentTotal););
+	DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+	return Main.currentTotal;
 }
+uint8_t Is_Main_Current_Over_Max_Current(void){
+	if(Get_Main_Current() > MAX_TOTAL_CURRENT){
+		return 1;
+	} else {
+		return 0;
+	}
+
+}
+
 SystemStatus Get_Main_Status(void){
 	return Main.status;
 }
@@ -552,6 +579,10 @@ void Display_OutLet_Status(uint8_t outletID){
 			DEBUG_POWER(sprintf((char*) strtmpPower, "NODE_OVER_CURRENT=%d\r\n", (int) outletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
+		case TOTAL_OVER_CURRRENT:
+			DEBUG_POWER(sprintf((char*) strtmpPower, "TOTAL_OVER_CURRRENT=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			break;
 		case NODE_OVER_MONEY:
 			DEBUG_POWER(sprintf((char*) strtmpPower, "NODE_OVER_MONEY=%d\r\n", (int) outletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
@@ -668,7 +699,10 @@ void Process_Outlets(void){
 			}
 			break;
 		case 1:
-			if (Main.nodes[tempOutletID].current < MIN_CURRENT){
+			if(Main.nodes[tempOutletID].nodeStatus == TOTAL_OVER_CURRRENT){
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT);
+				outletState[tempOutletID] = 3;
+			} else if (Main.nodes[tempOutletID].current < MIN_CURRENT){
 				tempDefference = (int32_t)(Main.nodes[tempOutletID].previousCurrent - Main.nodes[tempOutletID].current);
 				if (tempDefference > CURRENT_CHANGING_THRESHOLD) {
 					Main.nodes[tempOutletID].nodeStatus = UNPLUG;
@@ -704,6 +738,23 @@ void Process_Outlets(void){
 	}
 	Led_Update_Status_Buffer(tempOutletID, Main.nodes[tempOutletID].nodeStatus);
 	tempOutletID = (tempOutletID + 1) % NUMBER_OF_RELAYS;
+}
+
+void Process_Main_Current_Over_Max_Current(void){
+	uint8_t relayIndex = NUMBER_OF_RELAYS;
+	if(Is_Main_Current_Over_Max_Current() == 1){
+
+		relayIndex = Reset_Latest_Relay();
+		Main.nodes[relayIndex].nodeStatus = TOTAL_OVER_CURRRENT;
+		Clear_Counter_For_Checking_Total_Current();
+		DEBUG_POWER(sprintf((char*) strtmpPower, "relayIndex = %d\r\n", (int) relayIndex););
+		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+	} else if(Is_Timeout_For_Checking_Total_Current() == 0){
+		Increase_Counter_For_Checking_Total_Current();
+	} else {
+		Clear_Latest_Relay_Buffer();
+		Clear_Counter_For_Checking_Total_Current();
+	}
 }
 
 

@@ -47,8 +47,10 @@ typedef enum  {
 	NO_RELAY			=	7,
 
 	NODE_OVER_CURRENT	=	8,
-	NODE_OVER_MONEY		=	9,
-	NODE_OVER_TIME		=	10
+	TOTAL_OVER_CURRRENT =   9,
+	NODE_OVER_MONEY		=	10,
+	NODE_OVER_TIME		=	11,
+	 
 
 }NodeStatus;
 
@@ -95,4 +97,6 @@ NodeStatus Get_Node_Status(uint8_t outletID);
 void Power_Setup(void);
 void Power_Loop(void);
 void Process_System_Power(void);
+
+void Process_Main_Current_Over_Max_Current(void);
 #endif /* APP_POWER_H_ */

@@ -141,6 +141,7 @@ void Main_FSM(void){
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 			Show_KWH(Get_Main_Power_Consumption());
 #endif
+			Process_Main_Current_Over_Max_Current();
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}
 		break;
