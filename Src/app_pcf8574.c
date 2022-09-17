@@ -7,6 +7,7 @@
 #include "main.h"
 #include "app_uart.h"
 #include "app_pcf8574.h"
+#include "app_relay.h"
 
 
 #define PCF_WRITE_ADDRESS_1		64
@@ -161,4 +162,19 @@ void Set_Input_PCF_Pins(void){
 
 }
 
+
+uint8_t isNoFuseAvailable(uint8_t outletId){
+	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
+	return ((tempRelayFuseStatuses >> (outletId*2) & 0x00000002) > 0);
+}
+
+uint8_t isRelayOff(uint8_t outletId){
+	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
+	return ((tempRelayFuseStatuses >> (outletId*2) & 0x00000001) > 0);
+}
+
+uint8_t isRelayOn(uint8_t outletId){
+	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
+	return ((tempRelayFuseStatuses >> (outletId*2) & 0x00000001) == 0);
+}
 

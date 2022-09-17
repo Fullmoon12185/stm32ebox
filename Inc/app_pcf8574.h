@@ -14,4 +14,11 @@ uint32_t Get_All_Relay_Fuse_Statuses(void);
 uint8_t PCF_Scan();
 
 void PCF_read(void);
+
+
+uint8_t isNoFuseAvailable(uint8_t outletId);
+uint8_t isRelayOn(uint8_t outletId);
+uint8_t isRelayOff(uint8_t outletId);
+
+
 #endif /* APP_PCF8574_H_ */

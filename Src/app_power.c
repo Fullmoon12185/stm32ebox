@@ -52,7 +52,7 @@
 #elif(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 	#define 	MIN_PF									20
 #else
-	#define 	MIN_PF									30
+	#define 	MIN_PF									20
 #endif
 
 #elif(VERSION_EBOX == 15)
@@ -85,6 +85,7 @@ typedef struct PowerNodes {
 	NodeStatus  nodeStatus;			//avaiable = 0; charging = 1;	chargefull = 2
 	uint32_t current;	// in uA
 	uint32_t previousCurrent;
+	uint32_t previousCurrent_1;
 	uint8_t voltage;	// = 220
 //	uint8_t frequency;	// = 50 in Hz
 	uint8_t powerFactor; // = 1pF
@@ -404,8 +405,9 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.workingTime++;
 	} else if (outletID < MAIN_INPUT) {
 		uint8_t tempOutletID = outletID;
+		Main.nodes[tempOutletID].previousCurrent_1 = Main.nodes[tempOutletID].previousCurrent;
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].current;
-		if (current <= CURRENT_CHANGING_THRESHOLD
+		if (current <= MIN_CURRENT_DETECTING_UNPLUG
 				|| (Get_Relay_Status(tempOutletID) == RESET)
 				|| power_factor < MIN_PF)
 		{
@@ -596,6 +598,11 @@ void Display_OutLet_Status(uint8_t outletID){
 			break;
 		case NODE_OVER_TIME:
 			break;
+		case RELAY_BROKEN:
+			DEBUG_POWER(sprintf((char*) strtmpPower, "RELAY_BROKEN=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			break;
+
 		default:
 			break;
 		}
@@ -604,22 +611,26 @@ void Display_OutLet_Status(uint8_t outletID){
 void Process_Outlets(void){
 	static uint8_t tempOutletID = 0;
 //	int32_t tempDefference;
-	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
+//	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
 	Display_OutLet_Status(tempOutletID);
-	if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x02) > 0) {	//return NOFUSE
+	if (isNoFuseAvailable(tempOutletID)) {	//return NOFUSE
 		Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
 		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_FUSE);
 		outletState[tempOutletID] = 3;
 
-	} else if ((tempRelayFuseStatuses >> (tempOutletID*2) & 0x01) > 0
+	} else if (isRelayOff(tempOutletID)
 			&& (Get_Relay_Status(tempOutletID) == SET)
 			&& is_Set_Relay_Timeout()) {	//relay not working MUST and is Working
-
-		Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
+				Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
+				outletState[tempOutletID] = 3;
+	} else if(isRelayOn(tempOutletID) && (Get_Relay_Status(tempOutletID) == RESET)){
+		Main.nodes[tempOutletID].nodeStatus = RELAY_BROKEN;
 		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
 		outletState[tempOutletID] = 3;
-
 	}
+
+
 #if (VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 	else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860
 		if(tempOutletID == 0 || tempOutletID == 1){
@@ -714,8 +725,8 @@ void Process_Outlets(void){
 			} else if(Main.nodes[tempOutletID].nodeStatus == CHARGING){
 				if(Main.nodes[tempOutletID].current < MIN_CURRENT_DETECTING_UNPLUG){
 					outletCounterForUnplugDetection[tempOutletID] ++;
-	//				tempDefference = (int32_t)(Main.nodes[tempOutletID].previousCurrent - Main.nodes[tempOutletID].current);
-	//				if (tempDefference > MIN_CURRENT_DETECTING_UNPLUG)
+//					tempDefference = (int32_t)(Main.nodes[tempOutletID].previousCurrent - Main.nodes[tempOutletID].current);
+//					if (tempDefference > MIN_CURRENT_DETECTING_UNPLUG)
 					if(outletCounterForUnplugDetection[tempOutletID] >= COUNT_FOR_DECIDE_UNPLUG)
 					{
 						Main.nodes[tempOutletID].nodeStatus = UNPLUG;

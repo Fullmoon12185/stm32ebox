@@ -50,6 +50,7 @@ typedef enum  {
 	TOTAL_OVER_CURRRENT =   9,
 	NODE_OVER_MONEY		=	10,
 	NODE_OVER_TIME		=	11,
+	RELAY_BROKEN 		=   12,
 	 
 
 }NodeStatus;
