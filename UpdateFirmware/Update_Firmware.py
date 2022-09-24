@@ -20,6 +20,7 @@ import os
 import ssl
 import argparse
 import time
+import logging
 
 parser = argparse.ArgumentParser()
 
@@ -47,19 +48,27 @@ args.port = 8883
 args.username = "eboost-k2"
 args.password = "ZbHzPb5W"
 nextPackage = 0
+
+logging.basicConfig(filename='app.log', filemode='a', format='%(asctime)s, %(message)s' , datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+
+
 def on_connect(mqttc, obj, flags, rc):
     print("connect rc: " + str(rc))
 
 
 def on_message(mqttc, obj, msg):
-    global nextPackage
-    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-    if(b'ready' in msg.payload):
-        nextPackage = 1
-    elif(b'ack' in msg.payload):
-        nextPackage = 1
-    elif(b'resend' in msg.payload):
-        nextPackage = 1
+    tempData = msg.topic + ", " + str(msg.qos) + ", " + str(msg.payload) 
+    print(tempData)
+    logging.info(tempData)
+
+
+
+    # if(b'ready' in msg.payload):
+    #     nextPackage = 1
+    # elif(b'ack' in msg.payload):
+    #     nextPackage = 1
+    # elif(b'resend' in msg.payload):
+    #     nextPackage = 1
     
 
 
@@ -124,12 +133,27 @@ if args.debug:
 
 print("Connecting to "+args.host+" port: "+str(port))
 mqttc.connect(args.host, port, args.keepalive)
-mqttc.subscribe("ACKbox_0001", 0)
-
+boxIDs = ["0010"] 
+for boxID in boxIDs:    
+    topic = "SEbox_" + str(boxID)
+    print(topic)
+    mqttc.subscribe(topic, 0)
+for boxID in boxIDs:    
+    topic = "AEbox_" + str(boxID)
+    print(topic)
+    mqttc.subscribe(topic, 0)
+for boxID in boxIDs:    
+    topic = "PFEbox_" + str(boxID)
+    print(topic)
+    mqttc.subscribe(topic, 0)
+for boxID in boxIDs:    
+    topic = "PEbox_" + str(boxID)
+    print(topic)
+    mqttc.subscribe(topic, 0)
 mqttc.loop_start()
 args.nummsgs = 10
 args.delay = 2
-args.topic = "UEbox_0001"
+# args.topic = "UEbox_0001"
 
 
 file = open("stm32ebox.bin", "rb")
@@ -137,38 +161,7 @@ count = 0
 countForPayload = 0
 payload = ""
 while True:
-    byteRead = file.read(1)
-    if(not byteRead): 
-        break
-    # print(str(count) + " : " + str(byteRead.hex()))
-    if(count == 0):
-        payload =  str(byteRead.hex())
-    else: 
-        payload = payload + str(byteRead.hex())
-    count = count + 1
-    if(count == 32):
-        countForPayload = countForPayload + 1 
-        
-        # print(str(countForPayload))
-        if(countForPayload < 10):
-            payload = "000"+ str(countForPayload) + ":" + payload
-        elif(countForPayload < 100):
-            payload = "00" + str(countForPayload) + ":" + payload
-        elif(countForPayload < 1000):
-            payload = "0" + str(countForPayload) + ":" + payload
-        elif(countForPayload < 10000):
-            payload = str(countForPayload) + ":" + payload
-        print(payload)
-        while(True):
-            if(nextPackage == 1):
-                break
-        nextPackage = 0
-        infot = mqttc.publish(args.topic, payload, qos=args.qos)
-        infot.wait_for_publish()
-        # time.sleep(args.delay)
-        
-        count = 0
-        # payload = str(countForPayload) + "::"
+    time.sleep(args.delay)
 
 print(str(countForPayload) + ":" + payload)
 file.close()
