@@ -106,7 +106,7 @@ void Error_Handler(void);
 	#define   CT_20A_2                        1
 #endif
 
-#define   VOLTAGE_USAGE       			230
+#define   VOLTAGE_USAGE       			228
 #define		INTERRUPT_TIMER_PERIOD		10 //ms
 #define		WATCHDOG_ENABLE 			1
 

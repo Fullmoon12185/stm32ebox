@@ -93,7 +93,9 @@ uint8_t Get_Voltage(uint8_t outletID);
 uint32_t Get_Current(uint8_t outletID);
 FlagStatus Get_Is_Node_Status_Changed(void);
 
+void Start_Working_Time(uint8_t outletID);
 void Set_Limit_Energy(uint8_t outletID, uint32_t limit_energy);
+void Clear_Max_Node_Current(uint8_t outletID);
 NodeStatus Get_Node_Status(uint8_t outletID);
 void Power_Setup(void);
 void Power_Loop(void);

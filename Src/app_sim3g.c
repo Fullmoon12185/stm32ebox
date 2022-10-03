@@ -614,6 +614,8 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 			if(relayStatus == SET){
 				Set_Relay(relayIndex);
 				Set_Limit_Energy(relayIndex, 0xffffffff);
+				Start_Working_Time(relayIndex);
+				Clear_Max_Node_Current(relayIndex);
 			} else {
 				Reset_Relay(relayIndex);
 				Set_Limit_Energy(relayIndex, 0);
