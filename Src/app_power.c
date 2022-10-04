@@ -83,7 +83,7 @@
 #define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT							(5000/INTERRUPT_TIMER_PERIOD)
 
 #define			COUNT_FOR_DECIDE_UNPLUG									200
-#define			COUNT_FOR_DECIDE_CHARGE_FULL							1000
+#define			COUNT_FOR_DECIDE_CHARGE_FULL							10
 
 
 typedef struct PowerNodes {
@@ -366,8 +366,6 @@ uint32_t Get_Main_Current(void){
 	for(uint8_t outletIndex = 0; outletIndex < NUMBER_OF_RELAYS; outletIndex ++){
 		Main.currentTotal = Main.currentTotal + Get_Current(outletIndex);
 	}
-	DEBUG_POWER(sprintf((char*) strtmpPower, "Get_Main_Current = %d\r\n", (int) Main.currentTotal););
-	DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 	return Main.currentTotal;
 }
 uint8_t Is_Main_Current_Over_Max_Current(void){
@@ -440,7 +438,6 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		{
 			Main.nodes[tempOutletID].current = 0;
 			Main.nodes[tempOutletID].powerFactor = 0;
-			Main.nodes[tempOutletID].workingTime = 0;
 		} else	{
 			Main.nodes[tempOutletID].current = current;
 			Main.nodes[tempOutletID].powerFactor = power_factor;
@@ -464,12 +461,12 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID >= 0){
+		if(tempOutletID <= 1){
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "t:%d\t", (int) Main.workingTime););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.nodes[tempOutletID].workingTime););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
@@ -657,8 +654,13 @@ void Detect_Charge_Full(uint8_t outletID){
 }
 
 void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
+
+	DEBUG_POWER(sprintf((char*) strtmpPower, "threshold = %d\r\n", (int) threshold););
+	DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 	if(Main.nodes[outletID].current < MIN_CURRENT_DETECTING_UNPLUG){
 		int32_t tempDefference = (int32_t)(Main.nodes[outletID].previousCurrent - Main.nodes[outletID].current);
+		DEBUG_POWER(sprintf((char*) strtmpPower, "tempDefference = %d\r\n", (int) tempDefference););
+		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 		if (tempDefference > threshold)
 		{
 			Main.nodes[outletID].nodeStatus = UNPLUG;
@@ -667,6 +669,16 @@ void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 		}
 	}
 }
+uint8_t isNewCurrents(void){
+	static uint32_t previousWorkingTime;
+	if(previousWorkingTime != Main.workingTime){
+		previousWorkingTime = Main.workingTime;
+		return 1;
+	}
+	return 0;
+
+}
+
 void Process_Outlets(void){
 	static uint8_t tempOutletID = 0;
 //	int32_t tempDefference;
@@ -782,17 +794,14 @@ void Process_Outlets(void){
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT);
 				outletState[tempOutletID] = 3;
 			} else if(Main.nodes[tempOutletID].nodeStatus == CHARGING){
-				if(Is_Charging_More_Than_An_Hour(tempOutletID, 2*60*60)){
-					Detect_Charge_Full(tempOutletID);
-				} else if(Is_Charging_More_Than_An_Hour(tempOutletID, 60*60)){
-					Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent/2); 
-					Detect_Charge_Full(tempOutletID);
-				} else if(Is_Charging_More_Than_An_Hour(tempOutletID, 30*60)){
-					Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*2/3); 
-					Detect_Charge_Full(tempOutletID);
-				} else {
-					Detect_Un_Plug(tempOutletID, CURRENT_UN_PLUG_LEVEL_1);
-					Detect_Charge_Full(tempOutletID);
+				if(isNewCurrents()){
+					if(Is_Charging_More_Than_An_Hour(tempOutletID, 30*60)){
+						Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*2/3);
+						Detect_Charge_Full(tempOutletID);
+					} else {
+						Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*3/4);
+						Detect_Charge_Full(tempOutletID);
+					}
 				}
 			}
 			break;
