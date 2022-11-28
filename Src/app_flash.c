@@ -2,7 +2,6 @@
 #include "main.h"
 uint8_t lengthPage;
 
-char log[50];
 void deleteBuffer(char* data)
 {
 	uint8_t len = strlen(data);

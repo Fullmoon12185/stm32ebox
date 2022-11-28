@@ -16,6 +16,7 @@
 #include "app_power.h"
 #include "app_i2c_lcd.h"
 
+#include "app_send_sms.h"
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
@@ -52,6 +53,7 @@ typedef enum {
 	SIM3G_WAIT_FOR_A_MOMENT,
 	SIM3G_SETUP_SUBSCRIBE_TOPICS,
 	SIM3G_SETUP_PUBLISH_TOPICS,
+	SIM3G_SEND_SMS_MESSAGE,
 	MAX_SERVER_COMMUNICATION_FSM_NUMBER_STATES
 } SERVER_COMMUNICATION_FSM_STATE;
 
@@ -564,15 +566,18 @@ void Server_Communication(void){
 				Set_Sim3G_State(RESET_SIM3G);
 				serverCommunicationFsmState = SIM3G_OPEN_CONNECTION;
 			} else {
-				if(Get_Mqtt_State() == MQTT_WAIT_FOR_NEW_COMMAND){
+				if(Is_Ready_To_Send_MQTT_Data()){
 					serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
 				}
 			}
 		}
 		break;
 	case SIM3G_SETUP_PUBLISH_TOPICS:
-		if(Get_Mqtt_State() != MQTT_WAIT_FOR_NEW_COMMAND){
+		if(!Is_Ready_To_Send_MQTT_Data()){
 			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
+		} else if(Is_Set_Send_Sms_Flag()) {
+			Start_Sending_Sms_Message();
+			serverCommunicationFsmState = SIM3G_SEND_SMS_MESSAGE;
 		} else {
 			if(is_Set_Relay_Timeout()){
 //				if(Get_Is_Receive_Data_From_Server() == SET){
@@ -638,6 +643,12 @@ void Server_Communication(void){
 					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 				}
 			}
+		}
+		break;
+	case SIM3G_SEND_SMS_MESSAGE:
+		FSM_For_Sending_SMS_Message();
+		if(Is_Done_Sending_Sms_Message()){
+			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
 		}
 		break;
 	default:

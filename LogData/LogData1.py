@@ -49,7 +49,7 @@ args.username = "eboost-k2"
 args.password = "ZbHzPb5W"
 nextPackage = 0
 
-logging.basicConfig(filename='app15.csv', filemode='a', format='%(asctime)s, %(message)s' , datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logging.basicConfig(filename='app22.csv', filemode='a', format='%(asctime)s, %(message)s' , datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 
 def on_connect(mqttc, obj, flags, rc):
@@ -133,7 +133,7 @@ if args.debug:
 
 print("Connecting to "+args.host+" port: "+str(port))
 mqttc.connect(args.host, port, args.keepalive)
-boxIDs = ["0015"] 
+boxIDs = ["0022"] 
 for boxID in boxIDs:    
     topic = "SEbox_" + str(boxID)
     print(topic)
@@ -148,6 +148,11 @@ for boxID in boxIDs:
     mqttc.subscribe(topic, 0)
 for boxID in boxIDs:    
     topic = "PEbox_" + str(boxID)
+    print(topic)
+    mqttc.subscribe(topic, 0)
+
+for boxID in boxIDs:    
+    topic = "CEbox_" + str(boxID)
     print(topic)
     mqttc.subscribe(topic, 0)
 mqttc.loop_start()

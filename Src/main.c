@@ -33,6 +33,7 @@
 #include "app_eeprom.h"
 #include "app_i2c_lcd.h"
 #include "app_init.h"
+#include "app_send_sms.h"
 
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
@@ -72,6 +73,7 @@ int main(void)
 
 	Setup_Eeprom();
 	SCH_Add_Task(PCF_read, 13, 23);
+	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*60*24*3);
 //	SCH_Add_sTask(Test_Timer, 0, 100);
 	if(Get_Box_ID() != 0){
 		SCH_Add_Task(LED_Display_FSM, 19, 23);

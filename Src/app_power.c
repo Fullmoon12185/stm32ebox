@@ -17,9 +17,9 @@
 #include <math.h>
 
 
-#define		DEBUG_POWER(X)							X
+#define		DEBUG_POWER(X)							//X
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
-#define		MAX_CURRENT								700000
+#define		MAX_CURRENT								800000
 //for distrist
 //#define		MAX_CURRENT_1							700000
 #define		MAX_CURRENT_1							950000
@@ -73,14 +73,17 @@
 #define		TIME_OUT_1_SECOND											(1000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_STABABILITY										(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT					(20000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_UNPLUG										(50000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_UNPLUG										(10000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE							(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY							(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_CHARGE_FULL									(50000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_STOP_FROM_APP								(10000/INTERRUPT_TIMER_PERIOD)
+
 #define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(1000/INTERRUPT_TIMER_PERIOD)
 
 #define	    TIME_OUT_AFTER_DETECTING_OVER_MONEY							(10000/INTERRUPT_TIMER_PERIOD)
 #define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT							(5000/INTERRUPT_TIMER_PERIOD)
+#define		COUNT_FOR_DETECT_MAX_CURRENT								5
 
 #define			COUNT_FOR_DECIDE_UNPLUG									200
 #define			COUNT_FOR_DECIDE_CHARGE_FULL							10
@@ -144,6 +147,9 @@ static uint8_t outletState[NUMBER_OF_RELAYS] = {
 static uint32_t outletCounter[NUMBER_OF_RELAYS] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+static uint32_t outletCounterMaxCurrent[NUMBER_OF_RELAYS] = {
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
 static uint32_t outletCounterForUnplugDetection[NUMBER_OF_RELAYS] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
@@ -165,6 +171,7 @@ void Power_Set_Timeout_Flag_9(void);
 uint8_t Is_Power_Timeout_Flag(uint8_t outletID);
 uint8_t Is_Main_Current_Over_Max_Current(void);
 
+uint8_t isNewCurrents(uint8_t outletID);
 void Process_Outlets(void);
 SystemStatus Process_Input_Source(void);
 void Process_Main_Currrent_Over_Max_Current(void);
@@ -172,7 +179,9 @@ void Process_Main_Currrent_Over_Max_Current(void);
 
 void Process_System_Power(void){
 	if(Process_Input_Source() == SYSTEM_NORMAL){
-		Process_Outlets();
+
+			Process_Outlets();
+
 	}
 }
 
@@ -639,6 +648,20 @@ void Display_OutLet_Status(uint8_t outletID){
 	}
 }
 
+
+void Node_Over_Current_Detected(uint8_t outletID){
+	Main.nodes[outletID].nodeStatus = NODE_OVER_CURRENT;
+	Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
+	Reset_Relay(outletID);
+	outletState[outletID] = 3;
+}
+void Detect_Stop_From_App(uint8_t outletID){
+	Main.nodes[outletID].nodeStatus = CHARGEFULL;
+	outletCounter[outletID] = 0;
+	Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_STOP_FROM_APP);
+	outletState[outletID] = 2;
+}
+
 void Detect_Charge_Full(uint8_t outletID){
 	if (Main.nodes[outletID].current < MIN_CURRENT_DETECTING_FULL_CHARGE){
 			outletCounter[outletID]++;
@@ -663,16 +686,15 @@ void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 		if (tempDefference > threshold)
 		{
-			Main.nodes[outletID].nodeStatus = UNPLUG;
 			Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
 			outletState[outletID] = 3;
 		}
 	}
 }
-uint8_t isNewCurrents(void){
-	static uint32_t previousWorkingTime;
-	if(previousWorkingTime != Main.workingTime){
-		previousWorkingTime = Main.workingTime;
+uint8_t isNewCurrents(uint8_t outletID){
+	static uint32_t previousWorkingTime[NUMBER_OF_RELAYS];
+	if(previousWorkingTime[outletID] != Main.workingTime){
+		previousWorkingTime[outletID] = Main.workingTime;
 		return 1;
 	}
 	return 0;
@@ -683,7 +705,9 @@ void Process_Outlets(void){
 	static uint8_t tempOutletID = 0;
 //	int32_t tempDefference;
 //	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
+
 	Display_OutLet_Status(tempOutletID);
+
 	if (isNoFuseAvailable(tempOutletID)) {	//return NOFUSE
 		Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
 		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_FUSE);
@@ -695,7 +719,9 @@ void Process_Outlets(void){
 				Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
 				outletState[tempOutletID] = 3;
-	} else if(isRelayOn(tempOutletID) && (Get_Relay_Status(tempOutletID) == RESET)){
+	} else if(isRelayOn(tempOutletID) \
+			&& (Get_Relay_Status(tempOutletID) == RESET)
+			&& is_Set_Relay_Timeout()){
 		Main.nodes[tempOutletID].nodeStatus = RELAY_BROKEN;
 		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
 		outletState[tempOutletID] = 3;
@@ -736,32 +762,36 @@ void Process_Outlets(void){
 	}
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860
-		if(tempOutletID == CT_20A_1 || tempOutletID == CT_20A_2){
-			if (Main.nodes[tempOutletID].current > MAX_CURRENT_1){
-				Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
-				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
-				Reset_Relay(tempOutletID);
-				outletState[tempOutletID] = 3;
+		if(isNewCurrents(tempOutletID) == 1){
+			if(tempOutletID == CT_20A_1 || tempOutletID == CT_20A_2){
+				if (Main.nodes[tempOutletID].current > MAX_CURRENT_1){
+					outletCounterMaxCurrent[tempOutletID] ++;
+					if(outletCounterMaxCurrent[tempOutletID] > COUNT_FOR_DETECT_MAX_CURRENT){
+						Node_Over_Current_Detected(tempOutletID);
+					}
+				}
+			} else {
+				outletCounterMaxCurrent[tempOutletID] ++;
+				if(outletCounterMaxCurrent[tempOutletID] > COUNT_FOR_DETECT_MAX_CURRENT){
+					Node_Over_Current_Detected(tempOutletID);
+				}
 			}
-		} else {
-			Main.nodes[tempOutletID].nodeStatus = NODE_OVER_CURRENT;
-			Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
-			Reset_Relay(tempOutletID);
-			outletState[tempOutletID] = 3;
 		}
 	}
 #endif
-	else if (Main.nodes[tempOutletID].limitEnergy > 0
-			&& Main.nodes[tempOutletID].energy >= Main.nodes[tempOutletID].limitEnergy) {
-
-		Main.nodes[tempOutletID].nodeStatus = NODE_OVER_MONEY;
-		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_MONEY);
-		outletState[tempOutletID] = 3;
-
-	} else if (Main.nodes[tempOutletID].limitEnergy == 0) {
-		Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
-		outletState[tempOutletID] = 0;
-	} else {
+//	else if (Main.nodes[tempOutletID].limitEnergy > 0
+//			&& Main.nodes[tempOutletID].energy >= Main.nodes[tempOutletID].limitEnergy) {
+//
+//		Main.nodes[tempOutletID].nodeStatus = NODE_OVER_MONEY;
+//		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_OVER_MONEY);
+//		outletState[tempOutletID] = 3;
+//
+//	} else if (Main.nodes[tempOutletID].limitEnergy == 0) {
+//		Main.nodes[tempOutletID].nodeStatus = NODE_NORMAL;
+//		outletState[tempOutletID] = 0;
+//	}
+	else {
+		outletCounterMaxCurrent[tempOutletID] = 0;
 		switch(outletState[tempOutletID]){
 		case 0:
 			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
@@ -787,6 +817,8 @@ void Process_Outlets(void){
 				} else {
 					outletState[tempOutletID] = 0;
 				}
+			} else if(Get_Relay_Status(tempOutletID) == RESET){
+				outletState[tempOutletID] = 0;
 			}
 			break;
 		case 1:
@@ -794,13 +826,17 @@ void Process_Outlets(void){
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT);
 				outletState[tempOutletID] = 3;
 			} else if(Main.nodes[tempOutletID].nodeStatus == CHARGING){
-				if(isNewCurrents()){
-					if(Is_Charging_More_Than_An_Hour(tempOutletID, 30*60)){
-						Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*2/3);
-						Detect_Charge_Full(tempOutletID);
+				if(isNewCurrents(tempOutletID) == 1){
+					if(Get_Relay_Status(tempOutletID) == SET){
+						if(Is_Charging_More_Than_An_Hour(tempOutletID, 30*60)){
+							Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*2/3);
+							Detect_Charge_Full(tempOutletID);
+						} else {
+							Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*3/4);
+							Detect_Charge_Full(tempOutletID);
+						}
 					} else {
-						Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*3/4);
-						Detect_Charge_Full(tempOutletID);
+						Detect_Stop_From_App(tempOutletID);
 					}
 				}
 			}
@@ -812,6 +848,7 @@ void Process_Outlets(void){
 			break;
 		case 3:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
+				Main.nodes[tempOutletID].nodeStatus = UNPLUG;
 				outletState[tempOutletID] = 0;
 			} else if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
 				outletState[tempOutletID] = 0;
@@ -842,5 +879,8 @@ void Process_Main_Current_Over_Max_Current(void){
 		Clear_Counter_For_Checking_Total_Current();
 	}
 }
+
+
+
 
 

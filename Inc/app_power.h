@@ -51,6 +51,7 @@ typedef enum  {
 	NODE_OVER_MONEY		=	10,
 	NODE_OVER_TIME		=	11,
 	RELAY_BROKEN 		=   12,
+	STOP_FROM_APP		= 	13
 	 
 
 }NodeStatus;

@@ -69,7 +69,7 @@ void Error_Handler(void);
 
 #define		VERSION_EBOX				VERSION_5_WITH_8CT_10A_2CT_20A
 /*
- * Firmware Choosen
+ * Firmware Chosen
  */
 #define FOTA_FIRMWARE_CHOOSEN		0
 #define FACTORY_FIRMWARE_CHOOSEN	1
@@ -441,8 +441,9 @@ void Error_Handler(void);
 #define		DATA_RECEIVE_LENGTH									15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 				15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2 				17
-#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA					'x' 	// '2'
+#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA					'x' // '2'
 
+#define		COMMAND_SENDING_SMS_MESSAGE		     				's'
 
 #define 	LEN_FOR_UPDATE_POWER_CONSUPMPTION 				    24
 
@@ -455,7 +456,7 @@ void Error_Handler(void);
 #define		NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION	    (NUMBER_OF_RELAYS + 1)
 #define		MAIN_INPUT										    (NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION - 1)
 
-#define		POWER_CONSUMPTION_OF_MCU						    7
+#define		POWER_CONSUMPTION_OF_MCU						    6
 
 #ifdef __cplusplus
 }

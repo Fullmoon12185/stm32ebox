@@ -64,6 +64,7 @@ void Set_Up_Topic_Names(void);
 uint8_t MQTT_Run(void);
 void Set_Mqtt_State(MQTT_STATE newState);
 MQTT_STATE Get_Mqtt_State(void);
+uint8_t Is_Ready_To_Send_MQTT_Data(void);
 
 void Setup_Mqtt_Connect_Message(void);
 void Setup_Mqtt_Subscribe_Message(uint8_t * topic);

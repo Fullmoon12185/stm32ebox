@@ -103,6 +103,8 @@ uint8_t mqttMessage[MQTT_MESSAGE_BUFFER_LENGTH];
 uint8_t commandBuffer[20];
 uint8_t commandBufferIndex = 0;
 
+
+
 uint8_t mqttMessageIndex = 0;
 uint8_t subscribeTopicIndex = 0;
 uint8_t publishTopicIndex = 0;
@@ -407,6 +409,10 @@ void Set_Mqtt_State(MQTT_STATE newState){
 }
 MQTT_STATE Get_Mqtt_State(void){
 	return mqttState;
+}
+
+uint8_t Is_Ready_To_Send_MQTT_Data(void){
+	return (mqttState == MQTT_WAIT_FOR_NEW_COMMAND);
 }
 
 void Clear_Mqtt_Message_Buffer(void){

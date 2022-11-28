@@ -12,6 +12,7 @@
 #include "app_string.h"
 #include "app_power.h"
 #include "app_pcf8574.h"
+#include "app_send_sms.h"
 
 #define DEBUG_SIM3G(X)    						X
 
@@ -184,7 +185,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 
 };
 
-#define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G	8
+#define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G	9
 
 const AT_COMMAND_ARRAY atCommandArrayForCheckingSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
@@ -204,6 +205,9 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CIPMODE=0\r",  							(uint8_t*)"OK\r"		},
+
+		{(uint8_t*)"AT+CMGF=1\r",  							(uint8_t*)"OK\r"		},
+
 #if(VERSION_EBOX == 1)
 		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
 #elif(VERSION_EBOX == 15)
@@ -717,10 +721,16 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			}
 			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 				&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA)){ //For update total power consumption
-				UART3_SendToHost((uint8_t*)"PROCESSING_RECEIVED_DATA_TOPIC_2");
+				UART3_SendToHost((uint8_t*)"PROCESSING_RECEIVED_DATA_TOPIC_2\r\n");
 			processDataState = PROCESSING_RECEIVED_DATA_TOPIC_2;
 			Clear_Sim3gDataProcessingBuffer();
+			} else if((preReadCharacter == COMMAND_SENDING_SMS_MESSAGE)
+					&& (readCharacter == COMMAND_SENDING_SMS_MESSAGE)){ //For update total power consumption
+				UART3_SendToHost((uint8_t*)"COMMAND_SENDING_SMS_MESSAGE\r\n");
+				Start_Sending_Sms_Message();
+				Clear_Sim3gDataProcessingBuffer();
 			}
+
 			else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
 			}
@@ -790,28 +800,6 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		}
 		break;
 	case PROCESSING_RECEIVED_DATA_TOPIC_2:
-		/*
-		 * Ignore Data Process, jump to FOTA Firmware Immediately
-		 */
-//		if(Uart1_Received_Buffer_Available()){
-//			preReadCharacter = readCharacter;
-//			readCharacter = Uart1_Read_Received_Buffer();
-//			if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
-//				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_2, Get_Box_ID());
-//				processDataState = CHECK_DATA_AVAILABLE_STATE;
-//			} else if(preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE
-//					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA)){
-//				processDataState = PROCESSING_RECEIVED_DATA_TOPIC_2;
-//				Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_2,  Get_Box_ID());
-//				Clear_Sim3gDataProcessingBuffer();
-//			} else {
-//				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
-//				if(sim3gDataProcessingBufferIndex >= DATA_RECEIVE_LENGTH){
-//					Processing_Received_Data((uint8_t*)SUBSCRIBE_TOPIC_2, Get_Box_ID());
-//					processDataState = CHECK_DATA_AVAILABLE_STATE;
-//				}
-//			}
-//		}
 		UART3_SendToHost((uint8_t*)"Jump_To_Fota_Firmware");
 		Jump_To_Fota_Firmware();
 		break;
