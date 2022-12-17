@@ -97,7 +97,7 @@ void System_Initialization(void)
         case SIM_3G_INIT:
         	Sim3g_Init();
         	Set_Up_Topic_Names();
-        	Set_Sim3G_State(POWER_ON_SIM3G);
+//        	Set_Sim3G_State(POWER_OFF_SIM3G);
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SIM_3G_INIT - Done \r\n"));
         	break;
         case END_OF_INITIALISATION_STATE:

@@ -23,7 +23,7 @@
 #define TIMER_TO_POWER_ON_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_OFF_SIM3G				(3000/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_ON_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
-#define TIMER_TO_POWER_OFF_SIM3G_TIMEOUT		(10000/INTERRUPT_TIMER_PERIOD)
+#define TIMER_TO_POWER_OFF_SIM3G_TIMEOUT		(30000/INTERRUPT_TIMER_PERIOD)
 
 
 #define TIMER_TO_RESET_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
@@ -75,6 +75,8 @@ __IO ITStatus isGreaterThanSymbolReceived = RESET;
 const uint8_t SMS_DONE[] = "SMS DONE";
 const uint8_t PB_DONE[] = "PB DONE\r";
 const uint8_t STIN25[] = "+STIN: 25\r";
+
+const uint8_t CONNECT_115200[] = "CONNECT 115200\r";
 
 const uint8_t OK[] = "OK\r";
 const uint8_t CONNECT_OK[] = "CONNECT OK\r";
@@ -185,7 +187,7 @@ Sim3g_Machine_Type Sim3G_State_Machine [] = {
 
 };
 
-#define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G	9
+#define		NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G	16
 
 const AT_COMMAND_ARRAY atCommandArrayForCheckingSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
@@ -201,12 +203,23 @@ uint8_t atCommandArrayIndexForCheckingSim3g = 0;
 const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CREG?\r",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CREG=1\r",  							(uint8_t*)"OK\r"		},
+
+		{(uint8_t*)"AT+CGATT?\r",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CGATT=1\r",  							(uint8_t*)"OK\r"		},
+
+		{(uint8_t*)"AT+CGDATA=?\r",  							(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CGDATA=\"PPP\",1\r",  							(uint8_t*)"CONNECTION 115200\r"		},
+		{(uint8_t*)"AT+CGPADDR=?\r",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CGPADDR=1\r",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CGCLASS=?\r",  							(uint8_t*)"OK\r"		},
+
+
 		{(uint8_t*)"AT+CGDCONT=1,\"IP\",\"v-internet\"\r", 		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CIPMODE=0\r",  							(uint8_t*)"OK\r"		},
-
-		{(uint8_t*)"AT+CMGF=1\r",  							(uint8_t*)"OK\r"		},
 
 #if(VERSION_EBOX == 1)
 		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
@@ -221,7 +234,7 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 };
 uint8_t atCommandArrayIndex = 0;
 
-SIM3G_STATE sim3gState = POWER_ON_SIM3G;
+SIM3G_STATE sim3gState = POWER_OFF_SIM3G;
 SIM3G_STATE pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 void TestSendATcommand(void){
@@ -297,7 +310,7 @@ void Sim3g_Init(void){
 	sim3g_Setting_TimeoutFlag = 0;
 	sim3g_Timeout_Task_Index = SCH_MAX_TASKS;
 	sim3g_Retry_Counter = 0;
-	sim3gState = SIM3G_START_UP;
+	sim3gState = POWER_OFF_SIM3G;
 	pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 	counterForResetChargingAfterDisconnection = 0;
 	Sim3g_GPIO_Init();
@@ -485,7 +498,7 @@ void SM_Power_Off_Sim3g(void){
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
 	Sim3g_Disable();
 	Sim3g_Clear_Timeout_Flag();
-	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G,0);
+	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G_TIMEOUT,0);
 	sim3gState = WAIT_FOR_SIM3G_POWER_OFF;
 }
 void SM_Wait_For_Sim3g_Power_Off(void){
@@ -749,6 +762,8 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			isStin25 = SET;
 		} else if(isReceivedData((uint8_t *)OK)){
 			isOKFlag = SET;
+		} else if(isReceivedData((uint8_t*)CONNECT_115200)){
+			isOKFlag = SET;
 		} else if(isReceivedData((uint8_t *)ERROR_1)){
 			isErrorFlag = SET;
 //			UART3_SendToHost((uint8_t*)"aNg");
@@ -865,7 +880,7 @@ FlagStatus isIPClose(void){
 	return isIPCloseFlag;
 }
 FlagStatus isSendOK(void){
-	return isIPCloseFlag;
+	return isSendOKFlag;
 }
 
 void Set_Is_Receive_Data_From_Server(FlagStatus status){

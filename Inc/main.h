@@ -50,7 +50,7 @@ typedef enum
   NORMAL = !ABNORMAL
 } WorkingStatus;
 
-#define DEBUG_INIT(X) 					//X
+#define DEBUG_INIT(X) 					X
 
 
 /* Exported functions prototypes ---------------------------------------------*/
