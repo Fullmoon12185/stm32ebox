@@ -1,0 +1,3 @@
+[submodule "Lib/netif"]
+	path = Lib/netif
+	url = git@github.com:thodoxuan392/esp32_net.git
