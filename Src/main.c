@@ -34,6 +34,7 @@
 #include "app_i2c_lcd.h"
 #include "app_init.h"
 #include "app_send_sms.h"
+#include "netif.h"
 
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
@@ -93,7 +94,9 @@ int main(void)
 	    MX_IWDG_Init();
 	}
 #endif
+	netif_init();
 	while (1){
+		netif_run();
 		SCH_Dispatch_Tasks();
 		if(runtestState == NORMAL_RUN){
 			Main_FSM();
