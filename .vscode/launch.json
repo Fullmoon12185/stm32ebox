@@ -1,0 +1,24 @@
+// Configure debug launch settings
+// Feel free to copy these and modify them for your debugger and MCU
+{
+  "version": "0.2.0",
+  "projectName": "stm32ebox",
+  "configurations": [
+      {
+          "name": "STlink Debug",
+          "cwd": "${workspaceRoot}",
+          "executable": "${workspaceRoot}/build/stm32.elf",
+          "request": "launch",
+          "type": "cortex-debug",
+          "servertype": "stlink",
+          "interface": "swd",
+          "device": "STM32F103RB",
+          "runToEntryPoint": "main", // else it starts at reset handler - not interested
+          "preLaunchTask": "Build all", // configured in tasks.json
+          "configFiles": [
+            "interface/stlink-v2.cfg",
+            "target/stm32f1x.cfg"
+        ],
+      },
+  ]
+}

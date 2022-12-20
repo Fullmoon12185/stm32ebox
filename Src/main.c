@@ -97,6 +97,7 @@ int main(void)
 	netif_init();
 	while (1){
 		netif_run();
+		mqtt_run();
 		SCH_Dispatch_Tasks();
 		if(runtestState == NORMAL_RUN){
 			Main_FSM();

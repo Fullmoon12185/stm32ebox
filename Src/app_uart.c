@@ -67,9 +67,10 @@ void UART2_Init(void)
 	Uart2Handle.Init.Mode = UART_MODE_TX_RX;
 	Uart2Handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	Uart2Handle.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&Uart2Handle) != HAL_OK) {
-    Error_Handler();
-  }
+	if (HAL_UART_Init(&Uart2Handle) != HAL_OK) {
+		Error_Handler();
+	}
+	HAL_UART_Receive_IT(&Uart2Handle, (uint8_t *)aUART_RxBuffer, 1);
 //  /* Output a message on Hyperterminal using printf function */
 //   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
 //   printf("** Test finished successfully. ** \n\r");
@@ -125,14 +126,7 @@ void UART3_SendToHost(uint8_t * buffer){
 
 
 void UART3_Transmit(uint8_t * buffer, uint8_t buffer_len){
-	if(buffer_len == 0) {
-		return;
-	} else {
-		if(HAL_UART_Transmit_IT(&Uart3Handle, (uint8_t*)buffer, buffer_len)!= HAL_OK){
-			Error_Handler();
-		}
-		UartTransmitReady = RESET;
-	}
+	HAL_UART_Transmit(&Uart3Handle, (uint8_t *)buffer, buffer_len, 0xFFFFFFFF);
 	return;
 }
 

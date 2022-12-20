@@ -103,6 +103,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 		GPIO_InitStruct.Pin = USART2_RX_PIN;
 
 		HAL_GPIO_Init(USART2_RX_GPIO_PORT, &GPIO_InitStruct);
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+		HAL_NVIC_EnableIRQ(USART2_IRQn);
 	} else if(huart->Instance == USART3){
 		/*##-1- Enable peripherals and GPIO Clocks #################################*/
 		/* Enable GPIO TX/RX clock */
@@ -162,6 +164,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 		  HAL_GPIO_DeInit(USART2_TX_GPIO_PORT, USART2_TX_PIN);
 		  /* Configure UART Rx as alternate function  */
 		  HAL_GPIO_DeInit(USART2_RX_GPIO_PORT, USART2_RX_PIN);
+      HAL_NVIC_DisableIRQ(USART2_IRQn);
 	}  else if(huart->Instance == USART3){
 		/*##-1- Reset peripherals ##################################################*/
 		  USART3_FORCE_RESET();

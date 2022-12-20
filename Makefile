@@ -109,7 +109,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F103RBTX_FLASHre.ld
+LDSCRIPT = STM32F103RBTX_FLASHrc.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
