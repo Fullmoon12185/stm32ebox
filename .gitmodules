@@ -1,3 +1,9 @@
 [submodule "Lib/netif"]
 	path = Lib/netif
 	url = git@github.com:thodoxuan392/esp32_net.git
+[submodule "Lib/utils"]
+	path = Lib/utils
+	url = git@github.com:thodoxuan392/utils.git
+[submodule "Lib/modbus"]
+	path = Lib/modbus
+	url = git@github.com:thodoxuan392/modbus_protocol.git
