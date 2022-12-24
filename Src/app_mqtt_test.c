@@ -9,7 +9,8 @@
 #include "netif.h"
 #include "stdbool.h"
 #include "app_scheduler.h"
-#include "utils/netif_logger.h"
+
+#include "utils/utils_logger.h"
 
 static void time_to_publish();
 static void on_connect_cb(uint8_t status);
@@ -25,10 +26,10 @@ static bool published = false;
 
 static netif_mqtt_client_t mqtt_client = {
 		.client_id = "\"netif_test_123\"",
-		.host = "\"test.mosquitto.org\"",
-		.port = 1883,
-		.username = "\"\"",
-		.password = "\"\"",
+		.host = "\"35.240.158.2\"",
+		.port = 8883,
+		.username = "\"eboost-k2\"",
+		.password = "\"ZbHzPb5W\"",
 		.reconnect = 1,
 		.on_connect = on_connect_cb,
 		.on_disconnect = on_disconnect_cb,
@@ -50,14 +51,14 @@ void mqtt_run(){
 		case 0:
 			netif_manager_is_connect_to_internet(&internet_connected);
 			if(internet_connected){
-				netif_log_info("Internet Connected");
+				utils_log_info("Internet Connected");
 				step = 1;
 			}
 			break;
 		case 1:
 			ret = netif_mqtt_config(&mqtt_client);
 			if(ret == NETIF_OK){
-				netif_log_info("netif_mqtt_config OK");
+				utils_log_info("netif_mqtt_config OK");
 				last_sent = NETIF_GET_TIME_MS();
 				step = 2;
 			}
@@ -68,7 +69,7 @@ void mqtt_run(){
 			}
 			ret = netif_mqtt_connect(&mqtt_client);
 			if(ret == NETIF_OK){
-				netif_log_info("netif_mqtt_connect OK");
+				utils_log_info("netif_mqtt_connect OK");
 				last_sent = NETIF_GET_TIME_MS();
 				step = 3;
 			}
@@ -79,19 +80,20 @@ void mqtt_run(){
 			}
 			ret = netif_mqtt_subcribe(&mqtt_client, "\"thodoxuan\"", 1);
 			if(ret == NETIF_OK){
-				netif_log_info("netif_mqtt_subcribe OK");
+				utils_log_info("netif_mqtt_subcribe OK");
 				last_sent = NETIF_GET_TIME_MS();
 				step = 4;
 			}
 			break;
 		case 4:
-//			if(NETIF_GET_TIME_MS() - last_sent > 100){
-//				ret = netif_mqtt_publish(&mqtt_client, "\"publish_topic\"", "\"123\"", 1, 0);
-//				if(ret == NETIF_OK){
-//					last_sent = NETIF_GET_TIME_MS();
-//					netif_log_info("netif_mqtt_publish OK");
-//				}
-//			}
+			if(NETIF_GET_TIME_MS() - last_sent < 1000){
+				break;
+			}
+			ret = netif_mqtt_publish(&mqtt_client, "\"publish_topic\"", "\"123\"", 1, 0);
+			if(ret == NETIF_OK){
+				last_sent = NETIF_GET_TIME_MS();
+				utils_log_info("netif_mqtt_publish OK");
+			}
 			break;
 		default:
 			break;
@@ -112,7 +114,7 @@ static void on_disconnect_cb(uint8_t status){
 }
 
 static void on_message_cb(char * topic, char * payload){
-	netif_log_info("on_message_cb: topic %s, payload %s", topic,payload);
+	utils_log_info("on_message_cb: topic %s, payload %s", topic,payload);
 	have_message = true;
 }
 
