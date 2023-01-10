@@ -17,6 +17,7 @@
 #include "app_i2c_lcd.h"
 
 #include "app_send_sms.h"
+#include "app_iwatchdog.h"
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
@@ -110,7 +111,6 @@ void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData){
 		publish_message[publishMessageIndex] = 0;
 	}
 	publishMessageIndex = 0;
-//	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
 	publish_message[publishMessageIndex++] = outletID + 0x30;
 	if(displayData >= 10000){
 		publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
@@ -351,7 +351,6 @@ void Update_Publish_Voltage_Message_All_Outlets(void){
 		publish_message[publishMessageIndex] = 0;
 	}
 	publishMessageIndex = 0;
-//	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
 	for(uint8_t outletID = 0; outletID < 1; outletID++){
 		publish_message[publishMessageIndex++] = outletID + 0x30;
 		publish_message[publishMessageIndex++] = '-';
@@ -536,9 +535,12 @@ void Led_Status_Display(void){
 
 
 void Server_Communication(void){
-//	static uint8_t publishChannelIndex = 0;
-//	static uint16_t whTest = 0;
-//	Led_Status_Display();
+	if(Is_Reset_Module_Sim()){
+		Clear_Counter_For_Reset_Module_Sim();
+		Set_Sim3G_State(RESET_SIM3G);
+		Set_Mqtt_State(MQTT_WAIT_FOR_NEW_COMMAND);
+		serverCommunicationFsmState = SIM3G_OPEN_CONNECTION;
+	}
 	switch(serverCommunicationFsmState){
 	case SIM3G_OPEN_CONNECTION:
 		if(Sim3g_Run()){
@@ -580,31 +582,8 @@ void Server_Communication(void){
 			serverCommunicationFsmState = SIM3G_SEND_SMS_MESSAGE;
 		} else {
 			if(is_Set_Relay_Timeout()){
-//				if(Get_Is_Receive_Data_From_Server() == SET){
-//					Set_Is_Receive_Data_From_Server(RESET);
-//					SCH_Delete_Task(ping_Request_TimeoutIndex);
-//					Clear_Ping_Request_Timeout_Flag();
-//					ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, TIME_FOR_PING_REQUEST, 0);
-//				}
-//
-//				if(is_Ping_Request_Timeout()){
-//					Set_Mqtt_State(MQTT_PING_REQUEST_STATE);
-//					SCH_Delete_Task(ping_Request_TimeoutIndex);
-//					Clear_Ping_Request_Timeout_Flag();
-//					ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, TIME_FOR_PING_REQUEST, 0);
-//				}
-//				else
 				if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
-//					Update_Publish_Status_Message();
-//					Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-//					Set_Mqtt_State(MQTT_PUBLISH_STATE);
 					publishTopicIndex = 0;
-//					SCH_Delete_Task(publish_message_TimeoutIndex);
-//					Clear_Publish_Message_Timeout_Flag();
-//					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-//					Turn_On_Buzzer();
-//					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
-
 				} else if (is_Publish_Message_Timeout()){
 					if (publishTopicIndex == 0) {
 						publishTopicIndex = 1;
@@ -638,7 +617,8 @@ void Server_Communication(void){
 					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
 
 					ClearCounter();
-
+					Clear_Counter_For_Reset_Module_Sim();
+					Clear_For_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message();
 					Turn_On_Buzzer();
 					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 				}

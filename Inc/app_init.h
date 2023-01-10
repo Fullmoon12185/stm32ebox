@@ -27,6 +27,7 @@ enum InitState {
 	ADC_INIT,
 	START_DMA_ADC,
 	WATCH_DOG_INIT,
+	SEND_SMS_INIT,
 
     MAX_INIT_STATE
 };

@@ -13,23 +13,26 @@
 
 
 #define		DEBUG_SEND_SMS(x)		x
-
+#define		SMS_BUFFER_LENGTH		30
 
 #define		CTRL_Z	26
 
-uint8_t smsBuffer[40];
-uint8_t smsBufferIndex = 0;
+
 //const uint8_t smsCommand[] = "AT+CMGS=\"+84915075588\"\r";
 const uint8_t turnOnPDUMode[] = "AT+CMGF=0\r";
 const uint8_t turnOffPDUMode[] = "AT+CMGF=1\r";
-const uint8_t smsCommand[] = "AT+CMGS=\"+84902860954\"\r";
+const uint8_t smsCommand[] = "AT+CMGS=\"+84346702559\"\r";
 
 const uint8_t atCUSDCommand[] ="AT+CUSD=1,\"*101#\",15\r";
-const uint8_t smsMessage[] = "Hi Stefan, I'm still alive - ";
+const uint8_t smsNormalMessage[] =       "Still ALIVE - ";
+const uint8_t smsFirstMessage[] =        "BOOT UP - ";
+const uint8_t smsLostConnectionMessage[] = "Lost connection -";
 
 uint8_t sendSmsFlag = 0;
 uint8_t timeoutSendSmsFlag = 0;
 
+uint8_t smsBufferIndex = 0;
+uint8_t smsBuffer[SMS_BUFFER_LENGTH];
 
 extern FlagStatus isReadyToSendDataToServer;
 extern FlagStatus isOKFlag;
@@ -46,11 +49,20 @@ typedef enum {
 	OTHERS
 } SMS_STATE;
 
+
 static SMS_STATE smsState = TURN_ON_PDU;
 static SMS_STATE preSmsState = OTHERS;
 
-void Send_An_Sms_Message(void);
-void Send_Sms_Content(void);
+
+
+SMS_MESSAGE_TYPE smsMessageType = SMS_FIRST_MESSAGE_AFTER_REBOOT;
+
+
+void Send_An_Sms_Message_Command(void);
+void Send_Sms_Normal_Message(void);
+void Send_Sms_First_Message(void);
+void Send_Sms_Lost_Connection_Message(void);
+
 
 void Set_Send_Sms_Flag(void){
 	sendSmsFlag = 1;
@@ -71,22 +83,59 @@ uint8_t Is_Set_Timeout_Send_Sms_Flag(void){
 	return timeoutSendSmsFlag == 1;
 }
 
+void Send_Sms_Message_Init(void){
+	smsState = TURN_ON_PDU;
+	preSmsState = OTHERS;
+	smsMessageType = SMS_FIRST_MESSAGE_AFTER_REBOOT;
+}
 
+
+void Set_Sms_Message_Type(SMS_MESSAGE_TYPE msgType){
+	smsMessageType = msgType;
+}
 
 void Start_Sending_Sms_Message(void){
 	Set_Send_Sms_Flag();
 	Set_Timeout_Send_Sms_Flag();
 	smsState = TURN_OFF_PDU;
 }
+void Start_Sending_Lost_Connection_Message(void){
+	Set_Sms_Message_Type(SMS_LOST_CONNECTION);
+	Start_Sending_Sms_Message();
+}
 uint8_t Is_Done_Sending_Sms_Message(void){
 	return smsState == DONE_SENDING_SMS_MESSAGE;
 }
-void Send_Sms_Content(void){
+void Send_Sms_Normal_Message(void){
+	uint16_t boxID = Get_Box_ID();
+	smsBufferIndex = 0;
+	for (uint8_t i = 0; i < GetStringLength((uint8_t*)smsNormalMessage); i ++){
+		smsBuffer[smsBufferIndex++] = smsNormalMessage[i];
+	}
+	if(smsBufferIndex > SMS_BUFFER_LENGTH - 6) return;
+
+	smsBuffer[smsBufferIndex++] = boxID / 1000 + 0x30;
+	boxID = boxID % 1000;
+	smsBuffer[smsBufferIndex++] = boxID / 100 + 0x30;
+	boxID = boxID % 100;
+	smsBuffer[smsBufferIndex++] = boxID / 10 + 0x30;
+	boxID = boxID % 10;
+	smsBuffer[smsBufferIndex++] = boxID + 0x30;
+	smsBuffer[smsBufferIndex++] = CTRL_Z;
+	smsBuffer[smsBufferIndex++] = 0;
+
+	ATcommandSending((uint8_t*)smsBuffer);
+}
+void Send_Sms_First_Message(void){
 
 	uint16_t boxID = Get_Box_ID();
-	for (uint8_t i = 0; i < GetStringLength((uint8_t*)smsMessage); i ++){
-		smsBuffer[smsBufferIndex++] = smsMessage[i];
+	smsBufferIndex = 0;
+
+	for (uint8_t i = 0; i < GetStringLength((uint8_t*)smsFirstMessage); i ++){
+		smsBuffer[smsBufferIndex++] = smsFirstMessage[i];
 	}
+	if(smsBufferIndex > SMS_BUFFER_LENGTH - 6) return;
+
 	smsBuffer[smsBufferIndex++] = boxID / 1000 + 0x30;
 	boxID = boxID % 1000;
 	smsBuffer[smsBufferIndex++] = boxID / 100 + 0x30;
@@ -100,10 +149,44 @@ void Send_Sms_Content(void){
 	ATcommandSending((uint8_t*)smsBuffer);
 }
 
-void Send_An_Sms_Message(void){
+void Send_Sms_Lost_Connection_Message(void){
+
+	uint16_t boxID = Get_Box_ID();
+	smsBufferIndex = 0;
+	for (uint8_t i = 0; i < GetStringLength((uint8_t*)smsLostConnectionMessage); i ++){
+		smsBuffer[smsBufferIndex++] = smsLostConnectionMessage[i];
+	}
+	if(smsBufferIndex > SMS_BUFFER_LENGTH - 6) return;
+
+	smsBuffer[smsBufferIndex++] = boxID / 1000 + 0x30;
+	boxID = boxID % 1000;
+	smsBuffer[smsBufferIndex++] = boxID / 100 + 0x30;
+	boxID = boxID % 100;
+	smsBuffer[smsBufferIndex++] = boxID / 10 + 0x30;
+	boxID = boxID % 10;
+	smsBuffer[smsBufferIndex++] = boxID + 0x30;
+	smsBuffer[smsBufferIndex++] = CTRL_Z;
+	smsBuffer[smsBufferIndex++] = 0;
+
+	ATcommandSending((uint8_t*)smsBuffer);
+}
+
+
+
+void Send_An_Sms_Message_Command(void){
 	isReadyToSendDataToServer = RESET;
 	ATcommandSending((uint8_t*)smsCommand);
 }
+void Send_An_Sms_Message(void){
+	if(smsMessageType == SMS_FIRST_MESSAGE_AFTER_REBOOT){
+		Send_Sms_First_Message();
+	} else if(smsMessageType == SMS_NORMAL_MESSAGE){
+		Send_Sms_Normal_Message();
+	} else if(smsMessageType == SMS_LOST_CONNECTION){
+		Send_Sms_Lost_Connection_Message();
+	}
+}
+
 
 void Turn_Off_PDU_Mode(void){
 	isOKFlag = RESET;
@@ -163,12 +246,12 @@ void FSM_For_Sending_SMS_Message(void){
 			}
 			break;
 		case SENDING_COMMAND:
-				Send_An_Sms_Message();
+				Send_An_Sms_Message_Command();
 				smsState = WAIT_FOR_READY_THEN_SEND_CONTENT;
 			break;
 		case WAIT_FOR_READY_THEN_SEND_CONTENT:
 			if(isReadyToSendDataToServer){
-				Send_Sms_Content();
+				Send_An_Sms_Message();
 				Clear_Timeout_Send_Sms_Flag();
 				SCH_Add_Task(Set_Timeout_Send_Sms_Flag, 300, 0);
 				smsState = TURN_ON_PDU;
@@ -185,6 +268,7 @@ void FSM_For_Sending_SMS_Message(void){
 		case WAIT_FOR_TURN_ON_PDU_MODE:
 			if(isOKFlag){
 				Clear_Send_Sms_Flag();
+				Set_Sms_Message_Type(SMS_NORMAL_MESSAGE);
 				smsState = DONE_SENDING_SMS_MESSAGE;
 			}
 			if(isErrorFlag){

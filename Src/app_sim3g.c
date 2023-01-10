@@ -678,10 +678,8 @@ void Processing_Received_Data_From_Retained_Message(uint8_t * sub_topic, uint16_
 			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + i*4 + 2] - 0x30;
 			if(relayStatus == SET){
 				Set_Relay(relayIndex);
-				Set_Limit_Energy(relayIndex, 0xffffffff);
 			} else {
 				Reset_Relay(relayIndex);
-				Set_Limit_Energy(relayIndex, 0);
 			}
 		}
 	}
@@ -766,12 +764,12 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			isOKFlag = SET;
 		} else if(isReceivedData((uint8_t *)ERROR_1)){
 			isErrorFlag = SET;
-//			UART3_SendToHost((uint8_t*)"aNg");
 			if(counterForResetChargingAfterDisconnection < TIME_OUT_FOR_STOP_CHARGING){
 				counterForResetChargingAfterDisconnection ++;
 			} else {
 				counterForResetChargingAfterDisconnection  = TIME_OUT_FOR_STOP_CHARGING;
 			}
+
 		}else if(isReceivedData((uint8_t *)SIM_NOT_INSERT)){
 //			isErrorFlag = SET;
 			UART3_SendToHost((uint8_t*)"SIM_NOT_INSERT");
@@ -783,6 +781,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 
 		}else if(isReceivedData((uint8_t *)IP_CLOSE)){
 			isIPCloseFlag = SET;
+//			Start_Sending_Lost_Connection_Message();
 		} else if(isReceivedData((uint8_t *)RECV_FROM)){
 			isSendOKFlag = RESET;
 			isRecvFromFlag = SET;
@@ -866,7 +865,7 @@ void UART3_SendReceivedBuffer(void){
 	UART3_SendToHost((uint8_t *)Sim3gDataProcessingBuffer);
 }
 
-uint8_t isConnestionLost(void){
+uint8_t isConnectionLost(void){
 	return (counterForResetChargingAfterDisconnection == TIME_OUT_FOR_STOP_CHARGING);
 }
 void ClearCounter(void){

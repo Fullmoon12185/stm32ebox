@@ -28,6 +28,7 @@
 #include "app_scheduler.h"
 #include "app_eeprom.h"
 
+#include "app_send_sms.h"
 #include "app_test.h"
 
 
@@ -124,6 +125,10 @@ void System_Initialization(void)
         case WATCH_DOG_INIT:
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
             break;
+        case SEND_SMS_INIT:
+        	Send_Sms_Message_Init();
+        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SEND_SMS_INIT - Done \r\n"));
+        	break;
         default:
             initState = HAL_INIT;
             break;

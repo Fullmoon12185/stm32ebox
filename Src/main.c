@@ -56,7 +56,6 @@ void Main_FSM(void);
 
 int main(void)
 {
-
 	System_Initialization();
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
 	sprintf(log,"Ebox Version: %d\r\n",VERSION_EBOX);
@@ -73,8 +72,8 @@ int main(void)
 
 	Setup_Eeprom();
 	SCH_Add_Task(PCF_read, 13, 23);
-	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*60*24*3);
-//	SCH_Add_sTask(Test_Timer, 0, 100);
+	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*60*24*7);
+//	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*5);
 	if(Get_Box_ID() != 0){
 		SCH_Add_Task(LED_Display_FSM, 19, 23);
 		SCH_Add_Task(Watchdog_Counting, 7, 101);
@@ -119,7 +118,9 @@ void Test_Timer(void){
 void Main_FSM(void){
 
 #if(WATCHDOG_ENABLE == 1)
-	if(Is_Watchdog_Reset() == 0 && !isConnestionLost()){
+	if(Is_Watchdog_Reset() == 0
+			&& !isConnectionLost()
+			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
 		Watchdog_Refresh();
 	}
 #endif
