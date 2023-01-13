@@ -351,7 +351,6 @@ void HTTP_Read(){
  * else if AT_Result = AT_NOT_FOUND switch to HTTP_PARA every timeout
  * else if AT_Result = AT_ERROR switch to HTTP_MAX_STATE to reset Simcom7600
  */
-char log[50];
 uint32_t firmware_index_end;
 extern Firmware_Data_State firmware_state;
 void HTTP_Wait_For_Read(){
@@ -409,20 +408,6 @@ void HTTP_Wait_For_Read(){
 					default:
 						break;
 				}
-//				if(flag_ret){
-//					if(checksum_correct){
-//						if(http_response_remain == 0){
-//							LOG("Jump To Current Firmware");
-//							Jump_To_Current_Firmware();
-//						}
-//					}
-//					else{
-//						LOG("Jump To Factory Firmware");
-//						Jump_To_Factory_Firmware();
-//					}
-//					Clear_AT_Result();
-//					http_state = HTTP_READ;
-//				}
 				break;
 			default:
 				break;
@@ -531,9 +516,9 @@ uint16_t Get_IntegerValue_From_HTTP_Respone(){
 			return 0xFFFF;
 		}
 		else{
-			sprintf(log,"\r\n%d",result);
+			sprintf(logMsg,"\r\n%d",result);
 			UART_DEBUG_Transmit("3\r\n");
-			UART_DEBUG_Transmit(log);
+			UART_DEBUG_Transmit(logMsg);
 			data_index_2 = 0;
 			return result;
 		}
@@ -544,11 +529,12 @@ uint16_t Get_IntegerValue_From_HTTP_Respone(){
 }
 
 
-uint8_t temp_version_name_buffer[TEMP_VERSION_BUFFER_LENGTH];
-uint8_t temp_version_name_index = 0;
-FlagStatus prepare_record_version_name = RESET;
-FlagStatus start_record_version_name = RESET;
+
 FlagStatus HTTP_Firmware_Version(){
+	static uint8_t temp_version_name_buffer[TEMP_VERSION_BUFFER_LENGTH];
+	static uint8_t temp_version_name_index = 0;
+	static FlagStatus prepare_record_version_name = RESET;
+	static FlagStatus start_record_version_name = RESET;
 	if(UART_SIM7600_Received_Buffer_Available()){
 		temp_version_name_buffer[temp_version_name_index] = UART_SIM7600_Read_Received_Buffer();
 //		UART_DEBUG_Transmit_Size(temp_version_name_buffer + temp_version_name_index, 1);
@@ -603,24 +589,26 @@ FlagStatus is_Firmware_Line_Data_Correct(uint8_t *buffer, uint16_t buffer_len){
 /*
  * Return Size of Firmware Data which Received from UART
  */
-FlagStatus prepare_record_firmware_data = RESET;
-FlagStatus start_record_firmware_data = RESET;
-uint16_t count = 0;
-uint8_t temp_hex_1 ;
-uint8_t temp_hex_2 ;
-uint8_t offset = 0;
-uint8_t temp_firmware_data_buffer[TEMP_BUFFER_SIZE];
-uint16_t temp_firmware_data_index = 0;
-uint8_t line_buffer[LINE_BUFFER_LENGTH];
-uint16_t line_buffer_index = 0;
-uint8_t temp_at_response_buffer[LINE_BUFFER_LENGTH];
-uint16_t temp_at_response_index = 0;
-uint8_t temp_char;
-char new_log[10];
-FlagStatus first_http_read = SET;
-uint32_t firmware_address_of_hexfile;
-static FlagStatus get_2bytes_firmware_address = SET;
+
 Firmware_Data_State HTTP_Firmware_Data(){
+	static FlagStatus prepare_record_firmware_data = RESET;
+	static FlagStatus start_record_firmware_data = RESET;
+	static uint16_t count = 0;
+	static uint8_t temp_hex_1 ;
+	static uint8_t temp_hex_2 ;
+	static uint8_t offset = 0;
+	static uint8_t temp_firmware_data_buffer[TEMP_BUFFER_SIZE];
+	static uint16_t temp_firmware_data_index = 0;
+	static uint8_t line_buffer[LINE_BUFFER_LENGTH];
+	static uint16_t line_buffer_index = 0;
+	static uint8_t temp_at_response_buffer[LINE_BUFFER_LENGTH];
+	static uint16_t temp_at_response_index = 0;
+	static uint8_t temp_char;
+	static char new_log[10];
+	static FlagStatus first_http_read = SET;
+	static uint32_t firmware_address_of_hexfile;
+	static FlagStatus get_2bytes_firmware_address = SET;
+
 	/*
 	 * The first time get data pattern is
 	 * {
@@ -769,8 +757,8 @@ Firmware_Data_State HTTP_Firmware_Data(){
 							if(get_2bytes_firmware_address){
 								get_2bytes_firmware_address = RESET;
 								firmware_address_of_hexfile = (firmware_address_of_hexfile<<16) | (uint32_t)firmware_address_curr_offet;
-								sprintf(log,"\r\n2 byte total :%x\r\n",firmware_address_of_hexfile);
-								LOG(log);
+								sprintf(logMsg,"\r\n2 byte total :%x\r\n",firmware_address_of_hexfile);
+								LOG(logMsg);
 								if(firmware_address_of_hexfile != CURRENT_FIRMWARE_ADDR){
 									return ERR_CURRENT_FIRMWARE_ADDRESS_WRONG;
 								}
@@ -797,8 +785,8 @@ Firmware_Data_State HTTP_Firmware_Data(){
 						}
 						else if(Char2Hex(line_buffer[7])==4){
 							firmware_address_of_hexfile = ((uint16_t)(Char2Hex(line_buffer[8]))<<12) +((uint16_t)(Char2Hex(line_buffer[9]))<<8) + ((uint16_t)(Char2Hex(line_buffer[10]))<<4)+(uint16_t)(Char2Hex(line_buffer[11]));
-							sprintf(log,"\r\n2 byte low :%x\r\n",firmware_address_of_hexfile);
-							LOG(log);
+							sprintf(logMsg,"\r\n2 byte low :%x\r\n",firmware_address_of_hexfile);
+							LOG(logMsg);
 						}
 						line_buffer_index = 0;
 //							LOG("14");

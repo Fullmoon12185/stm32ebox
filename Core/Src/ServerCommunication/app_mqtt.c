@@ -226,7 +226,6 @@ uint8_t MQTT_Run(void){
 void MQTT_Declar(){
 	sprintf((char*)TOPIC_OPENCABINET, "*******");
 	sprintf((char*)TOPIC_UPDATE_FIRMWARE, "********");
-
 }
 
 /**
@@ -309,7 +308,6 @@ void MQTT_Accquire_Client(){
  * @brief else It is AT_ERROR so switch to MQTT_MAX_STATE for reset Simcom7600 after.
  */
 void MQTT_Wait_For_Accquire_Client(){
-//	Wait_For_Respone(AT_OK);
 	switch (Get_AT_Result()) {
 		case AT_OK:
 			Clear_AT_Result();
@@ -357,7 +355,6 @@ void MQTT_Connect(){
  */
 void MQTT_Wait_For_Connect(){
 	if(is_Mqtt_TimeOutFlag()){
-//		Wait_For_Respone(AT_OK);
 		switch (Get_AT_Result()) {
 			case AT_OK:
 				Clear_AT_Result();
@@ -406,7 +403,6 @@ void MQTT_Topic(){
  * @brief else It is AT_ERROR so switch to MQTT_MAX_STATE for reset Simcom7600 after.
  */
 void MQTT_Wait_For_Topic(){
-//	Wait_For_Respone(AT_INPUT);
 	if(is_Mqtt_TimeOutFlag()){
 		LOG("TIME OUT\r\n");
 		Clear_AT_Result();
@@ -469,7 +465,6 @@ void MQTT_Input_Topic(){
  * @brief else It is AT_ERROR so switch to MQTT_MAX_STATE for reset Simcom7600 after.
  */
 void MQTT_Wait_For_Input_Topic(){
-//	Wait_For_Respone(AT_OK);
 	if(is_Mqtt_TimeOutFlag()){
 		LOG("TIME OUT\r\n");
 		Clear_AT_Result();
@@ -513,9 +508,7 @@ void MQTT_Wait_For_Input_Topic(){
  * @brief This function for send ATcommand contains client_index and payload length for publish.
  */
 void MQTT_Payload(){
-//	Clear_AT_Result();
 	sprintf((char*)atcommand,"AT+CMQTTPAYLOAD=%d,%d\r\n",mqtt_client.client_index,strlen(publish_message.payload));
-//	Clear_Reiceive_Buffer();
 	Clear_Mqtt_Timeout_Flag();
 	task_MQTT_Timeout_ID = SCH_Add_Task(Set_Mqtt_Timeout_Flag, ATCOMMAND_TIMEOUT, 0);
 	UART_SIM7600_Transmit(atcommand);
@@ -532,7 +525,6 @@ void MQTT_Payload(){
  * @brief else It is AT_ERROR so switch to MQTT_MAX_STATE for reset Simcom7600 after.
  */
 void MQTT_Wait_For_Payload(){
-//	Wait_For_Respone(AT_INPUT);
 	if(is_Mqtt_TimeOutFlag()){
 		LOG("TIME OUT\r\n");
 		Clear_AT_Result();
@@ -575,8 +567,6 @@ void MQTT_Wait_For_Payload(){
  * @brief This function for input payload content.
  */
 void MQTT_Input_Payload(){
-//	Clear_AT_Result();
-//	Clear_Reiceive_Buffer();
 	sprintf((char*)atcommand,"%s",publish_message.payload);
 	Clear_Mqtt_Timeout_Flag();
 	task_MQTT_Timeout_ID = SCH_Add_Task(Set_Mqtt_Timeout_Flag, ATCOMMAND_TIMEOUT, 0);
@@ -595,7 +585,6 @@ void MQTT_Input_Payload(){
  * @brief else It is AT_ERROR so switch to MQTT_MAX_STATE for reset Simcom7600 after.
  */
 void MQTT_Wait_For_Input_Payload(){
-//	Wait_For_Respone(AT_OK);
 	if(is_Mqtt_TimeOutFlag()){
 		LOG("TIME OUT\r\n");
 		Clear_AT_Result();
@@ -638,10 +627,8 @@ void MQTT_Wait_For_Input_Payload(){
  * @brief This function for publish message.
  */
 void MQTT_Publish(){
-//	Clear_AT_Result();
 	sprintf((char*)atcommand,"AT+CMQTTPUB=%d,%d,%d,%d,%d\r\n",mqtt_client.client_index,publish_message.qos,
 			publish_message.pub_timeout, publish_message.retain, publish_message.dup);
-//	Clear_Reiceive_Buffer();
 	Clear_Mqtt_Timeout_Flag();
 	task_MQTT_Timeout_ID = SCH_Add_Task(Set_Mqtt_Timeout_Flag, ATCOMMAND_TIMEOUT, 0);
 	UART_SIM7600_Transmit(atcommand);
@@ -659,7 +646,6 @@ void MQTT_Publish(){
  * @brief else It is AT_ERROR so switch to MQTT_WAIT_NEXT_COMMAND for retry.
  */
 void MQTT_Wait_For_Publish(){
-//	Wait_For_Respone(AT_OK);
 	if(is_Mqtt_TimeOutFlag()){
 		LOG("TIME OUT\r\n");
 		Clear_AT_Result();
@@ -779,32 +765,6 @@ uint8_t* MQTT_Get_Message_Subcribe(uint8_t * payload_length){
 		}
 	}
 	return NULL;
-
-
-
-
-//	for(;;){
-//		if(UART_SIM7600_Received_Buffer_Available()){
-//			if(UART_SIM7600_Read_Received_Buffer()=='\n'){
-//				break;
-//			}
-//		}
-//
-//	}
-//	//Get Payload Content
-//	for(;;) {
-//		if(UART_SIM7600_Received_Buffer_Available()){
-//			temp=UART_SIM7600_Read_Received_Buffer();
-//			if(temp!='\r'){
-//				mess_receive_subcribe[length++]=temp;
-//			}
-//			else{
-//				break;
-//			}
-//		}
-//	}
-//	*payload_length = length;
-//	return mess_receive_subcribe;
 }
 
 
@@ -976,63 +936,3 @@ FlagStatus Clear_All_MQTT_Message(){
 FlagStatus is_MQTT_Available(){
 	return mqtt_state == MQTT_WAIT_NEXT_COMMAND;
 }
-//
-//void Setup_Mqtt_Connect_Message(uint8_t * clientid,uint8_t * username,uint8_t * password ,uint8_t *willtopic,uint8_t *willmessage,uint8_t keepalive,uint8_t cleansession){
-//	uint8_t i;
-//	uint8_t clientIdLength = strlen((uint8_t*)clientid);
-//	uint8_t usernameLength = strlen((uint8_t*)username);
-//	uint8_t passwordLength = strlen((uint8_t*)password);
-//	uint8_t willTopicLength = strlen((uint8_t*)willtopic);
-//	uint8_t willMessageLength = strlen((uint8_t*)willmessage);
-//
-//	Clear_Mqtt_Message_Buffer();
-//
-//	// Header
-//	mqttMessage[mqttMessageIndex++] = 0x10;
-//
-//	mqttMessage[mqttMessageIndex++] = 10 + clientIdLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
-//	// Protocol name
-//	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
-//	mqttMessage[mqttMessageIndex++] = 4;                      // Protocol Name Length LSB
-//	mqttMessage[mqttMessageIndex++] = 'M';
-//	mqttMessage[mqttMessageIndex++] = 'Q';
-//	mqttMessage[mqttMessageIndex++] = 'T';
-//	mqttMessage[mqttMessageIndex++] = 'T';
-//
-//	// Protocol Level
-//	mqttMessage[mqttMessageIndex++] =  4;					  // MQTT Protocol version = 4 (mqtt 3.1.1)
-//
-//	// Connection flags   2 for clean session
-// //   mqttMessage[9] = 2;
-//	mqttMessage[mqttMessageIndex++] = 0b11000010;  //enable username, password, clean session
-//
-//	// Keep-alive (maximum duration)
-////	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
-////	mqttMessage[mqttMessageIndex++] = 0x3c;                     // Keep-alive Time Length LSB
-//
-//	mqttMessage[mqttMessageIndex++] = 0x00;                     // Keep-alive Time Length MSB
-//		mqttMessage[mqttMessageIndex++] = 120;                    // Keep-alive Time Length LSB
-//
-//	// Client ID
-//	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
-//	mqttMessage[mqttMessageIndex++] = clientIdLength;        // Client ID length LSB
-//	for (i = 0; i < clientIdLength; i ++){
-//		mqttMessage[mqttMessageIndex++] = clientid[i];
-//	}
-//
-//	// Username
-//	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
-//	mqttMessage[mqttMessageIndex++] = usernameLength;        // Client ID length LSB
-//	for (i = 0; i < usernameLength; i ++){
-//		mqttMessage[mqttMessageIndex++] = username[i];
-//	}
-//
-//	// Password
-//	mqttMessage[mqttMessageIndex++] = 0;                     // Client ID length MSB
-//	mqttMessage[mqttMessageIndex++] = passwordLength;        // Client ID length LSB
-//	for (i = 0; i < passwordLength; i ++){
-//		mqttMessage[mqttMessageIndex++] = password[i];
-//	}
-//	mqttMessageLength = mqttMessageIndex;
-//	SM_Send_Data(mqttMessageLength);
-//}
