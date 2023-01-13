@@ -11,10 +11,12 @@
 #include "app_version.h"
 
 #define FLASH_BUFFER_SIZE 	2048
+#define MAX_RETRY		3
 
 FSM_State_Typedef fsm_curr_state = START_SIMCOM;
 FSM_State_Typedef fsm_prev_state = START_SIMCOM;
-uint8_t flash_buffer[2048];
+Firmware_Data_State firmware_state;
+static uint8_t flash_buffer[2048];
 static uint8_t UPDATE_PERCENT_COMPLETE_TOPIC[MAX_LENGTH_TOPIC];
 static uint8_t PAYLOAD[MAX_LENGTH_PAYLOAD];
 static uint8_t ret;
@@ -47,7 +49,7 @@ void FSM_Display_State(void){
 				LOG("\r\nMQTT CONFIGURATION\r\n");
 				break;
 			case HTTP_FIRMWARE_PROCESSING:
-				LOG("\r\nVERSION CHECKING HTTP\r\n");
+				LOG("\r\nHTTP FIRMWARE PROCESSING\r\n");
 				break;
 			case UPDATE_COMPLETE_PERCENT:
 				LOG("\r\nUPDATE PERCENT COMPLETE\r\n");
@@ -82,6 +84,7 @@ void Start_Simcom(){
 }
 
 void Mqtt_Configuration(){
+	static uint8_t mqtt_retry_count = 0;
 	MQTT_Run();
 	if(MQTT_Get_State() == MQTT_WAIT_NEXT_COMMAND){
 		fsm_curr_state = HTTP_FIRMWARE_PROCESSING;
@@ -89,13 +92,19 @@ void Mqtt_Configuration(){
 	else if (MQTT_Get_State() == MQTT_MAX_STATE){
 		SIM7600_Set_State(SIM7600_RESET);
 		MQTT_Set_State(MQTT_INIT);
-		fsm_curr_state = START_SIMCOM;
+		mqtt_retry_count ++;
+		if(mqtt_retry_count > MAX_RETRY){
+			// Update Firmware Fail -> Jump to Current Firmware
+			Jump_To_Current_Firmware();
+		}else{
+			// Restart SIMCOM again
+			fsm_curr_state = START_SIMCOM;
+		}
 	}
 }
 
 uint8_t complete_percent;
 uint8_t pre_complete_percent;
-Firmware_Data_State firmware_state;
 void HTTP_Firmware_Processing(){
 	HTTP_Run();
 	switch (HTTP_Get_State()) {
@@ -134,23 +143,6 @@ void HTTP_Firmware_Processing(){
 		default:
 			break;
 	}
-//	if(HTTP_Get_State() == HTTP_DONE){
-//		LOG("Get into\r\n");
-//		if(Get_Update_Firmware_Status() == UPDATE_FAILED){
-//			LOG("Get into Update Failed\r\n");
-//			Jump_To_Factory_Firmware();
-//		}
-//		else{
-//			LOG("Get into Update Success\r\n");
-//			fsm_curr_state = UPDATE_COMPLETE_PERCENT;
-//			Jump_To_Current_Firmware();
-//		}
-//	}
-//	else if(ret == 2){
-//		Reset_SimConfiguration_State();
-//		HTTP_Set_State(HTTP_INIT);
-//		fsm_curr_state = START_SIMCOM;
-//	}
 }
 
 
