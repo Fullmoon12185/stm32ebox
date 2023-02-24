@@ -12,7 +12,7 @@
 
 typedef enum  {
 	NONE = 0,
-#if(BOX_PLACE == BOX_GENERAL)
+#if(BOX_PLACE == BOX_GENERAL || BOX_PLACE == BOX_WITH_6_OUTLETS)
 	RED = 1,
 	GREEN = 2,
 #elif(BOX_PLACE == BOX_AT_SHOW_ROOM)

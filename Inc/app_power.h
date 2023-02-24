@@ -79,6 +79,8 @@ typedef struct Commands {
 	uint8_t data;
 } Command;
 
+void Power_Off_Sim3g(void);
+
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period);
 
 uint64_t Get_Main_Power_Consumption(void);

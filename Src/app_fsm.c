@@ -18,6 +18,8 @@
 
 #include "app_send_sms.h"
 #include "app_iwatchdog.h"
+#include "app_version.h"
+
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
@@ -48,6 +50,7 @@ uint32_t ping_Request_TimeoutIndex = NO_TASK_ID;
 uint8_t publish_message_TimeoutFlag = 0;
 uint32_t publish_message_TimeoutIndex = NO_TASK_ID;
 
+uint8_t update_Firmware_TimeoutFlag = 0;
 
 typedef enum {
 	SIM3G_OPEN_CONNECTION = 0,
@@ -55,6 +58,7 @@ typedef enum {
 	SIM3G_SETUP_SUBSCRIBE_TOPICS,
 	SIM3G_SETUP_PUBLISH_TOPICS,
 	SIM3G_SEND_SMS_MESSAGE,
+	SIM3G_UPDATE_FIRMWARE,
 	MAX_SERVER_COMMUNICATION_FSM_NUMBER_STATES
 } SERVER_COMMUNICATION_FSM_STATE;
 
@@ -62,6 +66,9 @@ SERVER_COMMUNICATION_FSM_STATE serverCommunicationFsmState = SIM3G_OPEN_CONNECTI
 
 
 
+uint8_t is_Update_Firmware_Timeout(void);
+void Set_Update_Firmware_Timeout_Flag(void);
+void Clear_Update_Firmware_Timeout_Flag(void);
 
 uint8_t is_Ping_Request_Timeout(void);
 void Set_Ping_Request_Timeout_Flag(void);
@@ -79,6 +86,16 @@ void Update_Publish_Power_Message_All_Outlets(void);
 void Update_Publish_Power_Factor_Message_All_Outlets(void);
 void Update_Publish_Voltage_Message_All_Outlets(void);
 void Update_Publish_Ampere_Message_All_Outlets(void);
+
+uint8_t is_Update_Firmware_Timeout(void){
+	return update_Firmware_TimeoutFlag == 1;
+}
+void Set_Update_Firmware_Timeout_Flag(void){
+	update_Firmware_TimeoutFlag = 1;
+}
+void Clear_Update_Firmware_Timeout_Flag(void){
+	update_Firmware_TimeoutFlag = 0;
+}
 
 void Clear_Ping_Request_Timeout_Flag(void){
 	ping_Request_TimeoutFlag = 0;
@@ -536,6 +553,7 @@ void Led_Status_Display(void){
 
 void Server_Communication(void){
 	if(Is_Reset_Module_Sim()){
+		UART3_SendToHost((uint8_t*)"Is_Reset_Module_Sim\r\n");
 		Clear_Counter_For_Reset_Module_Sim();
 		Set_Sim3G_State(RESET_SIM3G);
 		Set_Mqtt_State(MQTT_WAIT_FOR_NEW_COMMAND);
@@ -580,6 +598,11 @@ void Server_Communication(void){
 		} else if(Is_Set_Send_Sms_Flag()) {
 			Start_Sending_Sms_Message();
 			serverCommunicationFsmState = SIM3G_SEND_SMS_MESSAGE;
+		} else if(Is_Update_Firmware()){
+			Power_Off_Sim3g();
+			Clear_Update_Firmware_Timeout_Flag();
+			SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, 3000, 0);
+			serverCommunicationFsmState = SIM3G_UPDATE_FIRMWARE;
 		} else {
 			if(is_Set_Relay_Timeout()){
 				if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
@@ -629,6 +652,12 @@ void Server_Communication(void){
 		FSM_For_Sending_SMS_Message();
 		if(Is_Done_Sending_Sms_Message()){
 			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
+		}
+		break;
+	case SIM3G_UPDATE_FIRMWARE:
+		if(is_Update_Firmware_Timeout()){
+			UART3_SendToHost((uint8_t*)"Jump_To_Fota_Firmware");
+			Jump_To_Fota_Firmware();
 		}
 		break;
 	default:

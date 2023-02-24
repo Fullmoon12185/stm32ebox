@@ -32,7 +32,7 @@
 #define		MAX_CURRENT								800000
 //for distrist
 //#define		MAX_CURRENT_1							700000
-#define		MAX_CURRENT_1							1500000
+#define		MAX_CURRENT_1							1600000
 
 //#define 	MAX_TOTAL_CURRENT						38000		//in miliampere
 
@@ -40,17 +40,19 @@
 
 #define 	MAX_TOTAL_CURRENT						38000		//in miliampere
 
+#if(VERSION_EBOX == VERSION_TEST_EBOX)
+#define		MIN_CURRENT								5000
+#define		MIN_CURRENT_DETECTING_FULL_CHARGE		5000
+#define		MIN_CURRENT_DETECTING_UNPLUG			5000
+#define		MIN_CURRENT_FOR_START_CHARGING			5000
+#define 	CURRENT_CHANGING_THRESHOLD				5000
 
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+#elif(VERSION_EBOX == 2 || VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 #define		MIN_CURRENT								30000
 #define		MIN_CURRENT_DETECTING_FULL_CHARGE		30000
-#define		MIN_CURRENT_DETECTING_UNPLUG			5000
-#define		MIN_CURRENT_FOR_START_CHARGING			60000
+#define		MIN_CURRENT_DETECTING_UNPLUG			30000
+#define		MIN_CURRENT_FOR_START_CHARGING			30000
 #define 	CURRENT_CHANGING_THRESHOLD				30000
-
-#define		CURRENT_UN_PLUG_LEVEL_1					2 * MIN_CURRENT_DETECTING_FULL_CHARGE
-#define		CURRENT_UN_PLUG_LEVEL_2					3 * MIN_CURRENT_DETECTING_FULL_CHARGE
-#define		CURRENT_UN_PLUG_LEVEL_3					4 * MIN_CURRENT_DETECTING_FULL_CHARGE
 
 #if(BOX_PLACE == BOX_AT_XI)
 	#define 	MIN_PF									20
@@ -470,7 +472,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID <= 9){
+		if(tempOutletID <= 1){
 			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););

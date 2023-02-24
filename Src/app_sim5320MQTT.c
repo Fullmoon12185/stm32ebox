@@ -16,12 +16,12 @@
 #define		MOSQUITTO		0
 
 
-#define		DEBUG_MQTT(X)	X
+#define		DEBUG_MQTT(X)	//X
 #define 	MQTT_COMMAND_TIME_OUT		(50000/INTERRUPT_TIMER_PERIOD)
 
 #define 	MQTT_SUBSCRIBE_TIME_OUT		(3000/INTERRUPT_TIMER_PERIOD)
 
-
+#define 	MQTT_CONNECTION_DELAY 		(5000/INTERRUPT_TIMER_PERIOD)
 
 extern const uint8_t OK[];
 extern const uint8_t CONNECT_OK[];
@@ -37,6 +37,8 @@ extern FlagStatus isSendOKFlag;
 extern FlagStatus isReadyToSendDataToServer;
 extern FlagStatus isReceiveDataFromServer;
 extern FlagStatus isCipsend;
+
+extern FlagStatus isCIOPEN;
 
 
 const uint8_t MQTTCLOSE_COMMAND[]   = "AT+CIPCLOSE\r\n";
@@ -330,7 +332,7 @@ void Set_Up_Topic_Names(void){
 
 
 uint8_t MQTT_Run(void){
-//	MQTT_State_Display();
+	MQTT_State_Display();
 	if(mqttState < MAX_MQTT_NUMBER_STATES){
 		(*MQTT_State_Machine[mqttState].func)();
 		return 0;
@@ -471,12 +473,12 @@ void SM_Mqtt_Open(void){
 }
 
 void SM_Mqtt_Wait_For_Response_From_Open_State(void){
-	if(isOKFlag){
-		isOKFlag = RESET;
+	if(isCIOPEN){
+		isCIOPEN = RESET;
 		mqttState = MQTT_CONNECT_STATE;
 		SCH_Delete_Task(mqtt_Timeout_Task_Index);
 		Mqtt_Clear_Timeout_Flag();
-		mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, 100, 0);
+		mqtt_Timeout_Task_Index = SCH_Add_Task(Mqtt_Command_Timeout, MQTT_CONNECTION_DELAY, 0);
 	} else if(isErrorFlag){
 		isErrorFlag = 0;
 		mqttState = MAX_MQTT_NUMBER_STATES;

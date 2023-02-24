@@ -10,6 +10,11 @@
 
 #include "main.h"
 
+void Set_Is_Update_Firmware(void);
+void Clear_Is_Update_Firmware(void);
+uint8_t Is_Update_Firmware(void);
+
+
 uint16_t Get_Current_Version();
 uint16_t Get_Factory_Version();
 void Set_Current_Version(uint16_t version);

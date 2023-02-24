@@ -8,7 +8,7 @@
 #include "main.h"
 
 
-#define DURATION_FOR_RESET_MODULE_SIM	120
+#define DURATION_FOR_RESET_MODULE_SIM	300
 #define DURATION_FOR_WATCH_DOG_RESET	3000
 
 IWDG_HandleTypeDef hiwdg;

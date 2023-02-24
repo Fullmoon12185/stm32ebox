@@ -61,13 +61,21 @@ void Error_Handler(void);
 #define 	BOX_AT_XI					1
 #define	    BOX_GENERAL					2
 
+#define		BOX_WITH_6_OUTLETS			3
+
 #define		BOX_PLACE					BOX_GENERAL
 
 #define   VERSION_3_WITH_ALL_CT_5A       3
 #define   VERSION_4_WITH_8CT_5A_2CT_10A  4
 #define   VERSION_5_WITH_8CT_10A_2CT_20A 5
 
+//Please turn on this one if want to make a test box
+//#define		VERSION_TEST_EBOX			VERSION_3_WITH_ALL_CT_5A
+
 #define		VERSION_EBOX				VERSION_5_WITH_8CT_10A_2CT_20A
+
+
+
 /*
  * Firmware Chosen
  */

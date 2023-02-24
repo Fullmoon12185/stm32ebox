@@ -17,6 +17,19 @@
 
 #define		CTRL_Z	26
 
+/*====================================================================*/
+/*Firmware version management*/
+/*Version 1.0.0:
+Date: 22/02/2023
+Content:
+   - Add version and update fota
+
+*/
+#if(BOX_PLACE == BOX_WITH_6_OUTLETS)
+	const uint8_t firmwareVersion[] =  "6OLs-";
+#else
+	const uint8_t firmwareVersion[] =  "5.0.0-";
+#endif
 
 //const uint8_t smsCommand[] = "AT+CMGS=\"+84915075588\"\r";
 const uint8_t turnOnPDUMode[] = "AT+CMGF=0\r";
@@ -24,8 +37,8 @@ const uint8_t turnOffPDUMode[] = "AT+CMGF=1\r";
 const uint8_t smsCommand[] = "AT+CMGS=\"+84346702559\"\r";
 
 const uint8_t atCUSDCommand[] ="AT+CUSD=1,\"*101#\",15\r";
-const uint8_t smsNormalMessage[] =       "Still ALIVE - ";
-const uint8_t smsFirstMessage[] =        "BOOT UP - ";
+const uint8_t smsNormalMessage[] =       "ALIVE - ";
+const uint8_t smsFirstMessage[] =        "BOOT- ";
 const uint8_t smsLostConnectionMessage[] = "Lost connection -";
 
 uint8_t sendSmsFlag = 0;
@@ -133,6 +146,9 @@ void Send_Sms_First_Message(void){
 
 	for (uint8_t i = 0; i < GetStringLength((uint8_t*)smsFirstMessage); i ++){
 		smsBuffer[smsBufferIndex++] = smsFirstMessage[i];
+	}
+	for (uint8_t i = 0; i < GetStringLength((uint8_t*)firmwareVersion); i ++){
+		smsBuffer[smsBufferIndex++] = firmwareVersion[i];
 	}
 	if(smsBufferIndex > SMS_BUFFER_LENGTH - 6) return;
 

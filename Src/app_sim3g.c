@@ -13,6 +13,7 @@
 #include "app_power.h"
 #include "app_pcf8574.h"
 #include "app_send_sms.h"
+#include "app_version.h"
 
 #define DEBUG_SIM3G(X)    						X
 
@@ -28,8 +29,8 @@
 
 #define TIMER_TO_RESET_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_RESET_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
-#define COMMAND_TIME_OUT						(20000/INTERRUPT_TIMER_PERIOD)
-#define SETTING_TIME_OUT						(500/INTERRUPT_TIMER_PERIOD)
+#define COMMAND_TIME_OUT						(60000/INTERRUPT_TIMER_PERIOD)
+#define SETTING_TIME_OUT						(2000/INTERRUPT_TIMER_PERIOD)
 
 #define	WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT	(20000/INTERRUPT_TIMER_PERIOD) //10s
 
@@ -88,6 +89,8 @@ const uint8_t RECV_FROM[] = "RECV FROM";
 const uint8_t IP_CLOSE[] = "+IPCLOSE";
 const uint8_t ISCIPSEND[]= "+CIPSEND";
 const uint8_t SIM_NOT_INSERT[] = "+CME ERROR: SIM not inserted\r";
+const uint8_t CIOPEN[] = "+CIPOPEN";
+
 
 FlagStatus isPBDoneFlag = RESET;
 FlagStatus isStin25 = RESET;
@@ -99,9 +102,11 @@ FlagStatus isReadyToSendDataToServer = RESET;
 FlagStatus isSendOKFlag = RESET;
 FlagStatus isReceiveDataFromServer = RESET;
 FlagStatus isCipsend = RESET;
+FlagStatus isCIOPEN = RESET;
 
 
-static uint8_t sim3g_TimeoutFlag = 0;
+
+static uint8_t sim3g_Command_TimeoutFlag = 0;
 static uint8_t sim3g_Setting_TimeoutFlag = 0;
 static uint32_t sim3g_Timeout_Task_Index = NO_TASK_ID;
 static uint32_t sim3g_Setting_Timeout_Task_Index = NO_TASK_ID;
@@ -144,7 +149,7 @@ void Power_Signal_Low(void);
 void Power_Signal_High(void);
 void Reset_Signal_Low(void);
 void Reset_Signal_High(void);
-void Sim3g_Clear_Timeout_Flag(void);
+void Sim3g_Clear_Command_Timeout_Flag(void);
 void Sim3g_Command_Timeout(void);
 uint8_t is_Sim3g_Command_Timeout(void);
 void Sim3g_Setting_Clear_Timeout_Flag(void);
@@ -306,7 +311,7 @@ SIM3G_STATE Get_Sim3G_State(void){
 
 void Sim3g_Init(void){
 
-	sim3g_TimeoutFlag = 0;
+	sim3g_Command_TimeoutFlag = 0;
 	sim3g_Setting_TimeoutFlag = 0;
 	sim3g_Timeout_Task_Index = SCH_MAX_TASKS;
 	sim3g_Retry_Counter = 0;
@@ -433,14 +438,21 @@ void Reset_Signal_High(void){
 #endif
 }
 
-void Sim3g_Clear_Timeout_Flag(void){
-	sim3g_TimeoutFlag = 0;
+void Power_Off_Sim3g(void){
+	SCH_Add_Task(Power_Signal_Low, 0, 0);
+	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
+}
+
+void Sim3g_Clear_Command_Timeout_Flag(void){
+	sim3g_Command_TimeoutFlag = 0;
 }
 void Sim3g_Command_Timeout(void){
-	sim3g_TimeoutFlag = 1;
+	sim3g_Command_TimeoutFlag = 1;
+	DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"sim3g_Command_TimeoutFlag = 1;\r\n"););
+
 }
 uint8_t is_Sim3g_Command_Timeout(void){
-	return sim3g_TimeoutFlag;
+	return sim3g_Command_TimeoutFlag;
 }
 
 void Sim3g_Setting_Clear_Timeout_Flag(void){
@@ -463,13 +475,14 @@ void Clear_All_Uart_Receive_Flags(void){
 	isReadyToSendDataToServer = RESET;
 	isSendOKFlag = RESET;
 	isReceiveDataFromServer = RESET;
+	isCIOPEN = RESET;
 }
 
 void SM_Power_On_Sim3g(void){
 	SCH_Add_Task(Power_Signal_Low, 0, 0);
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_ON_SIM3G, 0);
 	Clear_All_Uart_Receive_Flags();
-	Sim3g_Clear_Timeout_Flag();
+	Sim3g_Clear_Command_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_ON_SIM3G_TIMEOUT,0);
 	sim3gState = WAIT_FOR_SIM3G_POWER_ON;
 }
@@ -483,7 +496,7 @@ void SM_Wait_For_Sim3g_Power_On(void){
 void SM_Reset_Sim3g(void){
 	SCH_Add_Task(Reset_Signal_Low, 0, 0);
 	SCH_Add_Task(Reset_Signal_High, TIMER_TO_RESET_SIM3G, 0);
-	Sim3g_Clear_Timeout_Flag();
+	Sim3g_Clear_Command_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_RESET_SIM3G_TIMEOUT, 0);
 	sim3gState = WAIT_FOR_SIM3G_RESET;
 }
@@ -497,7 +510,7 @@ void SM_Power_Off_Sim3g(void){
 	SCH_Add_Task(Power_Signal_Low, 0, 0);
 	SCH_Add_Task(Power_Signal_High, TIMER_TO_POWER_OFF_SIM3G, 0);
 	Sim3g_Disable();
-	Sim3g_Clear_Timeout_Flag();
+	Sim3g_Clear_Command_Timeout_Flag();
 	SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G_TIMEOUT,0);
 	sim3gState = WAIT_FOR_SIM3G_POWER_OFF;
 }
@@ -512,14 +525,14 @@ void SM_Wait_For_Sim3g_Power_Off(void){
 void Setting_Up_Timeout(void){
 	sim3g_Retry_Counter ++;
 	SCH_Delete_Task(sim3g_Timeout_Task_Index);
-	Sim3g_Clear_Timeout_Flag();
+	Sim3g_Clear_Command_Timeout_Flag();
 	sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, COMMAND_TIME_OUT,0);
 }
 
 void SM_Sim3g_Startup(void){
 
 	SCH_Delete_Task(sim3g_Timeout_Task_Index);
-	Sim3g_Clear_Timeout_Flag();
+	Sim3g_Clear_Command_Timeout_Flag();
 	sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, COMMAND_TIME_OUT,0);
 	sim3gState = WAIT_FOR_SIM3G_STARTUP_RESPONSE;
 }
@@ -530,7 +543,7 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 		isStin25 = RESET;
 
 		SCH_Delete_Task(sim3g_Timeout_Task_Index);
-		Sim3g_Clear_Timeout_Flag();
+		Sim3g_Clear_Command_Timeout_Flag();
 		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT,0);
 		sim3gState = WAIT_FOR_NETWORK_ESTABLISHMENT;
 	} else if(isErrorFlag){
@@ -550,7 +563,7 @@ void SM_Wait_For_Sim3g_Network_Establishment(void){
 		sim3g_Retry_Counter = 0;
 		sim3gState = SIM3G_SETTING;
 		SCH_Delete_Task(sim3g_Timeout_Task_Index);
-		Sim3g_Clear_Timeout_Flag();
+		Sim3g_Clear_Command_Timeout_Flag();
 		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, COMMAND_TIME_OUT,0);
 		Sim3g_Setting_Clear_Timeout_Flag();
 		sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT,0);
@@ -575,7 +588,7 @@ void SM_Wait_For_Sim3g_Setting_Response(void){
 		Sim3g_Setting_Clear_Timeout_Flag();
 		sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT,0);
 		atCommandArrayIndex++;
-		if(atCommandArrayIndex == NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G){
+		if(atCommandArrayIndex >= NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G){
 			sim3gState = MAX_SIM3G_NUMBER_STATES;
 		}
 	} else if(isErrorFlag){
@@ -583,14 +596,22 @@ void SM_Wait_For_Sim3g_Setting_Response(void){
 		if(sim3g_Retry_Counter > MAX_RETRY_NUMBER){
 			sim3g_Retry_Counter = 0;
 			sim3gState = RESET_SIM3G;
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"SM_Wait_For_Sim3g_Setting_Response - sim3g_Retry_Counter\r\n"););
 		} else {
 			sim3gState = SIM3G_SETTING;
 		}
 	}
-	if(is_Sim3g_Command_Timeout() || isIPCloseFlag){
+
+	if(is_Sim3g_Command_Timeout()){
 		isIPCloseFlag = RESET;
 		sim3g_Retry_Counter = 0;
 		sim3gState = RESET_SIM3G;
+		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"SM_Wait_For_Sim3g_Setting_Response - is_Sim3g_Command_Timeout\r\n"););
+	} else if(isIPCloseFlag){
+		isIPCloseFlag = RESET;
+		sim3g_Retry_Counter = 0;
+		sim3gState = RESET_SIM3G;
+		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"SM_Wait_For_Sim3g_Setting_Response - isIPCloseFlag\r\n"););
 	}
 }
 
@@ -730,13 +751,16 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
 				Clear_Sim3gDataProcessingBuffer();
 			}
+#if (VERSION_EBOX >= VERSION_5_WITH_8CT_10A_2CT_20A)
 			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
-				&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA)){ //For update total power consumption
-				UART3_SendToHost((uint8_t*)"PROCESSING_RECEIVED_DATA_TOPIC_2\r\n");
-			processDataState = PROCESSING_RECEIVED_DATA_TOPIC_2;
-			Clear_Sim3gDataProcessingBuffer();
-			} else if((preReadCharacter == COMMAND_SENDING_SMS_MESSAGE)
-					&& (readCharacter == COMMAND_SENDING_SMS_MESSAGE)){ //For update total power consumption
+				&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA)){ //For update firmware
+//				UART3_SendToHost((uint8_t*)"Receive command to start updating firmware\r\n");
+				Clear_Sim3gDataProcessingBuffer();
+				Set_Is_Update_Firmware();
+			}
+#endif
+			else if((preReadCharacter == COMMAND_SENDING_SMS_MESSAGE)
+					&& (readCharacter == COMMAND_SENDING_SMS_MESSAGE)){
 				UART3_SendToHost((uint8_t*)"COMMAND_SENDING_SMS_MESSAGE\r\n");
 				Start_Sending_Sms_Message();
 				Clear_Sim3gDataProcessingBuffer();
@@ -789,6 +813,9 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			isSendOKFlag = SET;
 		} else if(isReceivedData((uint8_t *)ISCIPSEND)){
 			isCipsend = SET;
+		} else if(isReceivedData((uint8_t *)CIOPEN)){
+			isCIOPEN = SET;
+			UART3_SendToHost((uint8_t*)"MQTT CONNECTED!");
 		}
 		processDataState = CHECK_DATA_AVAILABLE_STATE;
 		break;
@@ -813,10 +840,9 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			}
 		}
 		break;
-	case PROCESSING_RECEIVED_DATA_TOPIC_2:
-		UART3_SendToHost((uint8_t*)"Jump_To_Fota_Firmware");
-		Jump_To_Fota_Firmware();
-		break;
+//	case PROCESSING_RECEIVED_DATA_TOPIC_2:
+//
+//		break;
 	case PROCESSING_RETAINED_DATA_TOPIC_3:
 		if(Uart1_Received_Buffer_Available()){
 			preReadCharacter = readCharacter;
