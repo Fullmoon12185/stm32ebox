@@ -10,7 +10,7 @@
 #include "stdbool.h"
 #include "app_scheduler.h"
 
-#include "utils/utils_logger.h"
+#include "utils_logger.h"
 
 static void time_to_publish();
 static void on_connect_cb(uint8_t status);
