@@ -25,12 +25,13 @@ static bool have_message = false;
 static bool published = false;
 
 static netif_mqtt_client_t mqtt_client = {
-		.client_id = "\"netif_test_123\"",
-		.host = "\"35.240.158.2\"",
+		.client_id = "netif_test_123",
+		.host = "35.240.158.2",
 		.port = 8883,
-		.username = "\"eboost-k2\"",
-		.password = "\"ZbHzPb5W\"",
+		.username = "eboost-k2",
+		.password = "ZbHzPb5W",
 		.reconnect = 1,
+		.keep_alive = 120,
 		.on_connect = on_connect_cb,
 		.on_disconnect = on_disconnect_cb,
 		.on_message = on_message_cb,
@@ -78,7 +79,7 @@ void mqtt_run(){
 			if(NETIF_GET_TIME_MS() - last_sent < 1000){
 				break;
 			}
-			ret = netif_mqtt_subcribe(&mqtt_client, "\"thodoxuan\"", 1);
+			ret = netif_mqtt_subcribe(&mqtt_client, "thodoxuan", 1);
 			if(ret == NETIF_OK){
 				utils_log_info("netif_mqtt_subcribe OK");
 				last_sent = NETIF_GET_TIME_MS();
@@ -89,7 +90,7 @@ void mqtt_run(){
 			if(NETIF_GET_TIME_MS() - last_sent < 1000){
 				break;
 			}
-			ret = netif_mqtt_publish(&mqtt_client, "\"publish_topic\"", "\"123\"", 1, 0);
+			ret = netif_mqtt_publish(&mqtt_client, "publish_topic", "123", 1, 0);
 			if(ret == NETIF_OK){
 				last_sent = NETIF_GET_TIME_MS();
 				utils_log_info("netif_mqtt_publish OK");
