@@ -47,6 +47,7 @@ void System_Initialization(void)
             break;
         case UART_INIT:
         	UART3_Init();
+        	UART4_Init();
         	UART1_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
         	break;
@@ -101,13 +102,13 @@ void System_Initialization(void)
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SIM_3G_INIT - Done \r\n"));
         	break;
         case END_OF_INITIALISATION_STATE:
-        	Turn_On_Buzzer();
-			HAL_Delay(100);
-			Turn_Off_Buzzer();
-			HAL_Delay(100);
-			Turn_On_Buzzer();
-			HAL_Delay(100);
-			Turn_Off_Buzzer();
+//        	Turn_On_Buzzer();
+//			HAL_Delay(100);
+//			Turn_Off_Buzzer();
+//			HAL_Delay(100);
+//			Turn_On_Buzzer();
+//			HAL_Delay(100);
+//			Turn_Off_Buzzer();
         	break;
         case ADC_INIT:
         	ADC_DMA_Init();

@@ -23,9 +23,12 @@ HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart);
 ITStatus isSim3gReceiveReady();
 ITStatus isSim3gTransmissionReady(void);
 
+void UART4_Init(void);
+void UART4_transmit(uint8_t * data, uint32_t data_len);
+uint8_t UART4_Read_Available();
+uint8_t UART4_Read_Received_Buffer();
 
 
-void UART2_Init(void);
 void UART3_Init(void);
 void UART3_SendToHost(uint8_t * buffer);
 void UART3_SendReceivedBuffer(void);
