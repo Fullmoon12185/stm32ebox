@@ -6,120 +6,35 @@
  */
 
 #include "app_mqtt_test.h"
-#include "netif.h"
-#include "stdbool.h"
+#include "app_mqtt.h"
 #include "app_scheduler.h"
 
-#include "utils_logger.h"
+#define PUBLISH_INTERVAL 100 	// 1s
 
-static void time_to_publish();
-static void on_connect_cb(uint8_t status);
-static void on_disconnect_cb(uint8_t status);
-static void on_message_cb(char * topic, char * payload);
-static void on_publish_cb(uint8_t status);
+static void timeout_for_publish();
+static bool publish_timout_flag = true;
 
-static bool time_for_publish = false;
-static bool connected = false;
-static bool subcribed = false;
-static bool have_message = false;
-static bool published = false;
-
-static netif_mqtt_client_t mqtt_client = {
-		.client_id = "netif_test_123",
-		.host = "35.240.158.2",
-		.port = 8883,
-		.username = "eboost-k2",
-		.password = "ZbHzPb5W",
-		.reconnect = 1,
-		.keep_alive = 120,
-		.on_connect = on_connect_cb,
-		.on_disconnect = on_disconnect_cb,
-		.on_message = on_message_cb,
-		.on_publish = on_publish_cb
+static mqtt_message_t message = {
+	.topic = "topic_test",
+	.payload = "payload_test",
+	.qos = 1,
+	.retain = 0
 };
 
 /**
- *0. Connect
- *1. Subcribe
- *2. Publish
+ *0. Wait for Mqtt Ready
+ *1. Publish Interval
  */
-void mqtt_run(){
-	static uint8_t step = 0;
-	static uint32_t last_sent = 0;
-	netif_status_t ret;
-	bool internet_connected = false;
-	switch (step) {
-		case 0:
-			netif_manager_is_connect_to_internet(&internet_connected);
-			if(internet_connected){
-				utils_log_info("Internet Connected");
-				step = 1;
-			}
-			break;
-		case 1:
-			ret = netif_mqtt_config(&mqtt_client);
-			if(ret == NETIF_OK){
-				utils_log_info("netif_mqtt_config OK");
-				last_sent = NETIF_GET_TIME_MS();
-				step = 2;
-			}
-			break;
-		case 2:
-			if(NETIF_GET_TIME_MS() - last_sent < 1000){
-				break;
-			}
-			ret = netif_mqtt_connect(&mqtt_client);
-			if(ret == NETIF_OK){
-				utils_log_info("netif_mqtt_connect OK");
-				last_sent = NETIF_GET_TIME_MS();
-				step = 3;
-			}
-			break;
-		case 3:
-			if(NETIF_GET_TIME_MS() - last_sent < 1000){
-				break;
-			}
-			ret = netif_mqtt_subcribe(&mqtt_client, "thodoxuan", 1);
-			if(ret == NETIF_OK){
-				utils_log_info("netif_mqtt_subcribe OK");
-				last_sent = NETIF_GET_TIME_MS();
-				step = 4;
-			}
-			break;
-		case 4:
-			if(NETIF_GET_TIME_MS() - last_sent < 1000){
-				break;
-			}
-			ret = netif_mqtt_publish(&mqtt_client, "publish_topic", "123", 1, 0);
-			if(ret == NETIF_OK){
-				last_sent = NETIF_GET_TIME_MS();
-				utils_log_info("netif_mqtt_publish OK");
-			}
-			break;
-		default:
-			break;
+void mqtt_test_run(){
+	if(mqtt_is_ready()){
+		if(publish_timout_flag){
+			publish_timout_flag = false;
+			mqtt_sent_message(&message);
+			SCH_Add_Task(timeout_for_publish, PUBLISH_INTERVAL, 0);
+		}
 	}
 }
 
-static void time_to_publish(){
-	time_for_publish = true;
-}
-
-
-static void on_connect_cb(uint8_t status){
-	connected = true;
-}
-
-static void on_disconnect_cb(uint8_t status){
-	connected = false;
-}
-
-static void on_message_cb(char * topic, char * payload){
-	utils_log_info("on_message_cb: topic %s, payload %s", topic,payload);
-	have_message = true;
-}
-
-static void on_publish_cb(uint8_t status){
-	// reset
-	published = false;
+static void timeout_for_publish(){
+	publish_timout_flag = true;
 }
