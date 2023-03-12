@@ -15,7 +15,7 @@ static void timeout_for_publish();
 static bool publish_timout_flag = true;
 
 static mqtt_message_t message = {
-	.topic = "topic_test",
+	.topic_id = PUBTOPIC_CURRENT,
 	.payload = "payload_test",
 	.qos = 1,
 	.retain = 0

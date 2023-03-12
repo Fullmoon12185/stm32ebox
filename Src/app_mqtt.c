@@ -13,6 +13,9 @@
 #include "utils_buffer.h"
 #include "utils_logger.h"
 
+// Get BoxID
+#include "app_pcf8574.h"
+
 enum {
     MQTT_WAIT_FOR_INTERNET_CONNECTED,
     MQTT_CLIENT_CONFIG,
@@ -28,6 +31,7 @@ static void on_connect_cb(uint8_t status);
 static void on_disconnect_cb(uint8_t status);
 static void on_message_cb(char * topic, char * payload);
 static void on_publish_cb(uint8_t status);
+static uint8_t mqtt_subtopic_to_id(char * topic);
 
 // Internal State
 static uint8_t mqtt_state = MQTT_WAIT_FOR_INTERNET_CONNECTED;
@@ -45,6 +49,22 @@ static bool subcribed = false;
 static bool have_message = false;
 static bool published = false;
 
+static char client_id[CLIENTID_MAX_LEN];
+
+static char subtopic_entry[][TOPIC_MAX_LEN] = {
+		[SUBTOPIC_COMMAND] = "CEbox_%d",
+		[SUBTOPIC_FIRMWARE_UPDATE] = "FEbox_%d",
+		[SUBTOPIC_RETAINED] = "REbox_%d",
+};
+
+static char pubtopic_entry[][TOPIC_MAX_LEN] = {
+		[PUBTOPIC_STATUS] = "SEbox_%d",
+		[PUBTOPIC_POWER] = "PEbox_%d",
+		[PUBTOPIC_VOLTAGE] = "VEbox_%d",
+		[PUBTOPIC_CURRENT] = "AEbox_%d",
+		[PUBTOPIC_POWER_FACTOR] = "PFEbox_%d",
+};
+
 static netif_mqtt_client_t mqtt_client = {
 		.client_id = "netif_test_123",
 		.host = "35.240.158.2",
@@ -60,6 +80,23 @@ static netif_mqtt_client_t mqtt_client = {
 };
 
 void mqtt_init(){
+	char topic_temp[TOPIC_MAX_LEN];
+	uint16_t boxID = Get_Box_ID();
+	// Init Client ID
+	snprintf(client_id, CLIENTID_MAX_LEN,"Eb%d", boxID);
+	mqtt_client.client_id = client_id;
+	// Init SubTopic
+	for (int var = 0; var < sizeof(subtopic_entry)/sizeof(subtopic_entry[0]); ++var) {
+		// Append boxID to Topic
+		snprintf(topic_temp, TOPIC_MAX_LEN, subtopic_entry[var], boxID);
+		memcpy(subtopic_entry[var], topic_temp, TOPIC_MAX_LEN);
+	}
+	// Init PubTopic
+	for (int var = 0; var < sizeof(pubtopic_entry)/sizeof(pubtopic_entry[0]); ++var) {
+		// Append boxID to Topic
+		snprintf(topic_temp, TOPIC_MAX_LEN, pubtopic_entry[var], boxID);
+		memcpy(pubtopic_entry[var], topic_temp, TOPIC_MAX_LEN);
+	}
     // Init Tx-Rx Buffer;
     utils_buffer_init(&mqtt_tx_buffer, sizeof(mqtt_message_t));
     utils_buffer_init(&mqtt_rx_buffer, sizeof(mqtt_message_t));
@@ -73,6 +110,8 @@ void mqtt_init(){
 void mqtt_run(){
     static mqtt_message_t publish_message;
 	static uint32_t last_sent = 0;
+	static uint8_t subtopic_idx = 0;
+	static uint8_t subtopic_size = sizeof(subtopic_entry) / sizeof(subtopic_entry[0]);
 	bool internet_connected = false;
 	netif_status_t ret;
 	switch (mqtt_state) {
@@ -106,11 +145,16 @@ void mqtt_run(){
 			if(NETIF_GET_TIME_MS() - last_sent < 2 * COMMAND_INTERVAL){
 				break;
 			}
-			ret = netif_mqtt_subcribe(&mqtt_client, "thodoxuan", 1);
+			ret = netif_mqtt_subcribe(&mqtt_client, subtopic_entry[subtopic_idx], 1);
 			if(ret == NETIF_OK){
-				utils_log_info("Mqtt Subcribe OK");
+				subtopic_idx ++;
+				if(subtopic_idx >= subtopic_size){
+					subtopic_idx = 0;
+					mqtt_state = MQTT_CLIENT_IDLE;
+				}
+				utils_log_info("Subcribe OK");
 				last_sent = NETIF_GET_TIME_MS();
-				mqtt_state = MQTT_CLIENT_IDLE;
+
 			}
 			break;
         case MQTT_CLIENT_PUBLISH:
@@ -148,6 +192,8 @@ bool mqtt_is_ready(){
 }
 
 bool mqtt_sent_message(mqtt_message_t * message){
+	// Get Topic correspond with topic_idx
+	memcpy(message->topic, pubtopic_entry[message->topic_id], TOPIC_MAX_LEN);
     if(utils_buffer_is_full(&mqtt_tx_buffer)){
         return false;
     }
@@ -179,16 +225,24 @@ static void on_disconnect_cb(uint8_t status){
 }
 
 static void on_message_cb(char * topic, char * payload){
+
 	utils_log_debug("on_message_cb: topic %s, payload %s", topic,payload);
     mqtt_message_t message;
-    memcpy(message.topic, topic , strlen(topic));
+    message.topic_id = mqtt_subtopic_to_id(topic);
     memcpy(message.payload, payload , strlen(payload));
-    message.qos = 1; // Reserved
-    message.retain = 0; // Reserved
 	utils_buffer_push(&mqtt_rx_buffer, &message);
 }
 
 static void on_publish_cb(uint8_t status){
 	// reset
 	published = false;
+}
+
+static uint8_t mqtt_subtopic_to_id(char * topic){
+	for (int var = 0; var < sizeof(subtopic_entry)/sizeof(subtopic_entry[0]); ++var) {
+		if(!strstr(subtopic_entry[var], topic)){
+			return var;
+		}
+	}
+	return 0xFF;
 }
