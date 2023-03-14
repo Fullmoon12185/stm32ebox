@@ -7,8 +7,8 @@
 
 #include "main.h"
 #include "app_sim3g.h"
-#include "app_sim5320MQTT.h"
 #include "app_scheduler.h"
+#include "app_mqtt.h"
 #include "app_uart.h"
 #include "app_test.h"
 #include "app_relay.h"
@@ -17,6 +17,8 @@
 #include "app_i2c_lcd.h"
 
 #include "app_send_sms.h"
+
+#include "utils_logger.h"
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
@@ -33,9 +35,9 @@ extern uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
 
 
-extern uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
-extern uint8_t publishTopicIndex;
-extern uint8_t publish_message_length;
+static uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
+static uint8_t publishTopicIndex;
+static uint8_t publish_message_length;
 
 extern int32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
 
@@ -44,20 +46,18 @@ extern FlagStatus array_Of_Outlet_Status[NUMBER_OF_ADC_CHANNELS];
 uint8_t ping_Request_TimeoutFlag = 0;
 uint32_t ping_Request_TimeoutIndex = NO_TASK_ID;
 
-uint8_t publish_message_TimeoutFlag = 0;
+uint8_t publish_message_TimeoutFlag = 1;
 uint32_t publish_message_TimeoutIndex = NO_TASK_ID;
 
 
 typedef enum {
-	SIM3G_OPEN_CONNECTION = 0,
-	SIM3G_WAIT_FOR_A_MOMENT,
-	SIM3G_SETUP_SUBSCRIBE_TOPICS,
 	SIM3G_SETUP_PUBLISH_TOPICS,
+	SIM3G_RECEIVE_MQTT_MESSAGE,
 	SIM3G_SEND_SMS_MESSAGE,
 	MAX_SERVER_COMMUNICATION_FSM_NUMBER_STATES
 } SERVER_COMMUNICATION_FSM_STATE;
 
-SERVER_COMMUNICATION_FSM_STATE serverCommunicationFsmState = SIM3G_OPEN_CONNECTION;
+SERVER_COMMUNICATION_FSM_STATE serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
 
 
 
@@ -78,6 +78,10 @@ void Update_Publish_Power_Message_All_Outlets(void);
 void Update_Publish_Power_Factor_Message_All_Outlets(void);
 void Update_Publish_Voltage_Message_All_Outlets(void);
 void Update_Publish_Ampere_Message_All_Outlets(void);
+
+void Process_Subcribe_Command_Message(char * payload);
+void Process_Subcribe_Update_Power_Consumption_Message(char * payload);
+void Process_Subcribe_Retained_Message(char * payload);
 
 void Clear_Ping_Request_Timeout_Flag(void){
 	ping_Request_TimeoutFlag = 0;
@@ -509,27 +513,81 @@ void Update_Publish_Fota_Status_Message(uint16_t fota_status){
 	publish_message_length = publishMessageIndex;
 }
 
-void Led_Status_Display(void){
-	static uint8_t ledState = 0;
-	static uint8_t ledDislayTaskIndex = SCH_MAX_TASKS;
-	switch(ledState){
-	case 0:
-		SCH_Delete_Task(ledDislayTaskIndex);
-		ledDislayTaskIndex = SCH_Add_Task(test2, 0, 100);
-		ledState = 1;
-		break;
-	case 1:
-		if(Get_Mqtt_State() == MQTT_WAIT_FOR_NEW_COMMAND){
-			SCH_Delete_Task(ledDislayTaskIndex);
-			ledDislayTaskIndex = SCH_Add_Task(test2, 0, 10);
-			ledState = 2;
+//void Led_Status_Display(void){
+//	static uint8_t ledState = 0;
+//	static uint8_t ledDislayTaskIndex = SCH_MAX_TASKS;
+//	switch(ledState){
+//	case 0:
+//		SCH_Delete_Task(ledDislayTaskIndex);
+//		ledDislayTaskIndex = SCH_Add_Task(test2, 0, 100);
+//		ledState = 1;
+//		break;
+//	case 1:
+//		if(Get_Mqtt_State() == MQTT_WAIT_FOR_NEW_COMMAND){
+//			SCH_Delete_Task(ledDislayTaskIndex);
+//			ledDislayTaskIndex = SCH_Add_Task(test2, 0, 10);
+//			ledState = 2;
+//		}
+//		break;
+//	case 2:
+//		if(serverCommunicationFsmState == SIM3G_OPEN_CONNECTION){
+//			ledState = 0;
+//		}
+//		break;
+//	}
+//}
+
+void Process_Subcribe_Command_Message(char * payload){
+	utils_log_debug("Process_Subcribe_Command_Message\r\n");
+	uint8_t relayIndex;
+	uint8_t relayStatus;
+	if(payload[0] == '1'){
+		relayIndex = payload[1] - 0x30;
+		relayStatus = payload[2] - 0x30;
+		utils_log_debug("relayIndex %d, relayStatus %d\r\n", relayIndex, relayStatus);
+		if(relayStatus == SET){
+			Set_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0xffffffff);
+			Start_Working_Time(relayIndex);
+			Clear_Max_Node_Current(relayIndex);
+		} else {
+			Reset_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0);
 		}
-		break;
-	case 2:
-		if(serverCommunicationFsmState == SIM3G_OPEN_CONNECTION){
-			ledState = 0;
+	}else if(payload[0] == 'x'){
+		// FOTA
+		utils_log_debug("Jump_To_Fota_Firmware");
+		Jump_To_Fota_Firmware();
+	}
+}
+
+void Process_Subcribe_Update_Power_Consumption_Message(char * payload){
+	utils_log_debug("Process_Subcribe_Firmware_Update_Message\r\n");
+	uint64_t updateTotalPowerConsumption = 0;
+
+	if((payload[0] == '*') && (payload[11] == '#')){
+		for(uint8_t idx = 1; idx <= 10; idx++){
+			updateTotalPowerConsumption = updateTotalPowerConsumption*10 + (payload[idx] - 0x30);
 		}
-		break;
+		Set_Main_Power_Consumption(updateTotalPowerConsumption);
+	}
+}
+
+
+void Process_Subcribe_Retained_Message(char * payload){
+	utils_log_debug("Process_Subcribe_Firmware_Update_Message\r\n");
+	uint8_t relayIndex;
+	uint8_t relayStatus;
+	for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i++){
+		relayIndex = payload[i*4 + 0] - 0x30;
+		relayStatus = payload[i*4 + 2] - 0x30;
+		if(relayStatus == SET){
+			Set_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0xffffffff);
+		} else {
+			Reset_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0);
+		}
 	}
 }
 
@@ -539,47 +597,10 @@ void Server_Communication(void){
 //	static uint8_t publishChannelIndex = 0;
 //	static uint16_t whTest = 0;
 //	Led_Status_Display();
+	static mqtt_message_t message;
 	switch(serverCommunicationFsmState){
-	case SIM3G_OPEN_CONNECTION:
-		if(Sim3g_Run()){
-			Set_Mqtt_State(MQTT_OPEN_STATE);
-			SCH_Delete_Task(ping_Request_TimeoutIndex);
-			Clear_Ping_Request_Timeout_Flag();
-			ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, 200, 0);
-			serverCommunicationFsmState = SIM3G_WAIT_FOR_A_MOMENT;
-		}
-		break;
-	case SIM3G_WAIT_FOR_A_MOMENT:
-		if(is_Ping_Request_Timeout()){
-			Clear_Ping_Request_Timeout_Flag();
-			ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, TIME_FOR_PING_REQUEST, 0);
-
-			Clear_Publish_Message_Timeout_Flag();
-			publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag,TIME_FOR_PUBLISH_MESSAGE, 0);
-
-			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
-		}
-		break;
-	case SIM3G_SETUP_SUBSCRIBE_TOPICS:
-		if(Uart1_Received_Buffer_Available() == 0){
-			if(MQTT_Run()){
-				Set_Sim3G_State(RESET_SIM3G);
-				serverCommunicationFsmState = SIM3G_OPEN_CONNECTION;
-			} else {
-				if(Is_Ready_To_Send_MQTT_Data()){
-					serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
-				}
-			}
-		}
-		break;
 	case SIM3G_SETUP_PUBLISH_TOPICS:
-		if(!Is_Ready_To_Send_MQTT_Data()){
-			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
-		} else if(Is_Set_Send_Sms_Flag()) {
-			Start_Sending_Sms_Message();
-			serverCommunicationFsmState = SIM3G_SEND_SMS_MESSAGE;
-		} else {
-			if(is_Set_Relay_Timeout()){
+		if(is_Set_Relay_Timeout()){
 //				if(Get_Is_Receive_Data_From_Server() == SET){
 //					Set_Is_Receive_Data_From_Server(RESET);
 //					SCH_Delete_Task(ping_Request_TimeoutIndex);
@@ -594,61 +615,110 @@ void Server_Communication(void){
 //					ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, TIME_FOR_PING_REQUEST, 0);
 //				}
 //				else
-				if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
+			if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
 //					Update_Publish_Status_Message();
 //					Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
 //					Set_Mqtt_State(MQTT_PUBLISH_STATE);
-					publishTopicIndex = 0;
+				publishTopicIndex = 0;
 //					SCH_Delete_Task(publish_message_TimeoutIndex);
 //					Clear_Publish_Message_Timeout_Flag();
 //					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
 //					Turn_On_Buzzer();
 //					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 
-				} else if (is_Publish_Message_Timeout()){
-					if (publishTopicIndex == 0) {
-						publishTopicIndex = 1;
-						Update_Publish_Status_Message();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS,
-								publish_message, publish_message_length);
-					} else if (publishTopicIndex == 1) {
-						publishTopicIndex = 2;
-						Update_Publish_Power_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,
-								publish_message, publish_message_length);
-					} else if (publishTopicIndex == 2) {
-						publishTopicIndex = 3;
-						Update_Publish_Power_Factor_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR,
-								publish_message, publish_message_length);
-					} else if (publishTopicIndex == 3) {
-						publishTopicIndex = 4;
-						Update_Publish_Voltage_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
-								publish_message, publish_message_length);
-					} else if (publishTopicIndex == 4) {
-						publishTopicIndex = 0;
-						Update_Publish_Current_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
-								publish_message, publish_message_length);
-					}
-
-					Set_Mqtt_State(MQTT_PUBLISH_STATE);
-					Clear_Publish_Message_Timeout_Flag();
-					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-
-					ClearCounter();
-
-					Turn_On_Buzzer();
-					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+			} else if (is_Publish_Message_Timeout()){
+				if (publishTopicIndex == 0) {
+					publishTopicIndex = 1;
+					Update_Publish_Status_Message();
+//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS,
+//								publish_message, publish_message_length);
+					message.topic_id = PUBTOPIC_STATUS;
+					memset(message.payload, 0 , sizeof(message.payload));
+					memcpy(message.payload, publish_message, publish_message_length);
+					message.qos = 1;
+					message.retain = 0;
+					mqtt_sent_message(&message);
+				} else if (publishTopicIndex == 1) {
+					publishTopicIndex = 2;
+					Update_Publish_Power_Message_All_Outlets();
+//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,
+//								publish_message, publish_message_length);
+					message.topic_id = PUBTOPIC_POWER;
+					memset(message.payload, 0 , sizeof(message.payload));
+					memcpy(message.payload, publish_message, publish_message_length);
+					message.qos = 1;
+					message.retain = 0;
+					mqtt_sent_message(&message);
+				} else if (publishTopicIndex == 2) {
+					publishTopicIndex = 3;
+					Update_Publish_Power_Factor_Message_All_Outlets();
+//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR,
+//								publish_message, publish_message_length);
+					message.topic_id = PUBTOPIC_POWER_FACTOR;
+					memset(message.payload, 0 , sizeof(message.payload));
+					memcpy(message.payload, publish_message, publish_message_length);
+					message.qos = 1;
+					message.retain = 0;
+					mqtt_sent_message(&message);
+				} else if (publishTopicIndex == 3) {
+					publishTopicIndex = 4;
+					Update_Publish_Voltage_Message_All_Outlets();
+//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
+//								publish_message, publish_message_length);
+					message.topic_id = PUBTOPIC_VOLTAGE;
+					memset(message.payload, 0 , sizeof(message.payload));
+					memcpy(message.payload, publish_message, publish_message_length);
+					message.qos = 1;
+					message.retain = 0;
+					mqtt_sent_message(&message);
+				} else if (publishTopicIndex == 4) {
+					publishTopicIndex = 0;
+					Update_Publish_Current_Message_All_Outlets();
+//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
+//								publish_message, publish_message_length);
+					message.topic_id = PUBTOPIC_CURRENT;
+					memset(message.payload, 0 , sizeof(message.payload));
+					memcpy(message.payload, publish_message, publish_message_length);
+					message.qos = 1;
+					message.retain = 0;
+					mqtt_sent_message(&message);
 				}
+
+				Clear_Publish_Message_Timeout_Flag();
+				publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+
+				ClearCounter();
+
+//				Turn_On_Buzzer();
+//				SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+
 			}
 		}
+		serverCommunicationFsmState = SIM3G_RECEIVE_MQTT_MESSAGE;
+		break;
+	case SIM3G_RECEIVE_MQTT_MESSAGE:
+		if(mqtt_receive_message(&message)){
+			switch (message.topic_id) {
+				case SUBTOPIC_COMMAND:
+					Process_Subcribe_Command_Message(message.payload);
+					break;
+				case SUBTOPIC_UPDATE_POWER_CONSUMPTION:
+					Process_Subcribe_Update_Power_Consumption_Message(message.payload);
+					break;
+				case SUBTOPIC_RETAINED:
+					Process_Subcribe_Retained_Message(message.payload);
+					break;
+				default:
+					utils_log_error("Topic Invalid\r\n");
+					break;
+			}
+		}
+		serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
 		break;
 	case SIM3G_SEND_SMS_MESSAGE:
 		FSM_For_Sending_SMS_Message();
 		if(Is_Done_Sending_Sms_Message()){
-			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
+			serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
 		}
 		break;
 	default:

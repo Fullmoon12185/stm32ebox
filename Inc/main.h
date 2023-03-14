@@ -436,6 +436,8 @@ void Error_Handler(void);
 #define		NUMBER_OF_PUBLISH_TOPIC								2
 #define 	MAX_TOPIC_LENGTH									14
 
+#define		MQTT_MESSAGE_BUFFER_LENGTH							128
+
 #define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 						48
 #define		DATA_RECEIVE_LENGTH									15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 				15
