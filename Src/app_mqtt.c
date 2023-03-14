@@ -118,14 +118,14 @@ void mqtt_run(){
 		case MQTT_WAIT_FOR_INTERNET_CONNECTED:
 			netif_manager_is_connect_to_internet(&internet_connected);
 			if(internet_connected){
-				utils_log_info("Internet Connected");
+				utils_log_info("Internet Connected\r\n");
 				mqtt_state = MQTT_CLIENT_CONFIG;
 			}
 			break;
 		case MQTT_CLIENT_CONFIG:
 			ret = netif_mqtt_config(&mqtt_client);
 			if(ret == NETIF_OK){
-				utils_log_info("Mqtt Config OK");
+				utils_log_info("Mqtt Config OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 				mqtt_state = MQTT_CLIENT_CONNECT;
 			}else if(ret == NETIF_FAIL){
@@ -139,7 +139,7 @@ void mqtt_run(){
 			}
 			ret = netif_mqtt_connect(&mqtt_client);
 			if(ret == NETIF_OK){
-				utils_log_info("Mqtt Connect OK");
+				utils_log_info("Mqtt Connect OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 				mqtt_state = MQTT_CLIENT_SUBCRIBE;
 			}else if(ret == NETIF_FAIL){
@@ -157,7 +157,7 @@ void mqtt_run(){
 					subtopic_idx = 0;
 					mqtt_state = MQTT_CLIENT_IDLE;
 				}
-				utils_log_info("Subcribe OK");
+				utils_log_info("Subcribe OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 			}else if(ret == NETIF_FAIL){
 				Error_Handler();
@@ -173,7 +173,7 @@ void mqtt_run(){
 													publish_message.retain);
 			if(ret == NETIF_OK){
 				last_sent = NETIF_GET_TIME_MS();
-				utils_log_info("Mqtt Publish OK");
+				utils_log_info("Mqtt Publish OK\r\n");
                 mqtt_state = MQTT_CLIENT_IDLE;
 			}else if(ret == NETIF_FAIL){
 				Error_Handler();
@@ -215,6 +215,10 @@ bool mqtt_receive_message(mqtt_message_t * message){
     }
     utils_buffer_pop(&mqtt_rx_buffer,message);
     return true;
+}
+
+bool mqtt_receive_message_drop_all(){
+	utils_buffer_drop_all(&mqtt_rx_buffer);
 }
 
 

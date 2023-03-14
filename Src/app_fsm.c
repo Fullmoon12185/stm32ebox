@@ -709,7 +709,8 @@ void Server_Communication(void){
 					Process_Subcribe_Retained_Message(message.payload);
 					break;
 				default:
-					utils_log_error("Topic Invalid\r\n");
+					utils_log_error("Topic Invalid: Drop All Received Message\r\n");
+					mqtt_receive_message_drop_all();
 					break;
 			}
 		}
