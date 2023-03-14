@@ -846,7 +846,7 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 
-//				if(i >= 0)
+//				if(i <= 4)
 //				{
 //					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
 //					UART3_SendToHost((uint8_t *)strtmp);

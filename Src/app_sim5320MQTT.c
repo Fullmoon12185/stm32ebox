@@ -32,6 +32,9 @@ extern FlagStatus isOKFlag;
 extern FlagStatus isErrorFlag;
 extern FlagStatus isIPCloseFlag;
 extern FlagStatus isRecvFromFlag;
+
+extern FlagStatus isMqttConnected;
+extern FlagStatus isSubscribed;
 extern FlagStatus isSendOKFlag;
 
 extern FlagStatus isReadyToSendDataToServer;
@@ -61,15 +64,28 @@ uint8_t CLIENT_ID[MAX_TOPIC_LENGTH];
 //const uint8_t USERNAME[] 			= "eboost-k2";
 //const uint8_t PASSWORD[] 			= "ZbHzPb5W";
 
-//35.198.196.5
 
+
+#if(VERSION_EBOX == VERSION_TEST_EBOX)
+
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt.ohstem.vn\",1883\r";
+//const uint8_t USERNAME[] 			= "SmartBin2907123";
+//const uint8_t PASSWORD[] 			= "";
+
+//Kyanon server
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"uat-mqtt.ebox.demo-application.net\",8883\r";
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"113.161.34.240\",8883\r";
+const uint8_t USERNAME[] 			= "uat_mqtt";
+const uint8_t PASSWORD[] 			= "1kiNIcfT5";
+
+#else
+//35.198.196.5
+//PRODUCTION
 const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.158.2\",8883\r";
 const uint8_t USERNAME[] 			= "eboost-k2";
 const uint8_t PASSWORD[] 			= "ZbHzPb5W";
+#endif
 
-//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt-eboost.s3corp.vn\",8883\r";
-//const uint8_t USERNAME[] 			= "eboost-k2-s3";
-//const uint8_t PASSWORD[] 			= "Aa123456@";
 
 #elif(MOSQUITTO == 1)
 const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"broker.hivemq.com\",1883\r";
@@ -151,7 +167,7 @@ void SM_Mqtt_Disconnect(void);
 void SM_Wait_For_Response_From_Disconnect_State(void);
 void SM_Wait_For_New_Command(void);
 
-void SM_Send_Data(uint8_t mesageLength);
+void SM_Send_Data(uint8_t messageLength);
 
 //void Setup_Mqtt_Connect_Message(void);
 //void Setup_Mqtt_Subscribe_Message(const uint8_t * topic);
@@ -322,6 +338,9 @@ void Set_Up_Topic_Names(void){
 	indexTopicCharacter = 0;
 	CLIENT_ID[indexTopicCharacter++] = 'E';
 	CLIENT_ID[indexTopicCharacter++] = 'b';
+	CLIENT_ID[indexTopicCharacter++] = 'o';
+	CLIENT_ID[indexTopicCharacter++] = 'x';
+	CLIENT_ID[indexTopicCharacter++] = '_';
 	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
 	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
 	CLIENT_ID[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
@@ -424,10 +443,10 @@ void Clear_Mqtt_Message_Buffer(void){
  	}
 	mqttMessageIndex = 0;
 }
-void SM_Send_Data(uint8_t mesageLength){
+void SM_Send_Data(uint8_t messageLength){
 
 	commandBufferIndex = 0;
-	uint8_t tempMessageLength = mesageLength;
+	uint8_t tempMessageLength = messageLength;
 	commandBuffer[commandBufferIndex++] = 'A';
 	commandBuffer[commandBufferIndex++] = 'T';
 	commandBuffer[commandBufferIndex++] = '+';
@@ -442,14 +461,14 @@ void SM_Send_Data(uint8_t mesageLength){
 	commandBuffer[commandBufferIndex++] = '0';
 	commandBuffer[commandBufferIndex++] = ',';
 
-	if(mesageLength >= 100){
+	if(messageLength >= 100){
 		commandBuffer[commandBufferIndex++] = tempMessageLength/100 + 0x30;
 		tempMessageLength = tempMessageLength % 100;
 		commandBuffer[commandBufferIndex++] = tempMessageLength/10 + 0x30;
 		tempMessageLength = tempMessageLength % 10;
 		commandBuffer[commandBufferIndex++] = tempMessageLength + 0x30;
 
-	} else if(mesageLength >= 10){
+	} else if(messageLength >= 10){
 		commandBuffer[commandBufferIndex++] = tempMessageLength/10 + 0x30;
 		tempMessageLength = tempMessageLength % 10;
 		commandBuffer[commandBufferIndex++] = tempMessageLength + 0x30;
@@ -500,7 +519,7 @@ void SM_Mqtt_Connect(void){
 void SM_Mqtt_Receive_Greater_Than_Symbol_Connect_State(void){
 	if(isReadyToSendDataToServer){
 		isReadyToSendDataToServer = RESET;
-		isRecvFromFlag = RESET;
+		isMqttConnected = RESET;
 		isSendOKFlag = RESET;
 		isErrorFlag = RESET;
 		MQTTCommandSending((uint8_t *)mqttMessage, mqttMessageLength);
@@ -510,8 +529,8 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Connect_State(void){
 	}
 }
 void SM_Mqtt_Wait_For_Response_From_Connect_State(void){
-	if(isRecvFromFlag){
-		isRecvFromFlag = RESET;
+	if(isMqttConnected){
+		isMqttConnected = RESET;
 		subscribeTopicIndex = 0;
 		mqttState = MQTT_SUBSCRIBE_STATE;
 	} else if(isErrorFlag){
@@ -543,7 +562,7 @@ void SM_Mqtt_Subscribe (void) {
 void SM_Mqtt_Receive_Greater_Than_Symbol_Subscribe_State(void){
 	if(isReadyToSendDataToServer){
 		isReadyToSendDataToServer = RESET;
-		isRecvFromFlag = RESET;
+		isSubscribed = RESET;
 		isSendOKFlag = RESET;
 		isErrorFlag = RESET;
 		isIPCloseFlag = RESET;
@@ -565,9 +584,9 @@ void SM_Mqtt_Receive_Greater_Than_Symbol_Subscribe_State(void){
 }
 
 void SM_Mqtt_Wait_For_Response_From_Subscribe_State(void){
-	if(isRecvFromFlag){
+	if(isSubscribed){
 		if(is_Mqtt_Subscribe_Timeout()){
-			isRecvFromFlag = RESET;
+			isSubscribed = RESET;
 			subscribeTopicIndex ++;
 			if(subscribeTopicIndex < NUMBER_OF_SUBSCRIBE_TOPIC){
 				mqttState = MQTT_SUBSCRIBE_STATE;
@@ -707,11 +726,36 @@ void Setup_Mqtt_Connect_Message(void){
 	const uint8_t willTopicLength = GetStringLength((uint8_t*)PUBLISH_TOPIC_STATUS);
 
 	Clear_Mqtt_Message_Buffer();
-
 	// Header
 	mqttMessage[mqttMessageIndex++] = MQTT_MSG_CONNECT;
 
 	mqttMessage[mqttMessageIndex++] = 22 + clientIdLength + willPayloadLength + willTopicLength + usernameLength + passwordLength;    // Remaining length of the message (bytes 2-13 + clientId)
+
+#if(VERSION_EBOX == VERSION_TEST_EBOX)
+//	// Protocol name
+//	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
+//	mqttMessage[mqttMessageIndex++] = 4;                      // Protocol Name Length LSB
+//	mqttMessage[mqttMessageIndex++] = 'M';
+//	mqttMessage[mqttMessageIndex++] = 'Q';
+//	mqttMessage[mqttMessageIndex++] = 'T';
+//	mqttMessage[mqttMessageIndex++] = 'T';
+//
+//	// Protocol level
+//	mqttMessage[mqttMessageIndex++] = 4;                      // MQTT Protocol version = 4 (mqtt 3.1.1)
+
+	// Protocol name
+	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
+	mqttMessage[mqttMessageIndex++] = 6;                      // Protocol Name Length LSB
+	mqttMessage[mqttMessageIndex++] = 'M';
+	mqttMessage[mqttMessageIndex++] = 'Q';
+	mqttMessage[mqttMessageIndex++] = 'I';
+	mqttMessage[mqttMessageIndex++] = 's';
+	mqttMessage[mqttMessageIndex++] = 'd';
+	mqttMessage[mqttMessageIndex++] = 'p';
+
+	// Protocol level
+	mqttMessage[mqttMessageIndex++] = 3;
+#else
 	// Protocol name
 	mqttMessage[mqttMessageIndex++] = 0;                      // Protocol Name Length MSB
 	mqttMessage[mqttMessageIndex++] = 6;                      // Protocol Name Length LSB
@@ -724,6 +768,8 @@ void Setup_Mqtt_Connect_Message(void){
 
 	// Protocol level
 	mqttMessage[mqttMessageIndex++] = 3;                      // MQTT Protocol version = 4 (mqtt 3.1.1)
+
+#endif
 
 	// Connection flags   2 for clean session
  //   mqttMessage[9] = 2;
@@ -777,6 +823,7 @@ void Setup_Mqtt_Connect_Message(void){
 		mqttMessage[mqttMessageIndex++] = PASSWORD[i];
 	}
 	mqttMessageLength = mqttMessageIndex;
+
 	SM_Send_Data(mqttMessageLength);
 
 

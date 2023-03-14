@@ -36,11 +36,11 @@
 
 #define MAX_RETRY_NUMBER						3
 
-#define		COMMAND_ONLY						'1'
+#define		COMMAND_ONLY							'1'
 #define		START_UPDATE_TOTAL_POWER_CONSUMPTION	'*'
 #define		END_UPDATE_TOTAL_POWER_CONSUMPTION		'#'
 
-#define		COMMAND_WITH_MAX_ENERGY				'3'
+#define		COMMAND_WITH_MAX_ENERGY					'3'
 
 extern uint8_t SUBSCRIBE_TOPIC_1[MAX_TOPIC_LENGTH]; //CEbox_xxxx
 extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
@@ -98,6 +98,10 @@ FlagStatus isOKFlag = RESET;
 FlagStatus isErrorFlag = RESET;
 FlagStatus isIPCloseFlag = RESET;
 FlagStatus isRecvFromFlag = RESET;
+FlagStatus isMqttConnected = RESET;
+
+FlagStatus isSubscribed = RESET;
+
 FlagStatus isReadyToSendDataToServer = RESET;
 FlagStatus isSendOKFlag = RESET;
 FlagStatus isReceiveDataFromServer = RESET;
@@ -174,7 +178,11 @@ void SM_Sim3g_Setting(void);
 void SM_Wait_For_Sim3g_Setting_Response(void);
 
 void Clear_Sim3gDataProcessingBuffer(void);
+
 uint8_t isEndOfCommand(uint8_t pre, uint8_t cur);
+uint8_t isMqttConnectedOk(uint8_t pre, uint8_t cur);
+uint8_t isSubscribedOk(uint8_t pre, uint8_t cur);
+
 
 Sim3g_Machine_Type Sim3G_State_Machine [] = {
 		{POWER_ON_SIM3G, 									SM_Power_On_Sim3g									},
@@ -472,6 +480,8 @@ void Clear_All_Uart_Receive_Flags(void){
 	isErrorFlag = RESET;
 	isIPCloseFlag = RESET;
 	isRecvFromFlag = RESET;
+	isMqttConnected = RESET;
+	isSubscribed = RESET;
 	isReadyToSendDataToServer = RESET;
 	isSendOKFlag = RESET;
 	isReceiveDataFromServer = RESET;
@@ -716,6 +726,18 @@ uint8_t isEndOfCommand(uint8_t pre, uint8_t cur){
 
 }
 
+uint8_t isMqttConnectedOk(uint8_t pre, uint8_t cur){
+	if(pre == 32 && cur == 2)
+		return 1;
+	return 0;
+}
+
+uint8_t isSubscribedOk(uint8_t pre, uint8_t cur){
+	if(pre == 144 && cur == 3)
+		return 1;
+	return 0;
+}
+
 void FSM_Process_Data_Received_From_Sim3g(void){
 	static uint8_t readCharacter = 0;
 	static uint8_t preReadCharacter = 0;
@@ -734,19 +756,21 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			readCharacter = Uart1_Read_Received_Buffer();
 			if(readCharacter == '>'){
 				processDataState = PREPARE_FOR_SENDING_DATA;
-			}else if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
+			} else if(isMqttConnectedOk(preReadCharacter, readCharacter) == 1){
+				isMqttConnected = SET;
+			} else if(isSubscribedOk(preReadCharacter, readCharacter) == 1){
+				isSubscribed = SET;
+			} else if(isEndOfCommand(preReadCharacter, readCharacter) == 1){
 				processDataState = PREPARE_PROCESSING_RECEIVED_DATA;
 			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 || readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2)){
 				processDataState = PROCESSING_RECEIVED_DATA_TOPIC_1;
 				Clear_Sim3gDataProcessingBuffer();
-			}
-			else if((preReadCharacter == SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)
+			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)
 					&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_RETAINED_MESSAGE_TYPE)){
 				processDataState = PROCESSING_RETAINED_DATA_TOPIC_3;
 				Clear_Sim3gDataProcessingBuffer();
-			}
-			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
+			} else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 					&& (readCharacter == LEN_FOR_UPDATE_POWER_CONSUPMPTION)){ //For update total power consumption
 				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
 				Clear_Sim3gDataProcessingBuffer();
@@ -754,19 +778,15 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 #if (VERSION_EBOX >= VERSION_5_WITH_8CT_10A_2CT_20A)
 			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
 				&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA)){ //For update firmware
-//				UART3_SendToHost((uint8_t*)"Receive command to start updating firmware\r\n");
 				Clear_Sim3gDataProcessingBuffer();
 				Set_Is_Update_Firmware();
 			}
 #endif
 			else if((preReadCharacter == COMMAND_SENDING_SMS_MESSAGE)
 					&& (readCharacter == COMMAND_SENDING_SMS_MESSAGE)){
-				UART3_SendToHost((uint8_t*)"COMMAND_SENDING_SMS_MESSAGE\r\n");
 				Start_Sending_Sms_Message();
 				Clear_Sim3gDataProcessingBuffer();
-			}
-
-			else {
+			} else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
 			}
 		}
@@ -776,8 +796,8 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 		processDataState = CHECK_DATA_AVAILABLE_STATE;
 		break;
 	case PREPARE_PROCESSING_RECEIVED_DATA:
-//		UART3_SendToHost((uint8_t*)"a");
-//		UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer);
+//		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"a"););
+//		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer););
 		if(isReceivedData((uint8_t *)PB_DONE)){
 			isPBDoneFlag = SET;
 		} else if(isReceivedData((uint8_t *)STIN25)){
@@ -794,7 +814,7 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				counterForResetChargingAfterDisconnection  = TIME_OUT_FOR_STOP_CHARGING;
 			}
 
-		}else if(isReceivedData((uint8_t *)SIM_NOT_INSERT)){
+		} else if(isReceivedData((uint8_t *)SIM_NOT_INSERT)){
 //			isErrorFlag = SET;
 			UART3_SendToHost((uint8_t*)"SIM_NOT_INSERT");
 			if(counterForResetChargingAfterDisconnection < TIME_OUT_FOR_STOP_CHARGING){
@@ -803,19 +823,20 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				counterForResetChargingAfterDisconnection  = TIME_OUT_FOR_STOP_CHARGING;
 			}
 
-		}else if(isReceivedData((uint8_t *)IP_CLOSE)){
+		} else if(isReceivedData((uint8_t *)IP_CLOSE)){
 			isIPCloseFlag = SET;
 //			Start_Sending_Lost_Connection_Message();
 		} else if(isReceivedData((uint8_t *)RECV_FROM)){
 			isSendOKFlag = RESET;
 			isRecvFromFlag = SET;
+//			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RECV_FROM\r\n"););
 		} else if(isReceivedData((uint8_t *)Send_ok)){
 			isSendOKFlag = SET;
 		} else if(isReceivedData((uint8_t *)ISCIPSEND)){
 			isCipsend = SET;
 		} else if(isReceivedData((uint8_t *)CIOPEN)){
 			isCIOPEN = SET;
-			UART3_SendToHost((uint8_t*)"MQTT CONNECTED!");
+//			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"MQTT CONNECTED!\r\n"););
 		}
 		processDataState = CHECK_DATA_AVAILABLE_STATE;
 		break;

@@ -17,7 +17,7 @@
 #include <math.h>
 
 
-#define		DEBUG_POWER(X)							//X
+#define		DEBUG_POWER(X)							X
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 #define		MAX_CURRENT								800000
 //for distrist
@@ -46,6 +46,7 @@
 #define		MIN_CURRENT_DETECTING_UNPLUG			5000
 #define		MIN_CURRENT_FOR_START_CHARGING			5000
 #define 	CURRENT_CHANGING_THRESHOLD				5000
+#define 	MIN_PF									20
 
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 #define		MIN_CURRENT								30000
@@ -472,24 +473,24 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-		if(tempOutletID <= 1){
-			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.nodes[tempOutletID].workingTime););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-
-			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
-		}
+//		if(tempOutletID <= 4){
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.nodes[tempOutletID].workingTime););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
+//		}
 	}
 }
 

@@ -70,7 +70,7 @@ void Error_Handler(void);
 #define   VERSION_5_WITH_8CT_10A_2CT_20A 5
 
 //Please turn on this one if want to make a test box
-//#define		VERSION_TEST_EBOX			VERSION_3_WITH_ALL_CT_5A
+//#define		VERSION_TEST_EBOX			VERSION_4_WITH_8CT_5A_2CT_10A
 
 #define		VERSION_EBOX				VERSION_5_WITH_8CT_10A_2CT_20A
 
