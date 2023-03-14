@@ -7,7 +7,6 @@
 
 #include "main.h"
 #include "app_sim3g.h"
-#include "app_sim5320MQTT.h"
 #include "app_scheduler.h"
 #include "app_mqtt.h"
 #include "app_uart.h"
@@ -36,9 +35,9 @@ extern uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
 
 
-extern uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
-extern uint8_t publishTopicIndex;
-extern uint8_t publish_message_length;
+static uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
+static uint8_t publishTopicIndex;
+static uint8_t publish_message_length;
 
 extern int32_t array_Of_Power_Consumption_In_WattHour[NUMBER_OF_ADC_CHANNELS];
 
@@ -81,7 +80,7 @@ void Update_Publish_Voltage_Message_All_Outlets(void);
 void Update_Publish_Ampere_Message_All_Outlets(void);
 
 void Process_Subcribe_Command_Message(char * payload);
-void Process_Subcribe_Firmware_Update_Message(char * payload);
+void Process_Subcribe_Update_Power_Consumption_Message(char * payload);
 void Process_Subcribe_Retained_Message(char * payload);
 
 void Clear_Ping_Request_Timeout_Flag(void){
@@ -540,15 +539,56 @@ void Update_Publish_Fota_Status_Message(uint16_t fota_status){
 
 void Process_Subcribe_Command_Message(char * payload){
 	utils_log_debug("Process_Subcribe_Command_Message\r\n");
+	uint8_t relayIndex;
+	uint8_t relayStatus;
+	if(payload[0] == '1'){
+		relayIndex = payload[1] - 0x30;
+		relayStatus = payload[2] - 0x30;
+		utils_log_debug("relayIndex %d, relayStatus %d\r\n", relayIndex, relayStatus);
+		if(relayStatus == SET){
+			Set_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0xffffffff);
+			Start_Working_Time(relayIndex);
+			Clear_Max_Node_Current(relayIndex);
+		} else {
+			Reset_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0);
+		}
+	}else if(payload[0] == 'x'){
+		// FOTA
+		utils_log_debug("Jump_To_Fota_Firmware");
+		Jump_To_Fota_Firmware();
+	}
 }
 
-void Process_Subcribe_Firmware_Update_Message(char * payload){
+void Process_Subcribe_Update_Power_Consumption_Message(char * payload){
 	utils_log_debug("Process_Subcribe_Firmware_Update_Message\r\n");
+	uint64_t updateTotalPowerConsumption = 0;
+
+	if((payload[0] == '*') && (payload[11] == '#')){
+		for(uint8_t idx = 1; idx <= 10; idx++){
+			updateTotalPowerConsumption = updateTotalPowerConsumption*10 + (payload[idx] - 0x30);
+		}
+		Set_Main_Power_Consumption(updateTotalPowerConsumption);
+	}
 }
 
 
 void Process_Subcribe_Retained_Message(char * payload){
-	utils_log_debug("Process_Subcribe_Retained_Message\r\n");
+	utils_log_debug("Process_Subcribe_Firmware_Update_Message\r\n");
+	uint8_t relayIndex;
+	uint8_t relayStatus;
+	for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i++){
+		relayIndex = payload[i*4 + 0] - 0x30;
+		relayStatus = payload[i*4 + 2] - 0x30;
+		if(relayStatus == SET){
+			Set_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0xffffffff);
+		} else {
+			Reset_Relay(relayIndex);
+			Set_Limit_Energy(relayIndex, 0);
+		}
+	}
 }
 
 
@@ -593,6 +633,7 @@ void Server_Communication(void){
 //						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS,
 //								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_STATUS;
+					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
 					message.retain = 0;
@@ -603,6 +644,7 @@ void Server_Communication(void){
 //						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,
 //								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_POWER;
+					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
 					message.retain = 0;
@@ -613,6 +655,7 @@ void Server_Communication(void){
 //						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR,
 //								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_POWER_FACTOR;
+					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
 					message.retain = 0;
@@ -623,6 +666,7 @@ void Server_Communication(void){
 //						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
 //								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_VOLTAGE;
+					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
 					message.retain = 0;
@@ -633,13 +677,13 @@ void Server_Communication(void){
 //						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
 //								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_CURRENT;
+					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
 					message.retain = 0;
 					mqtt_sent_message(&message);
 				}
 
-				Set_Mqtt_State(MQTT_PUBLISH_STATE);
 				Clear_Publish_Message_Timeout_Flag();
 				publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
 
@@ -658,8 +702,8 @@ void Server_Communication(void){
 				case SUBTOPIC_COMMAND:
 					Process_Subcribe_Command_Message(message.payload);
 					break;
-				case SUBTOPIC_FIRMWARE_UPDATE:
-					Process_Subcribe_Firmware_Update_Message(message.payload);
+				case SUBTOPIC_UPDATE_POWER_CONSUMPTION:
+					Process_Subcribe_Update_Power_Consumption_Message(message.payload);
 					break;
 				case SUBTOPIC_RETAINED:
 					Process_Subcribe_Retained_Message(message.payload);
