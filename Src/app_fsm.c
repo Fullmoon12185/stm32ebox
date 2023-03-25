@@ -17,6 +17,9 @@
 #include "app_i2c_lcd.h"
 
 #include "app_send_sms.h"
+#include "app_iwatchdog.h"
+#include "app_version.h"
+
 
 #include "utils_logger.h"
 
@@ -49,11 +52,13 @@ uint32_t ping_Request_TimeoutIndex = NO_TASK_ID;
 uint8_t publish_message_TimeoutFlag = 1;
 uint32_t publish_message_TimeoutIndex = NO_TASK_ID;
 
+uint8_t update_Firmware_TimeoutFlag = 0;
 
 typedef enum {
 	SIM3G_SETUP_PUBLISH_TOPICS,
 	SIM3G_RECEIVE_MQTT_MESSAGE,
 	SIM3G_SEND_SMS_MESSAGE,
+	SIM3G_UPDATE_FIRMWARE,
 	MAX_SERVER_COMMUNICATION_FSM_NUMBER_STATES
 } SERVER_COMMUNICATION_FSM_STATE;
 
@@ -61,6 +66,9 @@ SERVER_COMMUNICATION_FSM_STATE serverCommunicationFsmState = SIM3G_SETUP_PUBLISH
 
 
 
+uint8_t is_Update_Firmware_Timeout(void);
+void Set_Update_Firmware_Timeout_Flag(void);
+void Clear_Update_Firmware_Timeout_Flag(void);
 
 uint8_t is_Ping_Request_Timeout(void);
 void Set_Ping_Request_Timeout_Flag(void);
@@ -114,7 +122,6 @@ void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData){
 		publish_message[publishMessageIndex] = 0;
 	}
 	publishMessageIndex = 0;
-//	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
 	publish_message[publishMessageIndex++] = outletID + 0x30;
 	if(displayData >= 10000){
 		publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
@@ -355,7 +362,6 @@ void Update_Publish_Voltage_Message_All_Outlets(void){
 		publish_message[publishMessageIndex] = 0;
 	}
 	publishMessageIndex = 0;
-//	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
 	for(uint8_t outletID = 0; outletID < 1; outletID++){
 		publish_message[publishMessageIndex++] = outletID + 0x30;
 		publish_message[publishMessageIndex++] = '-';
@@ -592,12 +598,33 @@ void Process_Subcribe_Retained_Message(char * payload){
 }
 
 
+void FSM_handle_subcribe_message(void){
+	static mqtt_message_t message;
+	if(mqtt_receive_message(&message)){
+		switch (message.topic_id) {
+			case SUBTOPIC_COMMAND:
+				Process_Subcribe_Command_Message(message.payload);
+				break;
+			case SUBTOPIC_UPDATE_POWER_CONSUMPTION:
+				Process_Subcribe_Update_Power_Consumption_Message(message.payload);
+				break;
+			case SUBTOPIC_RETAINED:
+				Process_Subcribe_Retained_Message(message.payload);
+				break;
+			default:
+				utils_log_error("Topic Invalid: Drop All Received Message\r\n");
+				mqtt_receive_message_drop_all();
+				break;
+		}
+	}
+}
+
+
 
 void Server_Communication(void){
 //	static uint8_t publishChannelIndex = 0;
 //	static uint16_t whTest = 0;
 //	Led_Status_Display();
-	static mqtt_message_t message;
 	switch(serverCommunicationFsmState){
 	case SIM3G_SETUP_PUBLISH_TOPICS:
 		if(is_Set_Relay_Timeout()){
@@ -627,6 +654,7 @@ void Server_Communication(void){
 //					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 
 			} else if (is_Publish_Message_Timeout()){
+				mqtt_message_t message;
 				if (publishTopicIndex == 0) {
 					publishTopicIndex = 1;
 					Update_Publish_Status_Message();
@@ -694,27 +722,6 @@ void Server_Communication(void){
 
 			}
 		}
-		serverCommunicationFsmState = SIM3G_RECEIVE_MQTT_MESSAGE;
-		break;
-	case SIM3G_RECEIVE_MQTT_MESSAGE:
-		if(mqtt_receive_message(&message)){
-			switch (message.topic_id) {
-				case SUBTOPIC_COMMAND:
-					Process_Subcribe_Command_Message(message.payload);
-					break;
-				case SUBTOPIC_UPDATE_POWER_CONSUMPTION:
-					Process_Subcribe_Update_Power_Consumption_Message(message.payload);
-					break;
-				case SUBTOPIC_RETAINED:
-					Process_Subcribe_Retained_Message(message.payload);
-					break;
-				default:
-					utils_log_error("Topic Invalid: Drop All Received Message\r\n");
-					mqtt_receive_message_drop_all();
-					break;
-			}
-		}
-		serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
 		break;
 	case SIM3G_SEND_SMS_MESSAGE:
 		FSM_For_Sending_SMS_Message();

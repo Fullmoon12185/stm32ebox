@@ -157,6 +157,10 @@ void Led_Display_Color(uint8_t position, LED_COLOR color) {
 #if(BOX_PLACE == BOX_GENERAL)
 		ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS - position - 1) * 2));
 		ledStatus |= colorMask << ((NUMBER_OF_RELAYS - position - 1) * 2);
+#elif(BOX_PLACE == BOX_WITH_6_OUTLETS)
+		ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS - position - 1) * 2));
+		if(position <= 5)
+			ledStatus |= colorMask << ((NUMBER_OF_RELAYS - position - 1) * 2);
 #elif(BOX_PLACE == BOX_AT_XI)
 		//change the led display in reverse order 0ld
 		ledStatus &= ~(0x00000003 << (position * 2));

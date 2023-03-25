@@ -43,6 +43,28 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 		RELAY_PORT_8,
 		RELAY_PORT_9
 };
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+uint16_t array_Of_Relay_Pins[NUMBER_OF_RELAYS] = {
+		RELAY_PIN_0,
+		RELAY_PIN_1,
+		RELAY_PIN_2,
+		RELAY_PIN_3,
+		RELAY_PIN_4,
+		RELAY_PIN_5,
+		RELAY_PIN_6,
+		RELAY_PIN_7
+};
+
+GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
+		RELAY_PORT_0,
+		RELAY_PORT_1,
+		RELAY_PORT_2,
+		RELAY_PORT_3,
+		RELAY_PORT_4,
+		RELAY_PORT_5,
+		RELAY_PORT_6,
+		RELAY_PORT_7
+};
 #else
 uint16_t array_Of_Relay_Pins[NUMBER_OF_RELAYS] = {
 		RELAY_PIN_6,
@@ -73,18 +95,8 @@ GPIO_TypeDef * array_Of_Relay_Ports[NUMBER_OF_RELAYS] = {
 #endif
 static uint32_t relay_TimeoutFlag_Index = NO_TASK_ID;
 uint8_t set_Relay_TimeoutFlag = 1;
-uint8_t latestRelay[NUMBER_OF_RELAYS] = {
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS,
-	NUMBER_OF_RELAYS
-};
+
+uint8_t latestRelay[NUMBER_OF_RELAYS];
 uint8_t latestRelayIndex = 0;
 static uint8_t timeoutForResetLatestRelayBuffer = 0;
 
@@ -99,7 +111,11 @@ uint8_t is_Set_Relay_Timeout(void){
 }
 
 static void Relay_Output_Control_Enable(void){
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3  || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A )
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);
+#elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);
+#elif(VERSION_EBOX == 2 || VERSION_EBOX == 3  || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A )
 	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);
 #elif(VERSION_EBOX == 15)
 	HAL_GPIO_WritePin(PD2_RELAY_ENABLE_PORT, PD2_RELAY_ENABLE_PIN, RESET);

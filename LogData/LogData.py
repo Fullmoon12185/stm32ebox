@@ -49,7 +49,7 @@ args.username = "eboost-k2"
 args.password = "ZbHzPb5W"
 nextPackage = 0
 
-logging.basicConfig(filename='app74.csv', filemode='a', format='%(asctime)s, %(message)s' , datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logging.basicConfig(filename='app22.csv', filemode='a', format='%(asctime)s, %(message)s' , datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 
 def on_connect(mqttc, obj, flags, rc):
@@ -133,7 +133,7 @@ if args.debug:
 
 print("Connecting to "+args.host+" port: "+str(port))
 mqttc.connect(args.host, port, args.keepalive)
-boxIDs = ["0074"] 
+boxIDs = ["0022"] 
 for boxID in boxIDs:    
     topic = "SEbox_" + str(boxID)
     print(topic)

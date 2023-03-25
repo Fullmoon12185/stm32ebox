@@ -27,6 +27,7 @@
 #include "app_scheduler.h"
 #include "app_eeprom.h"
 
+#include "app_send_sms.h"
 #include "app_test.h"
 
 
@@ -42,7 +43,10 @@ void System_Initialization(void)
             break;
         case SYSTEM_CLOCK_INIT:
         	SystemClock_Config();
-
+            break;
+        case GPIO_INIT:
+        	MX_GPIO_Init();
+//        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
         case UART_INIT:
         	UART3_Init();
@@ -50,10 +54,6 @@ void System_Initialization(void)
         	UART1_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
         	break;
-        case GPIO_INIT:
-        	MX_GPIO_Init();
-        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
-            break;
         case LED_DISPLAY_INIT:
         	Led_Display_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"LED_DISPLAY_INIT - Done \r\n"));
@@ -96,17 +96,22 @@ void System_Initialization(void)
         	break;
         case SIM_3G_INIT:
         	Sim3g_Init();
-        	Set_Sim3G_State(POWER_ON_SIM3G);
+//        	Set_Sim3G_State(POWER_OFF_SIM3G);
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SIM_3G_INIT - Done \r\n"));
         	break;
         case END_OF_INITIALISATION_STATE:
-//        	Turn_On_Buzzer();
-//			HAL_Delay(100);
-//			Turn_Off_Buzzer();
-//			HAL_Delay(100);
-//			Turn_On_Buzzer();
-//			HAL_Delay(100);
-//			Turn_Off_Buzzer();
+        	Turn_On_Buzzer();
+        	Turn_On_LED();
+			HAL_Delay(1000);
+			Turn_Off_Buzzer();
+			Turn_Off_LED();
+			HAL_Delay(1000);
+			Turn_On_LED();
+			Turn_On_Buzzer();
+			HAL_Delay(1000);
+			Turn_Off_Buzzer();
+			Turn_Off_LED();
+
         	break;
         case ADC_INIT:
         	ADC_DMA_Init();
@@ -123,6 +128,10 @@ void System_Initialization(void)
         case WATCH_DOG_INIT:
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"WATCH_DOG_INIT - Done \r\n"));
             break;
+        case SEND_SMS_INIT:
+        	Send_Sms_Message_Init();
+        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SEND_SMS_INIT - Done \r\n"));
+        	break;
         default:
             initState = HAL_INIT;
             break;

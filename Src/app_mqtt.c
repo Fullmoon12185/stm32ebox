@@ -52,17 +52,17 @@ static bool published = false;
 static char client_id[CLIENTID_MAX_LEN];
 
 static char subtopic_entry[][TOPIC_MAX_LEN] = {
-		[SUBTOPIC_COMMAND] = "CEbox_%d",
-		[SUBTOPIC_UPDATE_POWER_CONSUMPTION] = "FEbox_%d",
-		[SUBTOPIC_RETAINED] = "REbox_%d",
+		[SUBTOPIC_COMMAND] = "CEbox_%.4d",
+		[SUBTOPIC_UPDATE_POWER_CONSUMPTION] = "FEbox_%.4d",
+		[SUBTOPIC_RETAINED] = "REbox_%.4d",
 };
 
 static char pubtopic_entry[][TOPIC_MAX_LEN] = {
-		[PUBTOPIC_STATUS] = "SEbox_%d",
-		[PUBTOPIC_POWER] = "PEbox_%d",
-		[PUBTOPIC_VOLTAGE] = "VEbox_%d",
-		[PUBTOPIC_CURRENT] = "AEbox_%d",
-		[PUBTOPIC_POWER_FACTOR] = "PFEbox_%d",
+		[PUBTOPIC_STATUS] = "SEbox_%.4d",
+		[PUBTOPIC_POWER] = "PEbox_%.4d",
+		[PUBTOPIC_VOLTAGE] = "VEbox_%.4d",
+		[PUBTOPIC_CURRENT] = "AEbox_%.4d",
+		[PUBTOPIC_POWER_FACTOR] = "PFEbox_%.4d",
 };
 
 static netif_mqtt_client_t mqtt_client = {
@@ -128,7 +128,7 @@ void mqtt_run(){
 				utils_log_info("Mqtt Config OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 				mqtt_state = MQTT_CLIENT_CONNECT;
-			}else if(ret == NETIF_FAIL){
+			}else if(ret != NETIF_IN_PROCESS){
 				Error_Handler();
 			}
 
@@ -142,7 +142,7 @@ void mqtt_run(){
 				utils_log_info("Mqtt Connect OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 				mqtt_state = MQTT_CLIENT_SUBCRIBE;
-			}else if(ret == NETIF_FAIL){
+			}else if(ret != NETIF_IN_PROCESS){
 				Error_Handler();
 			}
 			break;
@@ -159,7 +159,7 @@ void mqtt_run(){
 				}
 				utils_log_info("Subcribe OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
-			}else if(ret == NETIF_FAIL){
+			}else if(ret  != NETIF_IN_PROCESS){
 				Error_Handler();
 			}
 			break;
@@ -175,7 +175,7 @@ void mqtt_run(){
 				last_sent = NETIF_GET_TIME_MS();
 				utils_log_info("Mqtt Publish OK\r\n");
                 mqtt_state = MQTT_CLIENT_IDLE;
-			}else if(ret == NETIF_FAIL){
+			}else if(ret  != NETIF_IN_PROCESS ){
 				Error_Handler();
 			}
 			break;

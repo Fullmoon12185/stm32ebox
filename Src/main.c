@@ -58,16 +58,20 @@ void Test_Timer(void);
 
 void Main_FSM(void);
 
+void Toggle_Reset(void);
+
 int main(void)
 {
-
 	System_Initialization();
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
-	sprintf(log,"Ebox Version: %d\r\n",VERSION_EBOX);
+	sprintf(log,"Ebox Version: %d\r\n", (uint8_t)VERSION_EBOX);
 	UART3_SendToHost((uint8_t*)log);
 
 	PCF_Init();
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	Lcd_Initialization();
+	Show_Box_ID(Get_Box_ID());
+#elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
 #endif
@@ -77,8 +81,8 @@ int main(void)
 
 	Setup_Eeprom();
 	SCH_Add_Task(PCF_read, 13, 23);
-	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*60*24*3);
-//	SCH_Add_sTask(Test_Timer, 0, 100);
+	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*60*24*7);
+//	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*5);
 	if(Get_Box_ID() != 0){
 		SCH_Add_Task(LED_Display_FSM, 19, 23);
 		SCH_Add_Task(Watchdog_Counting, 7, 101);
@@ -99,6 +103,7 @@ int main(void)
 #endif
 	netif_init();
 	mqtt_init();
+//	SCH_Add_Task(Toggle_Reset, 0, 300);
 	while (1){
 		netif_run();
 		mqtt_run();
@@ -107,6 +112,7 @@ int main(void)
 		if(runtestState == NORMAL_RUN){
 			Main_FSM();
 		}
+
 	}
 	return 0;
 }
@@ -125,14 +131,21 @@ void Test_Timer(void){
 
 }
 
+void Toggle_Reset(void){
+	UART3_SendToHost("Toggle Reset\r\n");
+	HAL_GPIO_TogglePin(PC9_3G_PERST_PORT, PC9_3G_PERST);
+}
+
 void Main_FSM(void){
 #if(WATCHDOG_ENABLE == 1)
-	if(Is_Watchdog_Reset() == 0 && !isConnestionLost()){
+	if(Is_Watchdog_Reset() == 0
+			&& !isConnectionLost()
+			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
 		Watchdog_Refresh();
 	}
 #endif
 	PowerConsumption_FSM();
-//	FSM_Process_Data_Received_From_Sim3g();
+	FSM_handle_subcribe_message();
 
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:

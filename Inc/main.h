@@ -61,13 +61,23 @@ void Error_Handler(void);
 #define 	BOX_AT_XI					1
 #define	    BOX_GENERAL					2
 
+#define		BOX_WITH_6_OUTLETS			3
+
 #define		BOX_PLACE					BOX_GENERAL
 
 #define   VERSION_3_WITH_ALL_CT_5A       3
 #define   VERSION_4_WITH_8CT_5A_2CT_10A  4
 #define   VERSION_5_WITH_8CT_10A_2CT_20A 5
 
-#define		VERSION_EBOX				VERSION_5_WITH_8CT_10A_2CT_20A
+#define   VERSION_6_WITH_8CT_20A		 6
+
+//Please turn on this one if want to make a test box
+#define		VERSION_TEST_EBOX			VERSION_4_WITH_8CT_5A_2CT_10A
+
+#define		VERSION_EBOX				VERSION_6_WITH_8CT_20A
+
+
+
 /*
  * Firmware Chosen
  */
@@ -118,32 +128,14 @@ void Error_Handler(void);
     #define		SIM7600						1
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
     #define		SIM7600						1
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+    #define		SIM7600						1
+
 #endif
-//#define B1_Pin 							GPIO_PIN_13
-//#define B1_GPIO_Port 					GPIOC
-//#define B1_EXTI_IRQn 					EXTI15_10_IRQn
-//#define LD2_Pin 						GPIO_PIN_5
-//#define LD2_GPIO_Port 					GPIOA
-
-//#define TMS_Pin 						GPIO_PIN_13
-//#define TMS_GPIO_Port 					GPIOA
-//#define TCK_Pin 						GPIO_PIN_14
-//#define TCK_GPIO_Port					GPIOA
-//#define SWO_Pin 						GPIO_PIN_3
-//#define SWO_GPIO_Port 					GPIOB
 
 
-
-//#define LED1_PIN                         GPIO_PIN_5
-//#define LED1_GPIO_PORT                   GPIOA
 #define LED2_PIN                         GPIO_PIN_2
 #define LED2_GPIO_PORT                   GPIOB
-//#define LED3_PIN                         GPIO_PIN_8
-//#define LED3_GPIO_PORT                   GPIOC
-//#define LED4_PIN                         GPIO_PIN_5
-//#define LED4_GPIO_PORT                   GPIOC
-
-
 
 
 //LED output control signals
@@ -267,13 +259,23 @@ void Error_Handler(void);
 #define USART3_FORCE_RESET()             		__HAL_RCC_USART3_FORCE_RESET()
 #define USART3_RELEASE_RESET()           		__HAL_RCC_USART3_RELEASE_RESET()
 
+#if(VERSION_EBOX != VERSION_6_WITH_8CT_20A)
+	#define		SAMPLE_STEPS							2
+	#define 	NUMBER_OF_SAMPLES_PER_AVERAGE			(1 << SAMPLE_STEPS)
+	#define 	NUMBER_OF_SAMPLES_PER_SECOND			275
+	#define 	NUMBER_OF_ADC_CHANNELS					14
+#else
 
-#define		SAMPLE_STEPS							2
-#define 	NUMBER_OF_SAMPLES_PER_AVERAGE			(1 << SAMPLE_STEPS)
-#define 	NUMBER_OF_SAMPLES_PER_SECOND			275
-#define 	NUMBER_OF_ADC_CHANNELS					14
+	#define		SAMPLE_STEPS							2
+	#define 	NUMBER_OF_SAMPLES_PER_AVERAGE			(1 << SAMPLE_STEPS)
+	#define 	NUMBER_OF_SAMPLES_PER_SECOND			275
+	#define 	NUMBER_OF_ADC_CHANNELS					12
+#endif
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+#define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
+#define 	ZERO_POINT_DETECTION_PORT				GPIOC
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 #define 	ZERO_POINT_DETECTION_PIN				GPIO_PIN_7
 #define 	ZERO_POINT_DETECTION_PORT				GPIOC
 #elif(VERSION_EBOX == 15)
@@ -349,6 +351,10 @@ void Error_Handler(void);
 #define SAC19				18
 #define SAC29				19
 
+
+
+#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+
 //Relay
 #define	NUMBER_OF_RELAYS				10
 #define RELAY_0							0
@@ -420,10 +426,84 @@ void Error_Handler(void);
 	#define RELAY_PORT_8						PB3_OUT8_PORT
 	#define RELAY_PORT_9						PB4_OUT9_PORT
 
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+//Relay
+#define	NUMBER_OF_RELAYS				8
+
+#define RELAY_0							0
+#define RELAY_1							1
+#define RELAY_2							2
+#define RELAY_3							3
+#define RELAY_4							4
+#define RELAY_5							5
+#define RELAY_6							6
+#define RELAY_7							7
+
+//Relay control pins and ports
+#define PA11_OUT0							GPIO_PIN_11
+#define PA11_OUT0_PORT						GPIOA
+#define PA12_OUT1							GPIO_PIN_12
+#define PA12_OUT1_PORT						GPIOA
+#define PB8_OUT2							GPIO_PIN_8
+#define PB8_OUT2_PORT						GPIOB
+#define PB9_OUT3							GPIO_PIN_9
+#define PB9_OUT3_PORT						GPIOB
+#define PA15_OUT4							GPIO_PIN_15
+#define PA15_OUT4_PORT						GPIOA
+
+#define PC10_OUT5							GPIO_PIN_3
+#define PC10_OUT5_PORT						GPIOB
+#define PC11_OUT6							GPIO_PIN_4
+#define PC11_OUT6_PORT						GPIOB
+
+
+#define PC12_OUT7								GPIO_PIN_0
+#define PC12_OUT7_PORT							GPIOB
+
+//#define PB3_OUT8								GPIO_PIN_3
+//#define PB3_OUT8_PORT							GPIOB
+//
+//#define PB4_OUT9								GPIO_PIN_4
+//#define PB4_OUT9_PORT							GPIOB
+
+
+
+
+	#define RELAY_PIN_0							PA11_OUT0
+	#define RELAY_PIN_1							PA12_OUT1
+	#define RELAY_PIN_2							PB8_OUT2
+	#define RELAY_PIN_3							PB9_OUT3
+	#define RELAY_PIN_4							PA15_OUT4
+	#define RELAY_PIN_5							PC10_OUT5
+	#define RELAY_PIN_6							PC11_OUT6
+	#define RELAY_PIN_7							PC12_OUT7
+//	#define RELAY_PIN_8							PB3_OUT8
+//	#define RELAY_PIN_9							PB4_OUT9
+
+	#define RELAY_PORT_0						PA11_OUT0_PORT
+	#define RELAY_PORT_1						PA12_OUT1_PORT
+	#define RELAY_PORT_2						PB8_OUT2_PORT
+	#define RELAY_PORT_3						PB9_OUT3_PORT
+	#define RELAY_PORT_4						PA15_OUT4_PORT
+	#define RELAY_PORT_5						PC10_OUT5_PORT
+	#define RELAY_PORT_6						PC11_OUT6_PORT
+	#define RELAY_PORT_7						PC12_OUT7_PORT
+//	#define RELAY_PORT_8						PB3_OUT8_PORT
+//	#define RELAY_PORT_9						PB4_OUT9_PORT
+
+
+#endif
+
+
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 #define PD2_RELAY_ENABLE_PIN						GPIO_PIN_2
 #define PD2_RELAY_ENABLE_PORT						GPIOD
+
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+#define PD2_RELAY_ENABLE_PIN						GPIO_PIN_1
+#define PD2_RELAY_ENABLE_PORT						GPIOB
+
 #endif
 
 #if(VERSION_EBOX == 15)

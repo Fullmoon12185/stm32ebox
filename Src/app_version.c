@@ -9,7 +9,17 @@
 #include "main.h"
 #include "app_flash.h"
 
+static uint8_t isUpdateFirmware = 0;
+void Set_Is_Update_Firmware(void){
+	isUpdateFirmware = 1;
+}
 
+void Clear_Is_Update_Firmware(void){
+	isUpdateFirmware = 0;
+}
+uint8_t Is_Update_Firmware(void){
+	return (isUpdateFirmware == 1);
+}
 
 uint16_t Get_Current_Version(){
 	return Flash_Read_Int(CURRENT_VERSION_ADDR);
