@@ -18,15 +18,14 @@
 #define		DEBUG_ADC(X)								X
 #define 	NUMBER_OF_SAMPLES_FOR_SMA					12
 #define		MAIN_ADC_INDEX								12
-#define		REFERENCE_1V8_VOLTAGE_INDEX					12
 #define		DIFFERENCE_ADC_VALUE_THRESHOLD				10
 
-//#define		AVCC_OPAMP								5 //5 Volt
-//#define AVCC_OPAMP								3 //3.3 Volt
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	#define		REFERENCE_1V8_VOLTAGE_INDEX					10
+#else
+	#define		REFERENCE_1V8_VOLTAGE_INDEX					12
+#endif
 
-//#if (AVCC_OPAMP == 3)
-//#define		COEFFICIENT_0								1100
-//#define		COEFFICIENT_01								950
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 
 //this is for CT 5A
@@ -227,6 +226,24 @@
 #define		CT_20A_THRESHOLD_5							0
 #define		CT_20A_COEFF_5								2600
 
+
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+//this is for 20A
+#define		CT_20A_THRESHOLD_1							400
+#define		CT_20A_COEFF_1								2785
+
+#define		CT_20A_THRESHOLD_2							300
+#define		CT_20A_COEFF_2								2745
+
+#define		CT_20A_THRESHOLD_3							200
+#define		CT_20A_COEFF_3								2730
+
+#define		CT_20A_THRESHOLD_4							100
+#define		CT_20A_COEFF_4								2730
+
+#define		CT_20A_THRESHOLD_5							0
+#define		CT_20A_COEFF_5								2600
+
 #else
 
 #define		COEFFICIENT_1								540
@@ -260,8 +277,9 @@ uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][
 /* Variable to report ADC analog watchdog status:   */
 /*   RESET <=> voltage into AWD window   */
 /*   SET   <=> voltage out of AWD window */
-FlagStatus         ubAnalogWatchdogStatus = RESET;  /* Set into analog watchdog interrupt callback */
+FlagStatus ubAnalogWatchdogStatus = RESET;  /* Set into analog watchdog interrupt callback */
 FlagStatus AdcDmaStoreFlag = RESET;
+
 #define ADC_READING_TIME_OUT	95
 
 typedef enum {
@@ -324,6 +342,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *AdcHandle)
 	AdcDmaStoreFlag = SET;
 }
 
+
+#if (VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 /**
   * @brief ADC1 Initialization Function
   * @param None
@@ -349,7 +369,8 @@ void ADC1_Init(void)
   ADC1Handle.Init.DiscontinuousConvMode = DISABLE;
   ADC1Handle.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   ADC1Handle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  ADC1Handle.Init.NbrOfConversion = 14;
+  ADC1Handle.Init.NbrOfConversion = NUMBER_OF_ADC_CHANNELS;
+
   if (HAL_ADC_Init(&ADC1Handle) != HAL_OK)
   {
     Error_Handler();
@@ -419,6 +440,226 @@ void ADC1_Init(void)
   {
     Error_Handler();
   }
+
+
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Rank = ADC_REGULAR_RANK_9;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_11;
+  sConfig.Rank = ADC_REGULAR_RANK_10;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Rank = ADC_REGULAR_RANK_11;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  sConfig.Rank = ADC_REGULAR_RANK_12;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+ // WatchDogAnalogInit();
+
+  Adc_Buffers_Init();
+}
+
+void WatchDogAnalogInit(void){
+
+
+	  ADC_AnalogWDGConfTypeDef AnalogWDGConfig;
+
+	/* Analog watchdog 1 configuration */
+	  AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_ALL_REG;
+	  AnalogWDGConfig.ITMode = ENABLE;
+	  AnalogWDGConfig.HighThreshold = 4000;
+	  AnalogWDGConfig.LowThreshold = 100;
+
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_0;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+	    /* Channel Configuration Error */
+	    Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_1;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_2;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_3;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_4;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_5;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_6;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_7;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_11;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+	  AnalogWDGConfig.Channel = ADC_CHANNEL_12;
+	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
+	  {
+		/* Channel Configuration Error */
+		Error_Handler();
+	  }
+
+	  /* NVIC configuration for ADC interrupt */
+	/* Priority: high-priority */
+	HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+}
+
+
+#else
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+void ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Common config
+  */
+  ADC1Handle.Instance = ADC1;
+  ADC1Handle.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  ADC1Handle.Init.ContinuousConvMode = ENABLE;
+  ADC1Handle.Init.DiscontinuousConvMode = DISABLE;
+  ADC1Handle.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  ADC1Handle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  ADC1Handle.Init.NbrOfConversion = 14;
+
+  if (HAL_ADC_Init(&ADC1Handle) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_7;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Rank = ADC_REGULAR_RANK_8;
+  if (HAL_ADC_ConfigChannel(&ADC1Handle, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_8;
@@ -435,6 +676,10 @@ void ADC1_Init(void)
   {
     Error_Handler();
   }
+
+
+
+
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_10;
@@ -533,6 +778,8 @@ void WatchDogAnalogInit(void){
 		/* Channel Configuration Error */
 		Error_Handler();
 	  }
+
+
 	  AnalogWDGConfig.Channel = ADC_CHANNEL_8;
 	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
 	  {
@@ -546,6 +793,7 @@ void WatchDogAnalogInit(void){
 		/* Channel Configuration Error */
 		Error_Handler();
 	  }
+
 
 //	  AnalogWDGConfig.Channel = ADC_CHANNEL_10;
 //	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
@@ -573,6 +821,8 @@ void WatchDogAnalogInit(void){
 }
 
 
+
+#endif
 /**
   * @brief  Analog watchdog callback in non blocking mode.
   * @param  hadc: ADC handle
@@ -589,7 +839,6 @@ void WatchDogAnalogInit(void){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	is_Ready_To_Find_Min_Max_Voltage = SET;
-//	test2();
 	return;
 }
 /**
@@ -704,12 +953,10 @@ void PowerConsumption_FSM(void){
 		if(AdcDmaStoreFlag == SET){
 			ADC_Stop_Getting_Values();
 			AdcDmaStoreFlag = RESET;
+
+
 			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; channelIndex++) {
 				AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] = AdcDmaBuffer[channelIndex] - AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX];
-				//				if(AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] < 10 && AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] > -10){
-//					AdcBuffer[channelIndex][AdcDmaBufferIndexFilter] = 0;
-//				}
-
 			}
 			AdcDmaBufferIndexFilter++;
 			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
@@ -835,8 +1082,19 @@ void PowerConsumption_FSM(void){
 					}
 
 				}
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+					if(tempIrmsADCValue > 200){
+						coefficientForPF = 300;
+					} else if(tempIrmsADCValue > 100)
+						coefficientForPF = 360;
+					else {
+						coefficientForPF = 320;
+					}
+
 #endif
-				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 15){
+
+#if(VERSION_EBOX == VERSION_TEST_EBOX)
+				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 5){
 					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
 				} else {
 					tempPowerFactor = 0.0;
@@ -845,22 +1103,33 @@ void PowerConsumption_FSM(void){
 				if(PowerFactor[i] >= 98){
 					PowerFactor[i] = 100;
 				}
+#else
+				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 15){
+									tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
+								} else {
+									tempPowerFactor = 0.0;
+								}
+								PowerFactor[i] = (uint32_t)tempPowerFactor;
+								if(PowerFactor[i] >= 98){
+									PowerFactor[i] = 100;
+								}
+#endif
 
-//				if(i <= 4)
-//				{
-//					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
-//					UART3_SendToHost((uint8_t *)strtmp);
-//					sprintf((char*) strtmp, "%d\t", (int) tempPowerFactor);
-//					UART3_SendToHost((uint8_t *)strtmp);
-//					sprintf((char*) strtmp, "%d\t", (int) tempIrmsADCValue);
-//					UART3_SendToHost((uint8_t *)strtmp);
-//
-//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i]);
-//					UART3_SendToHost((uint8_t *)strtmp);
-//
-//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-//					UART3_SendToHost((uint8_t *)strtmp);
-//				}
+				if(i == 0 || i == 1)
+				{
+					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
+					UART3_SendToHost((uint8_t *)strtmp);
+					sprintf((char*) strtmp, "%d\t", (int) tempPowerFactor);
+					UART3_SendToHost((uint8_t *)strtmp);
+					sprintf((char*) strtmp, "%d\t", (int) tempIrmsADCValue);
+					UART3_SendToHost((uint8_t *)strtmp);
+
+					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i]);
+					UART3_SendToHost((uint8_t *)strtmp);
+
+					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+					UART3_SendToHost((uint8_t *)strtmp);
+				}
 
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
@@ -1032,6 +1301,20 @@ void PowerConsumption_FSM(void){
 						Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 					}
 				}				
+
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+				uint8_t voltage = VOLTAGE_USAGE;
+				if(tempIrmsADCValue >= CT_20A_THRESHOLD_1){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_1)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= CT_20A_THRESHOLD_2){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_2)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= CT_20A_THRESHOLD_3){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_3)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= CT_20A_THRESHOLD_4){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= CT_20A_THRESHOLD_5){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				}
 #else
 				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];
 				if(tempIrmsADCValue > 1000){

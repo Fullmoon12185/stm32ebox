@@ -44,17 +44,16 @@ void System_Initialization(void)
             break;
         case SYSTEM_CLOCK_INIT:
         	SystemClock_Config();
-
+            break;
+        case GPIO_INIT:
+        	MX_GPIO_Init();
+//        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
         case UART_INIT:
         	UART3_Init();
         	UART1_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
         	break;
-        case GPIO_INIT:
-        	MX_GPIO_Init();
-        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
-            break;
         case LED_DISPLAY_INIT:
         	Led_Display_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"LED_DISPLAY_INIT - Done \r\n"));
@@ -103,12 +102,17 @@ void System_Initialization(void)
         	break;
         case END_OF_INITIALISATION_STATE:
         	Turn_On_Buzzer();
-			HAL_Delay(100);
+        	Turn_On_LED();
+			HAL_Delay(1000);
 			Turn_Off_Buzzer();
-			HAL_Delay(100);
+			Turn_Off_LED();
+			HAL_Delay(1000);
+			Turn_On_LED();
 			Turn_On_Buzzer();
-			HAL_Delay(100);
+			HAL_Delay(1000);
 			Turn_Off_Buzzer();
+			Turn_Off_LED();
+
         	break;
         case ADC_INIT:
         	ADC_DMA_Init();

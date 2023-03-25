@@ -55,6 +55,8 @@ void LED_Init(void){
 
 
 void GPIO_Relay_Init(void){
+
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
@@ -78,14 +80,74 @@ void GPIO_Relay_Init(void){
 	HAL_GPIO_Init(RELAY_PORT_6, &GPIO_InitStruct);
 	GPIO_InitStruct.Pin = RELAY_PIN_7;
 	HAL_GPIO_Init(RELAY_PORT_7, &GPIO_InitStruct);
+
+
+	GPIO_InitStruct.Pin = PD2_RELAY_ENABLE_PIN;
+	HAL_GPIO_Init(PD2_RELAY_ENABLE_PORT, &GPIO_InitStruct);
+
+#elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+
+	GPIO_InitStruct.Pin = RELAY_PIN_0;
+	HAL_GPIO_Init(RELAY_PORT_0, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = RELAY_PIN_1;
+	HAL_GPIO_Init(RELAY_PORT_1, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_2;
+	HAL_GPIO_Init(RELAY_PORT_2, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_3;
+	HAL_GPIO_Init(RELAY_PORT_3, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_4;
+	HAL_GPIO_Init(RELAY_PORT_4, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_5;
+	HAL_GPIO_Init(RELAY_PORT_5, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_6;
+	HAL_GPIO_Init(RELAY_PORT_6, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_7;
+	HAL_GPIO_Init(RELAY_PORT_7, &GPIO_InitStruct);
+
 	GPIO_InitStruct.Pin = RELAY_PIN_8;
 	HAL_GPIO_Init(RELAY_PORT_8, &GPIO_InitStruct);
 	GPIO_InitStruct.Pin = RELAY_PIN_9;
 	HAL_GPIO_Init(RELAY_PORT_9, &GPIO_InitStruct);
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+
 	GPIO_InitStruct.Pin = PD2_RELAY_ENABLE_PIN;
 	HAL_GPIO_Init(PD2_RELAY_ENABLE_PORT, &GPIO_InitStruct);
+
 #elif (VERSION_EBOX == 15)
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+
+	GPIO_InitStruct.Pin = RELAY_PIN_0;
+	HAL_GPIO_Init(RELAY_PORT_0, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = RELAY_PIN_1;
+	HAL_GPIO_Init(RELAY_PORT_1, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_2;
+	HAL_GPIO_Init(RELAY_PORT_2, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_3;
+	HAL_GPIO_Init(RELAY_PORT_3, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_4;
+	HAL_GPIO_Init(RELAY_PORT_4, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_5;
+	HAL_GPIO_Init(RELAY_PORT_5, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_6;
+	HAL_GPIO_Init(RELAY_PORT_6, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_7;
+	HAL_GPIO_Init(RELAY_PORT_7, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = RELAY_PIN_8;
+	HAL_GPIO_Init(RELAY_PORT_8, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = RELAY_PIN_9;
+	HAL_GPIO_Init(RELAY_PORT_9, &GPIO_InitStruct);
+
 	GPIO_InitStruct.Pin = PD2_RELAY_ENABLE_PIN;
 	HAL_GPIO_Init(PD2_RELAY_ENABLE_PORT, &GPIO_InitStruct);
 #endif
@@ -114,7 +176,11 @@ void ZeroPoint_Detection_Pin_Init(void){
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(ZERO_POINT_DETECTION_PORT, &GPIO_InitStruct);
 
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	/* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+#elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	/* EXTI interrupt init*/
 	  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
 	  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -149,6 +215,16 @@ void Turn_On_Buzzer(void){
 void Turn_Off_Buzzer(void){
 	HAL_GPIO_WritePin(BUZZER_PORT, BUZZER_PIN, RESET);
 }
+
+
+void Turn_On_LED(void){
+	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
+}
+
+void Turn_Off_LED(void){
+	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
+}
+
 
 
 

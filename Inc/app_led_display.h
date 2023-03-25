@@ -10,6 +10,31 @@
 
 #include "app_power.h"
 
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+
+typedef enum  {
+	NONE = 0,
+#if(BOX_PLACE == BOX_GENERAL || BOX_PLACE == BOX_WITH_6_OUTLETS)
+	RED = 2,
+	GREEN = 1,
+#elif(BOX_PLACE == BOX_AT_SHOW_ROOM)
+	RED = 2,
+	GREEN = 1,
+#elif(BOX_PLACE == BOX_AT_XI)
+	RED = 1,
+	GREEN = 2,
+#endif
+	YELLOW = 3,
+	BLINK_RED_SLOW = 4,
+	BLINK_RED_FAST = 5,
+	BLINK_GREEN_SLOW = 6,
+	BLINK_GREEN_FAST = 7,
+	BLINK_YELLOW_SLOW = 8,
+	BLINK_YELLOW_FAST = 9
+}LED_COLOR;
+
+#else
+
 typedef enum  {
 	NONE = 0,
 #if(BOX_PLACE == BOX_GENERAL || BOX_PLACE == BOX_WITH_6_OUTLETS)
@@ -31,6 +56,7 @@ typedef enum  {
 	BLINK_YELLOW_FAST = 9
 }LED_COLOR;
 
+#endif
 //Normal OFF
 //Chargin Red
 //Charge Full = Green 1s  then  red 1s off = {6,4,6,4,6,4,6,4,6,4,6,4,6,4,6,4,6,4}

@@ -58,11 +58,14 @@ int main(void)
 {
 	System_Initialization();
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
-	sprintf(log,"Ebox Version: %d\r\n",VERSION_EBOX);
+	sprintf(log,"Ebox Version: %d\r\n", (uint8_t)VERSION_EBOX);
 	UART3_SendToHost((uint8_t*)log);
 
 	PCF_Init();
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	Lcd_Initialization();
+	Show_Box_ID(Get_Box_ID());
+#elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
 #endif

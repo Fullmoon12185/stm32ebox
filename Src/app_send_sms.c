@@ -35,7 +35,10 @@ Content:
 	const uint8_t firmwareVersion[] =  "4.0.0-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.0.0-";
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	const uint8_t firmwareVersion[] =  "6.0.0-";
 #endif
+
 #endif
 
 //const uint8_t smsCommand[] = "AT+CMGS=\"+84915075588\"\r";

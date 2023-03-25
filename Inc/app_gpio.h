@@ -11,6 +11,10 @@
 void Turn_On_Buzzer(void);
 void Turn_Off_Buzzer(void);
 
+void Turn_On_LED(void);
+void Turn_Off_LED(void);
+
+
 void SPI_CS_Init(void);
 void MX_GPIO_Init(void);
 
