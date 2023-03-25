@@ -233,18 +233,17 @@ void Error_Handler(void);
 
 
 
-#define USART2_TX_PIN 					GPIO_PIN_2
-#define USART2_TX_GPIO_PORT 				GPIOA
-#define USART2_RX_PIN 					GPIO_PIN_3
-#define USART2_RX_GPIO_PORT 				GPIOA
+#define UART4_TX_PIN 					GPIO_PIN_10
+#define UART4_TX_GPIO_PORT 				GPIOC
+#define UART4_RX_PIN 					GPIO_PIN_11
+#define UART4_RX_GPIO_PORT 				GPIOC
 
-#define USART2_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE();
-#define DMA2_CLK_ENABLE()                __HAL_RCC_DMA2_CLK_ENABLE()
-#define USART2_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
-#define USART2_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define UART4_CLK_ENABLE()              __HAL_RCC_UART4_CLK_ENABLE();
+#define UART4_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOC_CLK_ENABLE()
+#define UART4_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOC_CLK_ENABLE()
 
-#define USART2_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
-#define USART2_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
+#define UART4_FORCE_RESET()             __HAL_RCC_UART4_FORCE_RESET()
+#define UART4_RELEASE_RESET()           __HAL_RCC_UART4_RELEASE_RESET()
 
 ///////////////////////////////////////////////////////////////////////////////
 #define USART3_TX_PIN 					GPIO_PIN_10
@@ -516,6 +515,8 @@ void Error_Handler(void);
 #define		NUMBER_OF_SUBSCRIBE_TOPIC							3
 #define		NUMBER_OF_PUBLISH_TOPIC								2
 #define 	MAX_TOPIC_LENGTH									14
+
+#define		MQTT_MESSAGE_BUFFER_LENGTH							128
 
 #define 	SUBSCRIBE_RECEIVE_MESSAGE_TYPE 						48
 #define		DATA_RECEIVE_LENGTH									15

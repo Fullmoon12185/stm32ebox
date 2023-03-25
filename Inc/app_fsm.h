@@ -10,6 +10,7 @@
 
 
 void Server_Communication(void);
+void FSM_handle_subcribe_message(void);
 void UpdatePublishMessage(uint8_t outletID, int32_t displayData);
 
 #endif /* APP_FSM_H_ */

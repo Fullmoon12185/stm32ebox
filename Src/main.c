@@ -34,6 +34,10 @@
 #include "app_i2c_lcd.h"
 #include "app_init.h"
 #include "app_send_sms.h"
+#include "netif.h"
+
+#include "app_mqtt.h"
+#include "utils_logger.h"
 
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
@@ -48,11 +52,13 @@ typedef enum {
 
 MAIN_FSM_STATE mainState = POWER_CONSUMPTION_CALCULATION;
 
-static uint8_t runtestState = 0;
+static uint8_t runtestState = NORMAL_RUN;
 void LCD_Show_Box_ID(void);
 void Test_Timer(void);
 
 void Main_FSM(void);
+
+void Toggle_Reset(void);
 
 int main(void)
 {
@@ -95,11 +101,18 @@ int main(void)
 	    MX_IWDG_Init();
 	}
 #endif
+	netif_init();
+	mqtt_init();
+//	SCH_Add_Task(Toggle_Reset, 0, 300);
 	while (1){
+		netif_run();
+		mqtt_run();
+//		mqtt_test_run();
 		SCH_Dispatch_Tasks();
 		if(runtestState == NORMAL_RUN){
 			Main_FSM();
 		}
+
 	}
 	return 0;
 }
@@ -118,8 +131,12 @@ void Test_Timer(void){
 
 }
 
-void Main_FSM(void){
+void Toggle_Reset(void){
+	UART3_SendToHost("Toggle Reset\r\n");
+	HAL_GPIO_TogglePin(PC9_3G_PERST_PORT, PC9_3G_PERST);
+}
 
+void Main_FSM(void){
 #if(WATCHDOG_ENABLE == 1)
 	if(Is_Watchdog_Reset() == 0
 			&& !isConnectionLost()
@@ -128,7 +145,7 @@ void Main_FSM(void){
 	}
 #endif
 	PowerConsumption_FSM();
-	FSM_Process_Data_Received_From_Sim3g();
+	FSM_handle_subcribe_message();
 
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:

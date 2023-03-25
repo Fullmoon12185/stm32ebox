@@ -8,8 +8,6 @@
 #include "app_string.h"
 #include "app_sim3g.h"
 #include "app_send_sms.h"
-#include "app_sim5320MQTT.h"
-#include "app_scheduler.h"
 
 
 #define		DEBUG_SEND_SMS(x)		x
@@ -250,7 +248,7 @@ void Send_SMS_State_Display(void){
 
 void FSM_For_Sending_SMS_Message(void){
 
-	if(Is_Set_Send_Sms_Flag() && Is_Ready_To_Send_MQTT_Data()){
+	if(Is_Set_Send_Sms_Flag()){
 		Send_SMS_State_Display();
 		switch(smsState){
 		case TURN_OFF_PDU:

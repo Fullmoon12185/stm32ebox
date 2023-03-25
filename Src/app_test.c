@@ -11,7 +11,6 @@
 #include "app_led_display.h"
 #include "app_sim3g.h"
 #include "app_uart.h"
-#include "app_sim5320MQTT.h"
 #include "app_pcf8574.h"
 #include "app_scheduler.h"
 #include "app_gpio.h"
