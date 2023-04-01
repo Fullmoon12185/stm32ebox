@@ -34,6 +34,25 @@ void MX_GPIO_Init(void)
 	Buzzer_Init();
 	SPI_CS_Init();
 	ZeroPoint_Detection_Pin_Init();
+	WIFIETHERNET_init();
+}
+
+void WIFIETHERNET_init(void){
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.Pin = WIFIETHERNET_RST_PIN;
+	HAL_GPIO_Init(WIFIETHERNET_RST_PORT, &GPIO_InitStruct);
+	WIFIETHERNET_reset();
+}
+
+
+void WIFIETHERNET_reset(void){
+	HAL_GPIO_WritePin(WIFIETHERNET_RST_PORT, WIFIETHERNET_RST_PIN, RESET);
+	HAL_Delay(500);
+	HAL_GPIO_WritePin(WIFIETHERNET_RST_PORT, WIFIETHERNET_RST_PIN, SET);
 }
 
 void LED_Init(void){

@@ -133,6 +133,9 @@ void Error_Handler(void);
 
 #endif
 
+// WIFIEthernet RESET Pin
+#define WIFIETHERNET_RST_PIN             GPIO_PIN_8
+#define WIFIETHERNET_RST_PORT            GPIOA
 
 #define LED2_PIN                         GPIO_PIN_2
 #define LED2_GPIO_PORT                   GPIOB
