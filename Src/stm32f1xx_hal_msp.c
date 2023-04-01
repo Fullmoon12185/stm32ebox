@@ -125,9 +125,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
 			/* UART RX GPIO pin configuration  */
 			GPIO_InitStruct.Pin = UART4_RX_PIN;
+			GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
 
 			HAL_GPIO_Init(UART4_RX_GPIO_PORT, &GPIO_InitStruct);
-			HAL_NVIC_SetPriority(UART4_IRQn, 0, 0);
+			HAL_NVIC_SetPriority(UART4_IRQn, 0, 2);
 			HAL_NVIC_EnableIRQ(UART4_IRQn);
 		}
 }
