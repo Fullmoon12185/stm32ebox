@@ -203,6 +203,7 @@ bool mqtt_sent_message(mqtt_message_t * message){
 	// Get Topic correspond with topic_idx
 	memcpy(message->topic, pubtopic_entry[message->topic_id], TOPIC_MAX_LEN);
     if(utils_buffer_is_full(&mqtt_tx_buffer)){
+    	utils_log_warn("Mqtt message buffer is full\r\n");
         return false;
     }
     utils_buffer_push(&mqtt_tx_buffer,message);
