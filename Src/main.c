@@ -145,6 +145,7 @@ void Main_FSM(void){
 	}
 #endif
 	PowerConsumption_FSM();
+	POWERMETER485_fsm();
 	FSM_handle_subcribe_message();
 
 	switch(mainState){

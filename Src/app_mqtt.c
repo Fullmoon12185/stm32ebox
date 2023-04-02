@@ -63,6 +63,7 @@ static char pubtopic_entry[][TOPIC_MAX_LEN] = {
 		[PUBTOPIC_VOLTAGE] = "VEbox_%.4d",
 		[PUBTOPIC_CURRENT] = "AEbox_%.4d",
 		[PUBTOPIC_POWER_FACTOR] = "PFEbox_%.4d",
+		[PUBTOPIC_POWERMETER485] = "PMEbox_%.4d"
 };
 
 static netif_mqtt_client_t mqtt_client = {
