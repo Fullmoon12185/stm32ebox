@@ -17,8 +17,9 @@
 
 /* UART handler declaration */
 UART_HandleTypeDef Uart1Handle;
-UART_HandleTypeDef Uart4Handle;
 UART_HandleTypeDef Uart3Handle;
+UART_HandleTypeDef Uart4Handle;
+UART_HandleTypeDef Uart5Handle;
 
 /* Buffer used for UART1 */
 uint8_t UART1_buffer[RXBUFFERSIZE];
@@ -33,6 +34,13 @@ uint8_t UART4_receiveBufferIndexHead = 0;
 uint8_t UART4_receiveBufferIndexTail = 0;
 __IO ITStatus UART4_TransmitReady = SET;
 __IO ITStatus UART4_ReceiveReady = RESET;
+
+/* Buffer used for UART4 */
+uint8_t UART5_buffer[RXBUFFERSIZE];
+uint8_t UART5_receiveBufferIndexHead = 0;
+uint8_t UART5_receiveBufferIndexTail = 0;
+__IO ITStatus UART5_TransmitReady = SET;
+__IO ITStatus UART5_ReceiveReady = RESET;
 
 
 
@@ -100,6 +108,32 @@ void UART4_Init(void)
 		Error_Handler();
 	}
 	HAL_UART_Receive_IT(&Uart4Handle, (uint8_t *)UART4_buffer, RXBUFFERSIZE);
+}
+
+
+/**
+  * @brief USART5 Initialization Function
+  * @param None
+  * @retval None
+  */
+void UART5_Init(void)
+{
+	Uart5Handle.Instance = UART5;
+	Uart5Handle.Init.BaudRate = 9600;
+	Uart5Handle.Init.WordLength = UART_WORDLENGTH_9B;
+	Uart5Handle.Init.StopBits = UART_STOPBITS_1;
+	Uart5Handle.Init.Parity = UART_PARITY_EVEN;
+	Uart5Handle.Init.Mode = UART_MODE_TX_RX;
+	Uart5Handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	Uart5Handle.Init.OverSampling = UART_OVERSAMPLING_16;
+
+	if(HAL_UART_DeInit(&Uart5Handle) != HAL_OK){
+		Error_Handler();
+	}
+	if (HAL_UART_Init(&Uart5Handle) != HAL_OK) {
+		Error_Handler();
+	}
+	HAL_UART_Receive_IT(&Uart5Handle, (uint8_t *)UART5_buffer, RXBUFFERSIZE);
 }
 
 HAL_StatusTypeDef Sim3g_Receive_Setup(void){
@@ -178,7 +212,19 @@ HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart)
 		  } else {
 		    return HAL_BUSY;
 		  }
-	}
+	}else if(huart->Instance == UART5){
+	  /* Check that a Rx process is ongoing */
+	  if (huart->RxState == HAL_UART_STATE_BUSY_RX)
+	  {
+		  huart->ErrorCode = HAL_UART_ERROR_NONE;
+		  huart->RxState = HAL_UART_STATE_BUSY_RX;
+		  UART5_buffer[UART5_receiveBufferIndexHead] = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
+		  UART5_receiveBufferIndexHead = (UART5_receiveBufferIndexHead + 1) % RXBUFFERSIZE;
+		  return HAL_OK;
+	  } else {
+	    return HAL_BUSY;
+	  }
+}
 
 }
 
@@ -188,6 +234,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 		UART1_TransmitReady = SET;
 	}else if(huart->Instance == UART4){
 		UART4_TransmitReady = SET;
+	}else if(huart->Instance == UART5){
+		UART5_TransmitReady = SET;
 	}
 
 }
@@ -273,6 +321,37 @@ uint8_t UART4_Read_Received_Buffer(){
 	if(UART4_receiveBufferIndexTail == UART4_receiveBufferIndexHead) return 0xff;
 	uint8_t ch = UART4_buffer[UART4_receiveBufferIndexTail];
 	UART4_receiveBufferIndexTail = (UART4_receiveBufferIndexTail + 1) % RXBUFFERSIZE;
+	buffer[0] = ch;
+	buffer[1] = 0;
+	UART3_SendToHost(buffer);
+	return ch;
+}
+
+
+
+void UART5_transmit(uint8_t * data, uint32_t data_len){
+	UART3_Transmit(data, data_len);
+	if(UART5_TransmitReady){
+		if(HAL_UART_Transmit_IT(&Uart5Handle, (uint8_t*)data, data_len)!= HAL_OK){
+			Error_Handler();
+		}
+		UART5_TransmitReady = RESET;
+	}
+}
+
+uint8_t UART5_Read_Available(){
+	if(UART5_receiveBufferIndexTail != UART5_receiveBufferIndexHead){
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+uint8_t UART5_Read_Received_Buffer(){
+	uint8_t buffer[2];
+	if(UART5_receiveBufferIndexTail == UART5_receiveBufferIndexHead) return 0xff;
+	uint8_t ch = UART5_buffer[UART5_receiveBufferIndexTail];
+	UART5_receiveBufferIndexTail = (UART5_receiveBufferIndexTail + 1) % RXBUFFERSIZE;
 	buffer[0] = ch;
 	buffer[1] = 0;
 	UART3_SendToHost(buffer);

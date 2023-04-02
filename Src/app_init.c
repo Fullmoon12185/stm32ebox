@@ -51,7 +51,8 @@ void System_Initialization(void)
         case UART_INIT:
         	UART3_Init();
         	UART4_Init();
-        	UART1_Init();
+			UART1_Init();
+        	UART5_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
         	break;
         case LED_DISPLAY_INIT:

@@ -234,6 +234,19 @@ void Error_Handler(void);
 #define RXBUFFERSIZE                      250
 
 
+#define UART5_TX_PIN 					GPIO_PIN_12
+#define UART5_TX_GPIO_PORT 				GPIOC
+#define UART5_RX_PIN 					GPIO_PIN_2
+#define UART5_RX_GPIO_PORT 				GPIOD
+
+#define UART5_CLK_ENABLE()              __HAL_RCC_UART5_CLK_ENABLE();
+#define UART5_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOC_CLK_ENABLE()
+#define UART5_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
+
+#define UART5_FORCE_RESET()             __HAL_RCC_UART5_FORCE_RESET()
+#define UART5_RELEASE_RESET()           __HAL_RCC_UART5_RELEASE_RESET()
+
+
 
 
 #define UART4_TX_PIN 					GPIO_PIN_10
