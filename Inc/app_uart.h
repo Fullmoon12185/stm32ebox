@@ -29,6 +29,12 @@ uint8_t UART4_Read_Available();
 uint8_t UART4_Read_Received_Buffer();
 
 
+void UART5_Init(void);
+void UART5_transmit(uint8_t * data, uint32_t data_len);
+uint8_t UART5_Read_Available();
+uint8_t UART5_Read_Received_Buffer();
+
+
 void UART3_Init(void);
 void UART3_SendToHost(uint8_t * buffer);
 void UART3_SendReceivedBuffer(void);

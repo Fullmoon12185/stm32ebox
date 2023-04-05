@@ -133,6 +133,9 @@ void Error_Handler(void);
 
 #endif
 
+// WIFIEthernet RESET Pin
+#define WIFIETHERNET_RST_PIN             GPIO_PIN_8
+#define WIFIETHERNET_RST_PORT            GPIOA
 
 #define LED2_PIN                         GPIO_PIN_2
 #define LED2_GPIO_PORT                   GPIOB
@@ -229,6 +232,19 @@ void Error_Handler(void);
 #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
 /* Size of Reception buffer */
 #define RXBUFFERSIZE                      250
+
+
+#define UART5_TX_PIN 					GPIO_PIN_12
+#define UART5_TX_GPIO_PORT 				GPIOC
+#define UART5_RX_PIN 					GPIO_PIN_2
+#define UART5_RX_GPIO_PORT 				GPIOD
+
+#define UART5_CLK_ENABLE()              __HAL_RCC_UART5_CLK_ENABLE();
+#define UART5_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOC_CLK_ENABLE()
+#define UART5_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
+
+#define UART5_FORCE_RESET()             __HAL_RCC_UART5_FORCE_RESET()
+#define UART5_RELEASE_RESET()           __HAL_RCC_UART5_RELEASE_RESET()
 
 
 

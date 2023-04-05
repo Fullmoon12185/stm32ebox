@@ -20,6 +20,7 @@
 #include "app_iwatchdog.h"
 #include "app_version.h"
 
+#include "app_power_meter_485.h"
 
 #include "utils_logger.h"
 
@@ -79,8 +80,8 @@ void Clear_Publish_Message_Timeout_Flag(void);
 uint8_t is_Publish_Message_Timeout(void);
 
 void Update_Publish_Status_Message(void);
-void Update_Publish_Fota_Status_Message(uint16_t fota_status);
 void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData);
+void Update_Publish_PowerMeter_Message(void);
 
 void Update_Publish_Power_Message_All_Outlets(void);
 void Update_Publish_Power_Factor_Message_All_Outlets(void);
@@ -475,7 +476,6 @@ void Update_Publish_Current_Message_All_Outlets(void){
 	publish_message_length = publishMessageIndex;
 }
 
-
 void Update_Publish_Status_Message(void){
 	uint8_t publishMessageIndex = 0;
 	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
@@ -508,40 +508,18 @@ void Update_Publish_Status_Message(void){
 	publish_message_length = publishMessageIndex;
 }
 
-void Update_Publish_Fota_Status_Message(uint16_t fota_status){
-	uint8_t publishMessageIndex = 0;
-	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
-	}
-	publishMessageIndex = 0;
-	publish_message[publishMessageIndex++] = fota_status >> 8;
-	publish_message[publishMessageIndex++] = fota_status;
-	publish_message_length = publishMessageIndex;
+void Update_Publish_PowerMeter_Message(void){
+	POWER_t* power = POWERMETER485_get_lastest();
+	publish_message_length = snprintf((char*)publish_message,
+									MQTT_MESSAGE_BUFFER_LENGTH,
+									"%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", //voltage, current, active_power, power_factor, frequency, total_active_power
+									power->voltage,
+									power->current,
+									power->active_power,
+									power->power_factor,
+									power->frequency,
+									power->total_active_power);
 }
-
-//void Led_Status_Display(void){
-//	static uint8_t ledState = 0;
-//	static uint8_t ledDislayTaskIndex = SCH_MAX_TASKS;
-//	switch(ledState){
-//	case 0:
-//		SCH_Delete_Task(ledDislayTaskIndex);
-//		ledDislayTaskIndex = SCH_Add_Task(test2, 0, 100);
-//		ledState = 1;
-//		break;
-//	case 1:
-//		if(Get_Mqtt_State() == MQTT_WAIT_FOR_NEW_COMMAND){
-//			SCH_Delete_Task(ledDislayTaskIndex);
-//			ledDislayTaskIndex = SCH_Add_Task(test2, 0, 10);
-//			ledState = 2;
-//		}
-//		break;
-//	case 2:
-//		if(serverCommunicationFsmState == SIM3G_OPEN_CONNECTION){
-//			ledState = 0;
-//		}
-//		break;
-//	}
-//}
 
 void Process_Subcribe_Command_Message(char * payload){
 	utils_log_debug("Process_Subcribe_Command_Message\r\n");
@@ -628,38 +606,13 @@ void Server_Communication(void){
 	switch(serverCommunicationFsmState){
 	case SIM3G_SETUP_PUBLISH_TOPICS:
 		if(is_Set_Relay_Timeout()){
-//				if(Get_Is_Receive_Data_From_Server() == SET){
-//					Set_Is_Receive_Data_From_Server(RESET);
-//					SCH_Delete_Task(ping_Request_TimeoutIndex);
-//					Clear_Ping_Request_Timeout_Flag();
-//					ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, TIME_FOR_PING_REQUEST, 0);
-//				}
-//
-//				if(is_Ping_Request_Timeout()){
-//					Set_Mqtt_State(MQTT_PING_REQUEST_STATE);
-//					SCH_Delete_Task(ping_Request_TimeoutIndex);
-//					Clear_Ping_Request_Timeout_Flag();
-//					ping_Request_TimeoutIndex = SCH_Add_Task(Set_Ping_Request_Timeout_Flag, TIME_FOR_PING_REQUEST, 0);
-//				}
-//				else
 			if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
-//					Update_Publish_Status_Message();
-//					Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-//					Set_Mqtt_State(MQTT_PUBLISH_STATE);
 				publishTopicIndex = 0;
-//					SCH_Delete_Task(publish_message_TimeoutIndex);
-//					Clear_Publish_Message_Timeout_Flag();
-//					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-//					Turn_On_Buzzer();
-//					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
-
 			} else if (is_Publish_Message_Timeout()){
 				mqtt_message_t message;
 				if (publishTopicIndex == 0) {
 					publishTopicIndex = 1;
 					Update_Publish_Status_Message();
-//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS,
-//								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_STATUS;
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
@@ -669,8 +622,6 @@ void Server_Communication(void){
 				} else if (publishTopicIndex == 1) {
 					publishTopicIndex = 2;
 					Update_Publish_Power_Message_All_Outlets();
-//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,
-//								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_POWER;
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
@@ -680,8 +631,6 @@ void Server_Communication(void){
 				} else if (publishTopicIndex == 2) {
 					publishTopicIndex = 3;
 					Update_Publish_Power_Factor_Message_All_Outlets();
-//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR,
-//								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_POWER_FACTOR;
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
@@ -691,8 +640,6 @@ void Server_Communication(void){
 				} else if (publishTopicIndex == 3) {
 					publishTopicIndex = 4;
 					Update_Publish_Voltage_Message_All_Outlets();
-//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
-//								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_VOLTAGE;
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
@@ -700,11 +647,18 @@ void Server_Communication(void){
 					message.retain = 0;
 					mqtt_sent_message(&message);
 				} else if (publishTopicIndex == 4) {
-					publishTopicIndex = 0;
+					publishTopicIndex = 5;
 					Update_Publish_Current_Message_All_Outlets();
-//						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
-//								publish_message, publish_message_length);
 					message.topic_id = PUBTOPIC_CURRENT;
+					memset(message.payload, 0 , sizeof(message.payload));
+					memcpy(message.payload, publish_message, publish_message_length);
+					message.qos = 1;
+					message.retain = 0;
+					mqtt_sent_message(&message);
+				} else if (publishTopicIndex == 5) {
+					publishTopicIndex = 0;
+					Update_Publish_PowerMeter_Message();
+					message.topic_id = PUBTOPIC_POWERMETER485;
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;

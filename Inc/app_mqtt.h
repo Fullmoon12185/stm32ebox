@@ -4,7 +4,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-#define COMMAND_INTERVAL	300		// 300ms
+#define COMMAND_INTERVAL	1000		// 1000ms
 #define CLIENTID_MAX_LEN	64
 #define TOPIC_MAX_LEN       128
 #define PAYLOAD_MAX_LEN     512
@@ -21,7 +21,8 @@ enum{
 	PUBTOPIC_POWER,
 	PUBTOPIC_VOLTAGE,
 	PUBTOPIC_CURRENT,
-	PUBTOPIC_POWER_FACTOR
+	PUBTOPIC_POWER_FACTOR,
+	PUBTOPIC_POWERMETER485
 };
 
 typedef struct {
