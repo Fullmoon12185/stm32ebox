@@ -179,9 +179,7 @@ uint32_t Eeprom_Get_Energy(uint8_t outletID){
 		return tempE;
 }
 void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy){
-	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	};
+	static uint8_t updateEnergy[NUMBER_OF_RELAYS];
 	if(outletID >= NUMBER_OF_RELAYS) return;
 	updateEnergy[outletID] = (updateEnergy[outletID] + 1) % 20;
 	if(updateEnergy[outletID] == 0){

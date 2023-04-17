@@ -1105,31 +1105,31 @@ void PowerConsumption_FSM(void){
 				}
 #else
 				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 15){
-									tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
-								} else {
-									tempPowerFactor = 0.0;
-								}
-								PowerFactor[i] = (uint32_t)tempPowerFactor;
-								if(PowerFactor[i] >= 98){
-									PowerFactor[i] = 100;
-								}
+					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
+				} else {
+					tempPowerFactor = 0.0;
+				}
+				PowerFactor[i] = (uint32_t)tempPowerFactor;
+				if(PowerFactor[i] >= 98){
+					PowerFactor[i] = 100;
+				}
 #endif
 
-				if(i == 0 || i == 1)
-				{
-					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) tempPowerFactor);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) tempIrmsADCValue);
-					UART3_SendToHost((uint8_t *)strtmp);
-
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-
-					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-				}
+//				if(i == 0 || i == 1)
+//				{
+//					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) tempPowerFactor);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) tempIrmsADCValue);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//
+//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//				}
 
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3)

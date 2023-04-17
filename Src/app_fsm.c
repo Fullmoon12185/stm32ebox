@@ -19,7 +19,7 @@
 #include "app_send_sms.h"
 #include "app_iwatchdog.h"
 #include "app_version.h"
-
+#include "app_string.h"
 
 #include "utils_logger.h"
 
@@ -112,61 +112,20 @@ uint8_t is_Publish_Message_Timeout(void){
 }
 
 
-void Update_Publish_Power_Message(uint8_t outletID, int32_t displayData){
-
-	uint8_t publishMessageIndex = 0;
-	int32_t tempValue;
-	tempValue = displayData;
-	if(outletID > 9) return;
-	for(publishMessageIndex = 0; publishMessageIndex < 20; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
+void Clear_Publish_Message_Buffer(void){
+	for(uint8_t idx = 0; idx < MQTT_MESSAGE_BUFFER_LENGTH; idx ++){
+		publish_message[idx] = 0;
 	}
-	publishMessageIndex = 0;
-	publish_message[publishMessageIndex++] = outletID + 0x30;
-	if(displayData >= 10000){
-		publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-		tempValue = tempValue % 10000;
-		publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-		tempValue = tempValue % 1000;
-		publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-		tempValue = tempValue % 100;
-		publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-		tempValue = tempValue % 10;
-		publish_message[publishMessageIndex++] = tempValue + 0x30;
 
-	} else if (displayData >= 1000){
-		publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-		tempValue = tempValue % 1000;
-		publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-		tempValue = tempValue % 100;
-		publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-		tempValue = tempValue % 10;
-		publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-	} else if (displayData >= 100){
-		publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-		tempValue = tempValue % 100;
-		publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-		tempValue = tempValue % 10;
-		publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-	} else if(displayData >= 10){
-		publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-		tempValue = tempValue % 10;
-		publish_message[publishMessageIndex++] = tempValue + 0x30;
-	} else {
-		publish_message[publishMessageIndex++] = tempValue + 0x30;
-	}
-	publish_message_length = publishMessageIndex;
 }
 
 void Update_Publish_Power_Message_All_Outlets(void){
 
 	uint8_t publishMessageIndex = 0;
-	uint32_t tempValue;
-	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
-	}
+	uint64_t tempValue;
+	uint8_t* tempCharBuffer;
+
+	Clear_Publish_Message_Buffer();
 	publishMessageIndex = 0;
 	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID++){
 
@@ -175,138 +134,23 @@ void Update_Publish_Power_Message_All_Outlets(void){
 			publish_message[publishMessageIndex++] = '-';
 			tempValue = Get_Power_Consumption(outletID);
 		} else {
-			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
-			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			if(outletID >= 10){
+				publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+				publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			} else {
+				publish_message[publishMessageIndex++] = outletID + 0x30;
+			}
 			publish_message[publishMessageIndex++] = '-';
 			tempValue = Get_Main_Power_Consumption();
 
 		}
 
-
-		if(tempValue >= 1000000000){
-			publish_message[publishMessageIndex++] = tempValue/1000000000 + 0x30;
-			tempValue = tempValue % 1000000000;
-			publish_message[publishMessageIndex++] = tempValue/100000000 + 0x30;
-			tempValue = tempValue % 100000000;
-			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
-			tempValue = tempValue % 10000000;
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
+		tempCharBuffer = (uint8_t*)ConvertUint64ToString(tempValue);
+		for(uint8_t i = 0; i < 21; i ++){
+			if(tempCharBuffer[i] == 0) break;
+			publish_message[publishMessageIndex++] = tempCharBuffer[i];
 		}
-		else if(tempValue >= 100000000){
-			publish_message[publishMessageIndex++] = tempValue/100000000 + 0x30;
-			tempValue = tempValue % 100000000;
-			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
-			tempValue = tempValue % 10000000;
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
 
-		}
-		else if(tempValue >= 10000000){
-			publish_message[publishMessageIndex++] = tempValue/10000000 + 0x30;
-			tempValue = tempValue % 10000000;
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		}
-		else if(tempValue >= 1000000){
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 100000){
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 10000){
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if (tempValue >= 1000){
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-
-		} else if (tempValue >= 100){
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 10){
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-		} else {
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-		}
 		if(outletID < MAIN_INPUT)
 			publish_message[publishMessageIndex++] = ',';
 	}
@@ -318,9 +162,10 @@ void Update_Publish_Power_Factor_Message_All_Outlets(void){
 
 	uint8_t publishMessageIndex = 0;
 	uint8_t tempValue;
-	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
-	}
+	uint8_t * tempCharBuffer;
+
+
+	Clear_Publish_Message_Buffer();
 	publishMessageIndex = 0;
 	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID++){
 		if(outletID < MAIN_INPUT){
@@ -328,25 +173,20 @@ void Update_Publish_Power_Factor_Message_All_Outlets(void){
 			publish_message[publishMessageIndex++] = '-';
 			tempValue = Get_Power_Factor(outletID);
 		} else {
-			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
-			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			if(outletID <= 9){
+				publish_message[publishMessageIndex++] = outletID + 0x30;
+			} else {
+				publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+				publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			}
 			publish_message[publishMessageIndex++] = '-';
 			tempValue = Get_Main_Power_Factor();
 		}
 
-		if (tempValue >= 100){
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 10){
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-		} else {
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		tempCharBuffer = (uint8_t*)ConvertUint64ToString(tempValue);
+		for(uint8_t i = 0; i < 21; i ++){
+			if(tempCharBuffer[i] == 0) break;
+			publish_message[publishMessageIndex++] = tempCharBuffer[i];
 		}
 		if(outletID < MAIN_INPUT)
 			publish_message[publishMessageIndex++] = ',';
@@ -358,27 +198,19 @@ void Update_Publish_Voltage_Message_All_Outlets(void){
 
 	uint8_t publishMessageIndex = 0;
 	uint8_t tempValue;
-	for(publishMessageIndex = 0; publishMessageIndex < 20; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
-	}
+	uint8_t * tempCharBuffer;
+
+	Clear_Publish_Message_Buffer();
 	publishMessageIndex = 0;
 	for(uint8_t outletID = 0; outletID < 1; outletID++){
 		publish_message[publishMessageIndex++] = outletID + 0x30;
 		publish_message[publishMessageIndex++] = '-';
 		tempValue = Get_Voltage(outletID);
-		if (tempValue >= 100){
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
 
-		} else if(tempValue >= 10){
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-		} else {
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		tempCharBuffer = (uint8_t*)ConvertUint64ToString(tempValue);
+		for(uint8_t i = 0; i < 21; i ++){
+			if(tempCharBuffer[i] == 0) break;
+			publish_message[publishMessageIndex++] = tempCharBuffer[i];
 		}
 	}
 	publish_message_length = publishMessageIndex;
@@ -388,11 +220,10 @@ void Update_Publish_Current_Message_All_Outlets(void){
 
 	uint8_t publishMessageIndex = 0;
 	uint32_t tempValue;
-	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
-	}
+	uint8_t * tempCharBuffer;
+
+	Clear_Publish_Message_Buffer();
 	publishMessageIndex = 0;
-//	publish_message[publishMessageIndex++] = BOX_ID + 0x30;
 	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID++){
 
 		if(outletID < MAIN_INPUT){
@@ -400,75 +231,22 @@ void Update_Publish_Current_Message_All_Outlets(void){
 			publish_message[publishMessageIndex++] = '-';
 			tempValue = Get_Current(outletID);
 		} else {
-			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
-			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			if(outletID <= 9){
+				publish_message[publishMessageIndex++] = outletID + 0x30;
+			} else {
+				publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+				publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			}
 			publish_message[publishMessageIndex++] = '-';
 			tempValue = Get_Main_Current();
 		}
-		if(tempValue >= 1000000){
-			publish_message[publishMessageIndex++] = tempValue/1000000 + 0x30;
-			tempValue = tempValue % 1000000;
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
 
-		} else if(tempValue >= 100000){
-			publish_message[publishMessageIndex++] = tempValue/100000 + 0x30;
-			tempValue = tempValue % 100000;
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 10000){
-			publish_message[publishMessageIndex++] = tempValue/10000 + 0x30;
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if (tempValue >= 1000){
-			tempValue = tempValue % 10000;
-			publish_message[publishMessageIndex++] = tempValue/1000 + 0x30;
-			tempValue = tempValue % 1000;
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-
-		} else if (tempValue >= 100){
-			publish_message[publishMessageIndex++] = tempValue/100 + 0x30;
-			tempValue = tempValue % 100;
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-
-		} else if(tempValue >= 10){
-			publish_message[publishMessageIndex++] = tempValue/10 + 0x30;
-			tempValue = tempValue % 10;
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
-		} else {
-			publish_message[publishMessageIndex++] = tempValue + 0x30;
+		tempCharBuffer = (uint8_t*)ConvertUint64ToString(tempValue);
+		for(uint8_t i = 0; i < 21; i ++){
+			if(tempCharBuffer[i] == 0) break;
+			publish_message[publishMessageIndex++] = tempCharBuffer[i];
 		}
+
 		if(outletID < MAIN_INPUT)
 			publish_message[publishMessageIndex++] = ',';
 	}
@@ -478,27 +256,26 @@ void Update_Publish_Current_Message_All_Outlets(void){
 
 void Update_Publish_Status_Message(void){
 	uint8_t publishMessageIndex = 0;
-	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
-	}
+
+	Clear_Publish_Message_Buffer();
 	publishMessageIndex = 0;
 	for(uint8_t outletID = 0; outletID < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; outletID ++){
 		if(outletID < MAIN_INPUT){
 			publish_message[publishMessageIndex++] = outletID + 0x30;
 			publish_message[publishMessageIndex++] = '-';
-			// if(Get_Relay_Status(outletID)){
-				if((uint8_t)Get_Node_Status(outletID) <= 9){
-					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID) + 0x30;
-				} else {
-					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)/10 + 0x30;
-					publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)%10 + 0x30;
-				}
-			// } else {
-			// 	publish_message[publishMessageIndex++] = 0x30;
-			// }
+			if((uint8_t)Get_Node_Status(outletID) <= 9){
+				publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID) + 0x30;
+			} else {
+				publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)/10 + 0x30;
+				publish_message[publishMessageIndex++] = (uint8_t)Get_Node_Status(outletID)%10 + 0x30;
+			}
 		} else {
-			publish_message[publishMessageIndex++] = outletID/10 + 0x30;
-			publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			if(outletID <= 9){
+				publish_message[publishMessageIndex++] = outletID + 0x30;
+			} else {
+				publish_message[publishMessageIndex++] = outletID/10 + 0x30;
+				publish_message[publishMessageIndex++] = outletID%10 + 0x30;
+			}
 			publish_message[publishMessageIndex++] = '-';
 			publish_message[publishMessageIndex++] = (uint8_t)Get_Main_Status() + 0x30;
 		}
@@ -510,47 +287,24 @@ void Update_Publish_Status_Message(void){
 
 void Update_Publish_Fota_Status_Message(uint16_t fota_status){
 	uint8_t publishMessageIndex = 0;
-	for(publishMessageIndex = 0; publishMessageIndex < MQTT_MESSAGE_BUFFER_LENGTH; publishMessageIndex ++){
-		publish_message[publishMessageIndex] = 0;
-	}
+
+	Clear_Publish_Message_Buffer();
 	publishMessageIndex = 0;
 	publish_message[publishMessageIndex++] = fota_status >> 8;
 	publish_message[publishMessageIndex++] = fota_status;
 	publish_message_length = publishMessageIndex;
 }
 
-//void Led_Status_Display(void){
-//	static uint8_t ledState = 0;
-//	static uint8_t ledDislayTaskIndex = SCH_MAX_TASKS;
-//	switch(ledState){
-//	case 0:
-//		SCH_Delete_Task(ledDislayTaskIndex);
-//		ledDislayTaskIndex = SCH_Add_Task(test2, 0, 100);
-//		ledState = 1;
-//		break;
-//	case 1:
-//		if(Get_Mqtt_State() == MQTT_WAIT_FOR_NEW_COMMAND){
-//			SCH_Delete_Task(ledDislayTaskIndex);
-//			ledDislayTaskIndex = SCH_Add_Task(test2, 0, 10);
-//			ledState = 2;
-//		}
-//		break;
-//	case 2:
-//		if(serverCommunicationFsmState == SIM3G_OPEN_CONNECTION){
-//			ledState = 0;
-//		}
-//		break;
-//	}
-//}
+
 
 void Process_Subcribe_Command_Message(char * payload){
-	utils_log_debug("Process_Subcribe_Command_Message\r\n");
+	utils_log_debug("\r\nProcess_Subcribe_Command_Message\r\n");
 	uint8_t relayIndex;
 	uint8_t relayStatus;
 	if(payload[0] == '1'){
 		relayIndex = payload[1] - 0x30;
 		relayStatus = payload[2] - 0x30;
-		utils_log_debug("relayIndex %d, relayStatus %d\r\n", relayIndex, relayStatus);
+		utils_log_debug("\r\nrelayIndex %d, relayStatus %d\r\n", relayIndex, relayStatus);
 		if(relayStatus == SET){
 			Set_Relay(relayIndex);
 			Set_Limit_Energy(relayIndex, 0xffffffff);
@@ -560,10 +314,12 @@ void Process_Subcribe_Command_Message(char * payload){
 			Reset_Relay(relayIndex);
 			Set_Limit_Energy(relayIndex, 0);
 		}
-	}else if(payload[0] == 'x'){
+	} else if(payload[0] == '0' && payload[1] == 'x') {
 		// FOTA
 		utils_log_debug("Jump_To_Fota_Firmware");
 		Jump_To_Fota_Firmware();
+	} else if (payload[0] == '*'){
+		Process_Subcribe_Update_Power_Consumption_Message(payload);
 	}
 }
 
@@ -571,10 +327,12 @@ void Process_Subcribe_Update_Power_Consumption_Message(char * payload){
 	utils_log_debug("Process_Subcribe_Firmware_Update_Message\r\n");
 	uint64_t updateTotalPowerConsumption = 0;
 
-	if((payload[0] == '*') && (payload[11] == '#')){
+	if(payload[0] == '*'){
 		for(uint8_t idx = 1; idx <= 10; idx++){
+			if(payload[idx] == '#') break;
 			updateTotalPowerConsumption = updateTotalPowerConsumption*10 + (payload[idx] - 0x30);
 		}
+		utils_log_debug("\r\n updateTotalPowerConsumption %d\r\n", updateTotalPowerConsumption);
 		Set_Main_Power_Consumption(updateTotalPowerConsumption);
 	}
 }
@@ -605,9 +363,9 @@ void FSM_handle_subcribe_message(void){
 			case SUBTOPIC_COMMAND:
 				Process_Subcribe_Command_Message(message.payload);
 				break;
-			case SUBTOPIC_UPDATE_POWER_CONSUMPTION:
-				Process_Subcribe_Update_Power_Consumption_Message(message.payload);
-				break;
+//			case SUBTOPIC_UPDATE_POWER_CONSUMPTION:
+//				Process_Subcribe_Update_Power_Consumption_Message(message.payload);
+//				break;
 			case SUBTOPIC_RETAINED:
 				Process_Subcribe_Retained_Message(message.payload);
 				break;
@@ -717,8 +475,8 @@ void Server_Communication(void){
 
 				ClearCounter();
 
-//				Turn_On_Buzzer();
-//				SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+				Turn_On_Buzzer();
+				SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
 
 			}
 		}

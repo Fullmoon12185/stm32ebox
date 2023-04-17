@@ -40,5 +40,6 @@ bool mqtt_is_ready();
 bool mqtt_sent_message(mqtt_message_t * message);
 bool mqtt_receive_message(mqtt_message_t * message);
 
+bool mqtt_receive_message_drop_all();
 
 #endif //APP_MQTT_H
