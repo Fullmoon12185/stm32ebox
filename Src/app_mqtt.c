@@ -66,6 +66,23 @@ static char pubtopic_entry[][TOPIC_MAX_LEN] = {
 		[PUBTOPIC_POWERMETER485] = "PMEbox_%.4d"
 };
 
+
+#if(VERSION_EBOX == VERSION_TEST_EBOX)
+static netif_mqtt_client_t mqtt_client = {
+		.client_id = "netif_test_123",
+		.host = "mqtt-uat.eboost.vn",
+		.port = 8883,
+		.username = "uat_mqtt",
+		.password = "1kiNIcfT5",
+		.reconnect = 1,
+		.keep_alive = 120,
+		.on_connect = on_connect_cb,
+		.on_disconnect = on_disconnect_cb,
+		.on_message = on_message_cb,
+		.on_publish = on_publish_cb
+};
+
+#else
 static netif_mqtt_client_t mqtt_client = {
 		.client_id = "netif_test_123",
 		.host = "35.240.158.2",
@@ -79,6 +96,8 @@ static netif_mqtt_client_t mqtt_client = {
 		.on_message = on_message_cb,
 		.on_publish = on_publish_cb
 };
+
+#endif
 
 void mqtt_init(){
 	char topic_temp[TOPIC_MAX_LEN];
