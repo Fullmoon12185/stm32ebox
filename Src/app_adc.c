@@ -836,11 +836,19 @@ void PowerConsumption_FSM(void){
 
 				}
 #endif
+#if(VERSION_EBOX == VERSION_TEST_EBOX)
+				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 5){
+					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
+				} else {
+					tempPowerFactor = 0.0;
+				}
+#else
 				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 15){
 					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
 				} else {
 					tempPowerFactor = 0.0;
 				}
+#endif
 				PowerFactor[i] = (uint32_t)tempPowerFactor;
 				if(PowerFactor[i] >= 98){
 					PowerFactor[i] = 100;
