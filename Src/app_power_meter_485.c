@@ -147,7 +147,7 @@ void POWERMETER485_fsm(){
 			// Scan 485 address from 0 -> 255
 			if(!address_found){
 				read_req.address++;
-				utils_log_debug("Change address to 0x%x", read_req.address);
+				utils_log_debug("Change address to 0x%x\r\n", read_req.address);
 			}
 			powermeter485_state = POWERMETER485_SEND_REQUEST;
 			break;
