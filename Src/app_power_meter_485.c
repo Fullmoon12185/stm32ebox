@@ -14,6 +14,7 @@
 
 
 enum {
+	POWERMETER485_INIT,
 	POWERMETER485_SEND_REQUEST,
 	POWERMETER485_WAIT_FOR_GET_RESPONSE,
 };
@@ -40,6 +41,8 @@ typedef struct {
 	float data;
 }POWER_field_t;
 
+
+#if defined(MODBUS_MODEL) && (MODBUS_MODEL == DDX)
 static POWER_field_t power_mapping_table[] = {
 		[READ_VOLTAGE] = {
 			.idx = READ_VOLTAGE,
@@ -73,8 +76,43 @@ static POWER_field_t power_mapping_table[] = {
 		},
 };
 
+#elif defined(MODBUS_MODEL) && (MODBUS_MODEL == SDM120)
+static POWER_field_t power_mapping_table[] = {
+		[READ_VOLTAGE] = {
+			.idx = READ_VOLTAGE,
+			.address = 0x0000,
+			.name = "Voltage"
+		},
+		[READ_CURRENT] = {
+			.idx = READ_CURRENT,
+			.address = 0x0006,
+			.name = "Current"
+		},
+		[READ_ACTIVE_POWER] = {
+			.idx = READ_ACTIVE_POWER,
+			.address = 0x000C,
+			.name = "Active Power"
+		},
+		[READ_POWER_FACTOR] = {
+			.idx = READ_POWER_FACTOR,
+			.address = 0x001E,
+			.name = "Power Factor"
+		},
+		[READ_FREQUENCY] = {
+			.idx = READ_FREQUENCY,
+			.address = 0x0046,
+			.name = "Frequency"
+		},
+		[READ_TOTAL_ACTIVE_POWER] = {
+			.idx = READ_TOTAL_ACTIVE_POWER,
+			.address = 0x0156,
+			.name = "Total Active Power"
+		},
+};
+#endif
+
 static MODBUS_t read_req = {
-		.address = 5,
+		.address = 1,
 		.function_code = MODBUS_READ_INPUT_REGISTER,
 		.data = {
 			.read_req = {
@@ -83,6 +121,8 @@ static MODBUS_t read_req = {
 			}
 		},
 };
+
+static bool address_found = false;
 
 // Power Field
 static uint8_t powermeter485_state = POWERMETER485_SEND_REQUEST;
@@ -103,6 +143,14 @@ void POWERMETER485_fsm(){
 	static uint32_t start_tx_time = 0;
 	MODBUS_run();
 	switch (powermeter485_state) {
+		case POWERMETER485_INIT:
+			// Scan 485 address from 0 -> 255
+			if(!address_found){
+				read_req.address++;
+				utils_log_debug("Change address to 0x%x", read_req.address);
+			}
+			powermeter485_state = POWERMETER485_SEND_REQUEST;
+			break;
 		case POWERMETER485_SEND_REQUEST:
 			// Check if got all field of power
 			if(power_index == power_mapping_table_size){
@@ -134,10 +182,9 @@ void POWERMETER485_fsm(){
 				powermeter485_state = POWERMETER485_SEND_REQUEST;
 			}
 			if (HAL_GetTick() - start_tx_time > POWERMETER485_APP_TIMEOUT){
-				utils_log_error("Modbus timeout for receive\r\n");
-				// Increase Power Index
-				power_index++;
-				powermeter485_state = POWERMETER485_SEND_REQUEST;
+				utils_log_error("Modbus timeout for receive -> Try to other address\r\n");
+				address_found = false;
+				powermeter485_state = POWERMETER485_INIT;
 			}
 			break;
 		default:
