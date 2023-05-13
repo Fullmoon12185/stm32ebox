@@ -103,6 +103,7 @@ int main(void)
 #endif
 	netif_init();
 	mqtt_init();
+	MODBUS_init();
 //	SCH_Add_Task(Toggle_Reset, 0, 300);
 	while (1){
 		netif_run();
@@ -181,10 +182,9 @@ void Main_FSM(void){
   */
 void Error_Handler(void)
 {
-//	while(1){
-//		HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
-//		HAL_Delay(50);
-//	}
+	while(1){
+
+	}
 }
 
 #ifdef  USE_FULL_ASSERT

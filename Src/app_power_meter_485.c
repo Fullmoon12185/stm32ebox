@@ -74,7 +74,7 @@ static POWER_field_t power_mapping_table[] = {
 };
 
 static MODBUS_t read_req = {
-		.address = 10,
+		.address = 5,
 		.function_code = MODBUS_READ_INPUT_REGISTER,
 		.data = {
 			.read_req = {
@@ -86,7 +86,7 @@ static MODBUS_t read_req = {
 
 // Power Field
 static uint8_t powermeter485_state = POWERMETER485_SEND_REQUEST;
-static uint8_t power_mapping_table_size = sizeof(power_mapping_table) / sizeof(POWER_t);
+static uint8_t power_mapping_table_size = sizeof(power_mapping_table) / sizeof(POWER_field_t);
 static uint8_t power_index = 0;
 // Singleton Power
 static POWER_t power;
