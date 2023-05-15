@@ -4,6 +4,10 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#define	DDX		0x01
+#define SDM120 	0x02
+#define MODBUS_MODEL	SDM120
+
 typedef struct {
 	float voltage;
 	float current;
