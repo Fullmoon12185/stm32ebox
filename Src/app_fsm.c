@@ -93,6 +93,17 @@ void Process_Subcribe_Command_Message(char * payload);
 void Process_Subcribe_Update_Power_Consumption_Message(char * payload);
 void Process_Subcribe_Retained_Message(char * payload);
 
+
+uint8_t is_Update_Firmware_Timeout(void){
+	return update_Firmware_TimeoutFlag == 1;
+}
+void Set_Update_Firmware_Timeout_Flag(void){
+	update_Firmware_TimeoutFlag = 1;
+}
+void Clear_Update_Firmware_Timeout_Flag(void){
+	update_Firmware_TimeoutFlag = 0;
+}
+
 void Clear_Ping_Request_Timeout_Flag(void){
 	ping_Request_TimeoutFlag = 0;
 }
@@ -302,7 +313,7 @@ void Update_Publish_PowerMeter_Message(void){
 	POWER_t* power = POWERMETER485_get_lastest();
 	publish_message_length = snprintf((char*)publish_message,
 									MQTT_MESSAGE_BUFFER_LENGTH,
-									"%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", //voltage, current, active_power, power_factor, frequency, total_active_power
+									"%ld,%ld,%ld,%ld,%ld,%ld", //voltage, current, active_power, power_factor, frequency, total_active_power
 									power->voltage,
 									power->current,
 									power->active_power,
@@ -399,7 +410,16 @@ void Server_Communication(void){
 //	Led_Status_Display();
 	switch(serverCommunicationFsmState){
 	case SIM3G_SETUP_PUBLISH_TOPICS:
-		if(is_Set_Relay_Timeout()){
+		if(Is_Set_Send_Sms_Flag()) {
+			Start_Sending_Sms_Message();
+			serverCommunicationFsmState = SIM3G_SEND_SMS_MESSAGE;
+		} else if(Is_Update_Firmware()){
+			Power_Off_Sim3g();
+			Clear_Update_Firmware_Timeout_Flag();
+			SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, 3000, 0);
+			serverCommunicationFsmState = SIM3G_UPDATE_FIRMWARE;
+		}
+		else if(is_Set_Relay_Timeout()){
 			if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
 				publishTopicIndex = 0;
 			} else if (is_Publish_Message_Timeout()){
@@ -475,6 +495,12 @@ void Server_Communication(void){
 		FSM_For_Sending_SMS_Message();
 		if(Is_Done_Sending_Sms_Message()){
 			serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
+		}
+		break;
+	case SIM3G_UPDATE_FIRMWARE:
+		if(is_Update_Firmware_Timeout()){
+			UART3_SendToHost((uint8_t*)"Jump_To_Fota_Firmware");
+			Jump_To_Fota_Firmware();
 		}
 		break;
 	default:
