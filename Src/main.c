@@ -38,6 +38,10 @@
 
 #include "app_mqtt.h"
 #include "utils_logger.h"
+#include "modbus.h"
+
+#include "app_power_meter_485.h"
+
 
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1

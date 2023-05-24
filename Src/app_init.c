@@ -50,9 +50,8 @@ void System_Initialization(void)
             break;
         case UART_INIT:
         	UART3_Init();
-        	UART4_Init();
+//        	UART4_Init();
 			UART1_Init();
-        	UART5_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));
         	break;
         case LED_DISPLAY_INIT:
@@ -103,10 +102,10 @@ void System_Initialization(void)
         case END_OF_INITIALISATION_STATE:
         	Turn_On_Buzzer();
         	Turn_On_LED();
-			HAL_Delay(1000);
+			HAL_Delay(300);
 			Turn_Off_Buzzer();
 			Turn_Off_LED();
-			HAL_Delay(1000);
+			HAL_Delay(300);
 			Turn_On_LED();
 			Turn_On_Buzzer();
 			HAL_Delay(1000);
@@ -132,6 +131,8 @@ void System_Initialization(void)
         case SEND_SMS_INIT:
         	Send_Sms_Message_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"SEND_SMS_INIT - Done \r\n"));
+
+			UART5_Init();
         	break;
         default:
             initState = HAL_INIT;

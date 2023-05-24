@@ -11,6 +11,9 @@ void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
 void ZeroPoint_Detection_Pin_Init(void);
 
+void WIFIETHERNET_init(void);
+void WIFIETHERNET_reset(void);
+
 /**
   * @brief GPIO Initialization Function
   * @param None

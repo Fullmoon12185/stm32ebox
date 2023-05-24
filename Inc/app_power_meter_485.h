@@ -17,6 +17,6 @@ typedef struct {
 	float total_active_power;
 }POWER_t;
 
-void POWERMETER485_fsm();
-POWER_t* POWERMETER485_get_lastest();
+void POWERMETER485_fsm(void);
+POWER_t* POWERMETER485_get_lastest(void);
 #endif // __APP_MODBUS_TEST_H__

@@ -299,13 +299,13 @@ ITStatus isSim3gTransmissionReady(void){
 }
 
 void UART4_transmit(uint8_t * data, uint32_t data_len){
-	UART3_Transmit(data, data_len);
-	if(UART4_TransmitReady){
-		if(HAL_UART_Transmit_IT(&Uart4Handle, (uint8_t*)data, data_len)!= HAL_OK){
-			Error_Handler();
-		}
-		UART4_TransmitReady = RESET;
-	}
+//	UART3_Transmit(data, data_len);
+//	if(UART4_TransmitReady){
+//		if(HAL_UART_Transmit_IT(&Uart4Handle, (uint8_t*)data, data_len)!= HAL_OK){
+//			Error_Handler();
+//		}
+//		UART4_TransmitReady = RESET;
+//	}
 }
 
 uint8_t UART4_Read_Available(){

@@ -431,7 +431,7 @@ void Server_Communication(void){
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
-					message.retain = 0;
+					message.retain = 1;
 					mqtt_sent_message(&message);
 				} else if (publishTopicIndex == 1) {
 					publishTopicIndex = 2;
@@ -440,7 +440,7 @@ void Server_Communication(void){
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
-					message.retain = 0;
+					message.retain = 1;
 					mqtt_sent_message(&message);
 				} else if (publishTopicIndex == 2) {
 					publishTopicIndex = 3;
@@ -449,7 +449,7 @@ void Server_Communication(void){
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
-					message.retain = 0;
+					message.retain = 1;
 					mqtt_sent_message(&message);
 				} else if (publishTopicIndex == 3) {
 					publishTopicIndex = 4;
@@ -458,7 +458,7 @@ void Server_Communication(void){
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
-					message.retain = 0;
+					message.retain = 1;
 					mqtt_sent_message(&message);
 				} else if (publishTopicIndex == 4) {
 					publishTopicIndex = 5;
@@ -467,7 +467,7 @@ void Server_Communication(void){
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
-					message.retain = 0;
+					message.retain = 1;
 					mqtt_sent_message(&message);
 				} else if (publishTopicIndex == 5) {
 					publishTopicIndex = 0;
@@ -476,7 +476,7 @@ void Server_Communication(void){
 					memset(message.payload, 0 , sizeof(message.payload));
 					memcpy(message.payload, publish_message, publish_message_length);
 					message.qos = 1;
-					message.retain = 0;
+					message.retain = 1;
 					mqtt_sent_message(&message);
 				}
 

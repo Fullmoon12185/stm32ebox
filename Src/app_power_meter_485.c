@@ -139,7 +139,7 @@ static bool powermeter485_process_done = true;
 static float POWERMETER485_calculate_float(uint8_t * data_p, uint8_t data_size);
 static void POWERMETER_assign_data_by_index(POWER_t * power, POWER_idx_t index , float data);
 
-void POWERMETER485_fsm(){
+void POWERMETER485_fsm(void){
 	static uint32_t start_tx_time = 0;
 	MODBUS_run();
 	switch (powermeter485_state) {
@@ -175,8 +175,9 @@ void POWERMETER485_fsm(){
 			if(MODBUS_receive(&response)){
 				float data = POWERMETER485_calculate_float(response.data.read_res.data , response.data.read_res.byte_cnt);
 				POWERMETER_assign_data_by_index(&power,power_index,data);
-				utils_log_debug("%s: %f\r\n",power_mapping_table[power_index].name,
-											data);
+				
+				// utils_log_debug("%s: %f\r\n",power_mapping_table[power_index].name,
+				// 							data);
 				// Increase Power Index
 				power_index++;
 				powermeter485_state = POWERMETER485_SEND_REQUEST;
@@ -192,7 +193,7 @@ void POWERMETER485_fsm(){
 	}
 }
 
-POWER_t* POWERMETER485_get_lastest(){
+POWER_t* POWERMETER485_get_lastest(void){
 	return &power;
 }
 
