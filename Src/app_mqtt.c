@@ -13,6 +13,8 @@
 #include "utils_buffer.h"
 #include "utils_logger.h"
 
+#include "manager/netif_manager.h"
+
 // Get BoxID
 #include "app_pcf8574.h"
 
@@ -26,7 +28,7 @@ enum {
     MQTT_CLIENT_IDLE,
 };
 
-static void time_to_publish();
+//static void time_to_publish();
 static void on_connect_cb(uint8_t status);
 static void on_disconnect_cb(uint8_t status);
 static void on_message_cb(char * topic, char * payload);
@@ -45,8 +47,8 @@ static utils_buffer_t mqtt_rx_buffer;
 
 // Callback flag - Unused
 static bool connected = false;
-static bool subcribed = false;
-static bool have_message = false;
+//static bool subcribed = false;
+//static bool have_message = false;
 static bool published = false;
 
 static char client_id[CLIENTID_MAX_LEN];
@@ -138,14 +140,14 @@ void mqtt_run(){
 		case MQTT_WAIT_FOR_INTERNET_CONNECTED:
 			netif_manager_is_connect_to_internet(&internet_connected);
 			if(internet_connected){
-				utils_log_info("Internet Connected\r\n");
+				UTILS_LOG_NGUYEN((uint8_t*)"Internet Connected\r\n");
 				mqtt_state = MQTT_CLIENT_CONFIG;
 			}
 			break;
 		case MQTT_CLIENT_CONFIG:
 			ret = netif_mqtt_config(&mqtt_client);
 			if(ret == NETIF_OK){
-				utils_log_info("Mqtt Config OK\r\n");
+				UTILS_LOG_NGUYEN((uint8_t*)"Mqtt Config OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 				mqtt_state = MQTT_CLIENT_CONNECT;
 			}else if(ret != NETIF_IN_PROCESS){
@@ -159,7 +161,7 @@ void mqtt_run(){
 			}
 			ret = netif_mqtt_connect(&mqtt_client);
 			if(ret == NETIF_OK){
-				utils_log_info("Mqtt Connect OK\r\n");
+				UTILS_LOG_NGUYEN((uint8_t*)"Mqtt Connect OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 				mqtt_state = MQTT_CLIENT_SUBCRIBE;
 			}else if(ret != NETIF_IN_PROCESS){
@@ -177,7 +179,7 @@ void mqtt_run(){
 					subtopic_idx = 0;
 					mqtt_state = MQTT_CLIENT_IDLE;
 				}
-				utils_log_info("Subcribe OK\r\n");
+				UTILS_LOG_NGUYEN((uint8_t*)"Subcribe OK\r\n");
 				last_sent = NETIF_GET_TIME_MS();
 			}else if(ret  != NETIF_IN_PROCESS){
 				Error_Handler();
@@ -193,7 +195,7 @@ void mqtt_run(){
 													publish_message.retain);
 			if(ret == NETIF_OK){
 				last_sent = NETIF_GET_TIME_MS();
-				utils_log_info("Mqtt Publish OK\r\n");
+				UTILS_LOG_NGUYEN((uint8_t*)"Mqtt Publish OK\r\n");
                 mqtt_state = MQTT_CLIENT_IDLE;
 			}else if(ret  != NETIF_IN_PROCESS ){
 				Error_Handler();
@@ -223,7 +225,7 @@ bool mqtt_sent_message(mqtt_message_t * message){
 	// Get Topic correspond with topic_idx
 	memcpy(message->topic, pubtopic_entry[message->topic_id], TOPIC_MAX_LEN);
     if(utils_buffer_is_full(&mqtt_tx_buffer)){
-    	utils_log_warn("Mqtt message buffer is full\r\n");
+    	UTILS_LOG_NGUYEN((uint8_t*)"Mqtt message buffer is full\r\n");
         return false;
     }
     utils_buffer_push(&mqtt_tx_buffer,message);

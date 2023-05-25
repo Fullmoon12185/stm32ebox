@@ -313,7 +313,7 @@ void Update_Publish_PowerMeter_Message(void){
 	POWER_t* power = POWERMETER485_get_lastest();
 	publish_message_length = snprintf((char*)publish_message,
 									MQTT_MESSAGE_BUFFER_LENGTH,
-									"%ld,%ld,%ld,%ld,%ld,%ld", //voltage, current, active_power, power_factor, frequency, total_active_power
+									"%f,%f,%f,%f,%f,%f", //voltage, current, active_power, power_factor, frequency, total_active_power
 									power->voltage,
 									power->current,
 									power->active_power,
@@ -410,16 +410,18 @@ void Server_Communication(void){
 //	Led_Status_Display();
 	switch(serverCommunicationFsmState){
 	case SIM3G_SETUP_PUBLISH_TOPICS:
-		if(Is_Set_Send_Sms_Flag()) {
-			Start_Sending_Sms_Message();
-			serverCommunicationFsmState = SIM3G_SEND_SMS_MESSAGE;
-		} else if(Is_Update_Firmware()){
-			Power_Off_Sim3g();
-			Clear_Update_Firmware_Timeout_Flag();
-			SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, 3000, 0);
-			serverCommunicationFsmState = SIM3G_UPDATE_FIRMWARE;
-		}
-		else if(is_Set_Relay_Timeout()){
+//		if(Is_Set_Send_Sms_Flag()) {
+//			Start_Sending_Sms_Message();
+//			serverCommunicationFsmState = SIM3G_SEND_SMS_MESSAGE;
+//		} else
+//			if(Is_Update_Firmware()){
+//			Power_Off_Sim3g();
+//			Clear_Update_Firmware_Timeout_Flag();
+//			SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, 3000, 0);
+//			serverCommunicationFsmState = SIM3G_UPDATE_FIRMWARE;
+//		}
+//		else
+			if(is_Set_Relay_Timeout()){
 			if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
 				publishTopicIndex = 0;
 			} else if (is_Publish_Message_Timeout()){

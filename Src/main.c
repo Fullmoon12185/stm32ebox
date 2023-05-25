@@ -108,7 +108,6 @@ int main(void)
 	netif_init();
 	mqtt_init();
 	MODBUS_init();
-//	SCH_Add_Task(Toggle_Reset, 0, 300);
 	while (1){
 		netif_run();
 		mqtt_run();
