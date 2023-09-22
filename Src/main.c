@@ -76,14 +76,15 @@ int main(void)
 	Setup_Eeprom();
 	SCH_Add_Task(PCF_read, 13, 23);
 	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*60*24*7);
-//	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*5);
+//	Set_All();
+	HAL_Delay(2000);
 	if(Get_Box_ID() != 0){
 		SCH_Add_Task(LED_Display_FSM, 19, 23);
 		SCH_Add_Task(Watchdog_Counting, 7, 101);
 		runtestState = NORMAL_RUN;
 	} else {
 		runtestState = TEST_RUN;
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A || VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 		SCH_Add_Task(LCD_Show_Box_ID, 7, 73);
 		SCH_Add_Task(Test_Led_Display, 13, 57);
 #endif
@@ -122,7 +123,7 @@ void Main_FSM(void){
 
 #if(WATCHDOG_ENABLE == 1)
 	if(Is_Watchdog_Reset() == 0
-			&& !isConnectionLost()
+//			&& !isConnectionLost()
 			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
 		Watchdog_Refresh();
 	}
@@ -144,9 +145,9 @@ void Main_FSM(void){
 		Server_Communication();
 		Process_System_Power();
 		if(Is_Done_Getting_ADC() == RESET){
-#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
+//#if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 			Show_KWH(Get_Main_Power_Consumption());
-#endif
+//#endif
 			Process_Main_Current_Over_Max_Current();
 			mainState = POWER_CONSUMPTION_CALCULATION;
 		}

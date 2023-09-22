@@ -102,16 +102,12 @@ void System_Initialization(void)
         	break;
         case END_OF_INITIALISATION_STATE:
         	Turn_On_Buzzer();
-        	Turn_On_LED();
-			HAL_Delay(1000);
+			HAL_Delay(100);
 			Turn_Off_Buzzer();
-			Turn_Off_LED();
-			HAL_Delay(1000);
-			Turn_On_LED();
+			HAL_Delay(100);
 			Turn_On_Buzzer();
-			HAL_Delay(1000);
+			HAL_Delay(100);
 			Turn_Off_Buzzer();
-			Turn_Off_LED();
 
         	break;
         case ADC_INIT:

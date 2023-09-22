@@ -472,11 +472,17 @@ void Show_Box_ID(uint16_t bID){
 
 void Show_KWH(uint32_t ws){
 	char strTotalKWH[16];
+	static uint32_t preKwh = 0;
 	uint32_t kwh;
 //	kwh = ws/1000;
 	kwh = round((double)ws/(3600*1000));
 
-	sprintf(strTotalKWH, "Total: %ld kWh", kwh);
+	if(preKwh != kwh){
+		preKwh = kwh;
+		Lcd_Goto_XY(1, 0);
+		Lcd_Send_String((char*)"                ");
+	}
+	sprintf(strTotalKWH, "Eboost %ld", kwh);
 
 	Lcd_Goto_XY(1, 0);
 	Lcd_Send_String((char*)strTotalKWH);

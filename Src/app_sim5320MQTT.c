@@ -73,7 +73,7 @@ uint8_t CLIENT_ID[MAX_TOPIC_LENGTH];
 //const uint8_t PASSWORD[] 			= "";
 
 //Kyanon server
-const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"uat-mqtt.ebox.demo-application.net\",8883\r";
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt-uat.eboost.vn\",8883\r";
 //const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"113.161.34.240\",8883\r";
 const uint8_t USERNAME[] 			= "uat_mqtt";
 const uint8_t PASSWORD[] 			= "1kiNIcfT5";

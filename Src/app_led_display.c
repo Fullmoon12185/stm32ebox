@@ -17,6 +17,36 @@
 
 uint32_t ledStatus;
 
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+void Network_Led_Init(void);
+void Network_Connecting(void);
+void Network_Connected(void);
+void Network_Led_Display_Color(LED_COLOR color);
+void Network_LED_Display_FSM(void);
+
+LED_COLOR networkStatus = NONE;
+uint8_t networkLedDisplayCounter = 0;
+
+LED_COLOR ledStatusBuffer[NUMBER_OF_RELAYS+2] = {
+		NONE,
+		RED,
+		GREEN,
+		YELLOW,
+		BLINK_RED_SLOW,
+		BLINK_RED_FAST,
+		BLINK_GREEN_FAST,
+		BLINK_GREEN_SLOW,
+		BLINK_YELLOW_SLOW,
+		BLINK_YELLOW_FAST
+	};
+
+uint8_t ledDisplayCounterBuffer[NUMBER_OF_RELAYS+2] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t ledStateBuffer[NUMBER_OF_RELAYS+2] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+#else
+
+
+
 LED_COLOR ledStatusBuffer[NUMBER_OF_RELAYS] = {
 		NONE,
 		RED,
@@ -33,7 +63,7 @@ LED_COLOR ledStatusBuffer[NUMBER_OF_RELAYS] = {
 uint8_t ledDisplayCounterBuffer[NUMBER_OF_RELAYS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint8_t ledStateBuffer[NUMBER_OF_RELAYS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-
+#endif
 static void Latch_Enable(int8_t count);
 static void Latch_Disable(int8_t count);
 static void Output_Enable(void);
@@ -63,6 +93,10 @@ void Led_Display_Init(void){
 	Latch_Disable(1);
 	Clock_Off(1);
 	Led_Display_Clear_All();
+
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	Network_Led_Init();
+#endif
 
 }
 
@@ -173,8 +207,71 @@ void Led_Display_Color(uint8_t position, LED_COLOR color) {
 		ledStatus |= colorMask << (position * 2);
 #endif
 	}
-
 }
+
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+void Network_Led_Init(void){
+	networkLedDisplayCounter = 0;
+	networkStatus = BLINK_RED_SLOW;
+}
+
+void Network_Off(void){
+	networkStatus = BLINK_RED_SLOW;
+}
+
+void Network_Connecting(void){
+	networkStatus = BLINK_GREEN_FAST;
+}
+
+void Network_Connected(void){
+	networkStatus = BLINK_YELLOW_SLOW;
+}
+
+void Network_Led_Display_Color(LED_COLOR color) {
+	uint32_t colorMask = color & 0x00000003;
+	uint8_t networkLedPosition = 2;
+	ledStatus &= ~(0x00000003 << ((NUMBER_OF_RELAYS + networkLedPosition - 1) * 2));
+	ledStatus |= colorMask << ((NUMBER_OF_RELAYS + networkLedPosition - 1) * 2);
+}
+
+void Network_LED_Display_FSM(void) {
+	if(networkStatus == NONE || networkStatus == GREEN || networkStatus == RED || networkStatus == YELLOW){
+		Network_Led_Display_Color(networkStatus);
+	} else if(networkStatus == BLINK_YELLOW_SLOW || networkStatus == BLINK_GREEN_SLOW || networkStatus == BLINK_RED_SLOW ) {
+		if(networkLedDisplayCounter < TIME_FOR_SLOW_BLINK_ON){
+			if(networkStatus == BLINK_YELLOW_SLOW){
+				Network_Led_Display_Color(YELLOW);
+			} else if(networkStatus == BLINK_GREEN_SLOW){
+				Network_Led_Display_Color(GREEN);
+			}else if(networkStatus == BLINK_RED_SLOW){
+				Network_Led_Display_Color(RED);
+			}
+		} else if(networkLedDisplayCounter < TIME_FOR_SLOW_BLINK_OFF) {
+			Network_Led_Display_Color(NONE);
+		}
+		networkLedDisplayCounter ++;
+		if(networkLedDisplayCounter >= TIME_FOR_SLOW_BLINK_OFF){
+			networkLedDisplayCounter = 0;
+		}
+	} else if(networkStatus == BLINK_YELLOW_FAST || networkStatus == BLINK_GREEN_FAST || networkStatus == BLINK_RED_FAST ) {
+		if(networkLedDisplayCounter < TIME_FOR_FAST_BLINK_ON){
+			if(networkStatus == BLINK_YELLOW_FAST){
+				Network_Led_Display_Color(YELLOW);
+			} else if(networkStatus == BLINK_GREEN_FAST){
+				Network_Led_Display_Color(GREEN);
+			}else if(networkStatus == BLINK_RED_FAST){
+				Network_Led_Display_Color(RED);
+			}
+		} else if(networkLedDisplayCounter < TIME_FOR_FAST_BLINK_OFF) {
+			Network_Led_Display_Color(NONE);
+		}
+		networkLedDisplayCounter ++;
+		if(networkLedDisplayCounter >= TIME_FOR_FAST_BLINK_OFF){
+			networkLedDisplayCounter = 0;
+		}
+	}
+} 
+#endif
 
 
 void Led_Display_Clear_All(void) {
@@ -270,6 +367,10 @@ void LED_Display_FSM(void) { // call each 200ms
 			}
 		}
 	}
+	#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+		Network_LED_Display_FSM();
+	#endif
+
 	Led_Display();
 }
 

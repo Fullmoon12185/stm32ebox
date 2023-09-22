@@ -230,19 +230,19 @@
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2785
+#define		CT_20A_COEFF_1								2780
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2745
+#define		CT_20A_COEFF_2								2740
 
 #define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2730
+#define		CT_20A_COEFF_3								2725
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2730
+#define		CT_20A_COEFF_4								2725
 
 #define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2600
+#define		CT_20A_COEFF_5								2595
 
 #else
 
@@ -297,6 +297,8 @@ uint8_t adc_Timeout_Task_Index = 0;
 FlagStatus is_Ready_To_Find_Min_Max_Voltage = RESET;
 ADC_STATE adcState = ADC_SETUP_TIMER_ONE_SECOND;
 ADC_STATE pre_adcState = MAX_NUMBER_OF_ADC_STATES;
+
+uint8_t zeroPointCounter = 0;
 
 
 
@@ -727,8 +729,8 @@ void WatchDogAnalogInit(void){
 	/* Analog watchdog 1 configuration */
 	  AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_ALL_REG;
 	  AnalogWDGConfig.ITMode = ENABLE;
-	  AnalogWDGConfig.HighThreshold = 4000;
-	  AnalogWDGConfig.LowThreshold = 100;
+	  AnalogWDGConfig.HighThreshold = 4090;
+	  AnalogWDGConfig.LowThreshold = 10;
 
 	  AnalogWDGConfig.Channel = ADC_CHANNEL_0;
 	  if (HAL_ADC_AnalogWDGConfig(&ADC1Handle, &AnalogWDGConfig) != HAL_OK)
@@ -839,6 +841,7 @@ void WatchDogAnalogInit(void){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	is_Ready_To_Find_Min_Max_Voltage = SET;
+	zeroPointCounter ++;
 	return;
 }
 /**
@@ -877,22 +880,7 @@ uint8_t is_Adc_Reading_Timeout(void){
 
 
 
-void Zero_Point_Detection(void){
-	static uint8_t zeroPointState = 0;
-	switch(zeroPointState){
-	case 0:
-		if(HAL_GPIO_ReadPin(ZERO_POINT_DETECTION_PORT, ZERO_POINT_DETECTION_PIN) == GPIO_PIN_SET){
-			zeroPointState = 1;
-			is_Ready_To_Find_Min_Max_Voltage = SET;
-		}
-		break;
-	case 1:
-		if(HAL_GPIO_ReadPin(ZERO_POINT_DETECTION_PORT, ZERO_POINT_DETECTION_PIN) == GPIO_PIN_RESET){
-			zeroPointState = 0;
-		}
-		break;
-	}
-}
+
 
 FlagStatus Is_Done_Getting_ADC(void){
 	if(adcState == ADC_REPORT_POWER_DATA)
@@ -916,6 +904,7 @@ void PowerConsumption_FSM(void){
 		adc_Timeout_Task_Index = SCH_Add_Task(Adc_Reading_Timeout, 100, 0);
 		is_Ready_To_Find_Min_Max_Voltage = RESET;
 		externalInterruptCounter = 0;
+		zeroPointCounter = 0;
 		AdcDmaBufferIndexFilter = 0;
 		cycleCounter = 0;
 		adcState = ADC_FIND_ZERO_VOLTAGE_POINT;
@@ -1105,31 +1094,31 @@ void PowerConsumption_FSM(void){
 				}
 #else
 				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 15){
-									tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
-								} else {
-									tempPowerFactor = 0.0;
-								}
-								PowerFactor[i] = (uint32_t)tempPowerFactor;
-								if(PowerFactor[i] >= 98){
-									PowerFactor[i] = 100;
-								}
+					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
+				} else {
+					tempPowerFactor = 0.0;
+				}
+				PowerFactor[i] = (uint32_t)tempPowerFactor;
+				if(PowerFactor[i] >= 98){
+					PowerFactor[i] = 100;
+				}
 #endif
 
-				if(i == 0 || i == 1)
-				{
-					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) tempPowerFactor);
-					UART3_SendToHost((uint8_t *)strtmp);
-					sprintf((char*) strtmp, "%d\t", (int) tempIrmsADCValue);
-					UART3_SendToHost((uint8_t *)strtmp);
-
-					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i]);
-					UART3_SendToHost((uint8_t *)strtmp);
-
-					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
-					UART3_SendToHost((uint8_t *)strtmp);
-				}
+//				if(i == 0 || i == 1)
+//				{
+//					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) tempPowerFactor);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//					sprintf((char*) strtmp, "%d\t", (int) tempIrmsADCValue);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//
+//					sprintf((char*) strtmp, "%d\t", (int) array_Of_Average_Vrms_ADC_Values[i]);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//
+//					sprintf((char*) strtmp, "%d\r\n", (int) AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
+//					UART3_SendToHost((uint8_t *)strtmp);
+//				}
 
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3)
@@ -1342,7 +1331,9 @@ void PowerConsumption_FSM(void){
 		break;
 
 	case ADC_REPORT_POWER_DATA:
-		if(is_Adc_Reading_Timeout()){
+		if(is_Adc_Reading_Timeout())
+//		if(zeroPointCounter >= 50*2)
+		{
 			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
 			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; channelIndex++) {
 				array_Of_Vrms_ADC_Values[channelIndex]  = 0;

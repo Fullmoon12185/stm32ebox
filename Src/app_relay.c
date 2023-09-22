@@ -133,6 +133,23 @@ void Relay_Init(void){
 	Relay_Output_Control_Enable();
 }
 
+void Set_All(void){
+	Set_Relay(0);
+	HAL_Delay(1000);
+	Set_Relay(1);
+	HAL_Delay(1000);
+	Set_Relay(2);
+	HAL_Delay(1000);
+	Set_Relay(3);
+	HAL_Delay(1000);
+	Set_Relay(4);
+	HAL_Delay(1000);
+	Set_Relay(5);
+	HAL_Delay(1000);
+	Set_Relay(6);
+	HAL_Delay(1000);
+	Set_Relay(7);
+}
 void Set_Relay1(uint8_t relayIndex){
 	if(relayIndex >= NUMBER_OF_RELAYS) return;
 	if(array_Of_Relay_Statuses[relayIndex] == RESET){

@@ -30,13 +30,14 @@ Content:
 #else
 
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
-	const uint8_t firmwareVersion[] =  "3.0.0-";
+	const uint8_t firmwareVersion[] =  "3.0.1-";
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
-	const uint8_t firmwareVersion[] =  "4.0.0-";
+	const uint8_t firmwareVersion[] =  "4.0.1-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	const uint8_t firmwareVersion[] =  "5.0.0-";
+	const uint8_t firmwareVersion[] =  "5.0.1-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	const uint8_t firmwareVersion[] =  "6.0.0-";
+
 #endif
 
 #endif

@@ -72,7 +72,7 @@ void Error_Handler(void);
 #define   VERSION_6_WITH_8CT_20A		 6
 
 //Please turn on this one if want to make a test box
-#define		VERSION_TEST_EBOX			VERSION_4_WITH_8CT_5A_2CT_10A
+#define		VERSION_TEST_EBOX			VERSION_3_WITH_ALL_CT_5A
 
 #define		VERSION_EBOX				VERSION_6_WITH_8CT_20A
 
@@ -521,7 +521,7 @@ void Error_Handler(void);
 #define		DATA_RECEIVE_LENGTH									15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE1 				15
 #define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_TYPE2 				17
-#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA					'x' // '2'
+#define 	LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA					14 // '0x'
 
 #define		COMMAND_SENDING_SMS_MESSAGE		     				's'
 

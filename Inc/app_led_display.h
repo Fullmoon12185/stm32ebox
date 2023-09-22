@@ -7,7 +7,7 @@
 
 #ifndef APP_LED_DISPLAY_H_
 #define APP_LED_DISPLAY_H_
-
+#include "main.h"
 #include "app_power.h"
 
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
@@ -79,5 +79,11 @@ void Led_Display(void);
 
 void LED_Display_FSM(void);
 void Test_Led_Display(void);
+
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+void Network_Off(void);
+void Network_Connecting(void);
+void Network_Connected(void);
+#endif
 
 #endif /* APP_LED_DISPLAY_H_ */

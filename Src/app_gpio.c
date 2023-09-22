@@ -6,6 +6,11 @@
  */
 #include "main.h"
 #include "app_gpio.h"
+
+#define EXTI_PREEMP_PRIORITY_LEVEL 0
+#define EXTI_SUB_PRIORITY_LEVEL 0
+
+
 void LED_Init(void);
 void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
@@ -178,18 +183,18 @@ void ZeroPoint_Detection_Pin_Init(void){
 
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	/* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, EXTI_PREEMP_PRIORITY_LEVEL, EXTI_SUB_PRIORITY_LEVEL);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	/* EXTI interrupt init*/
-	  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+	  HAL_NVIC_SetPriority(EXTI9_5_IRQn, EXTI_PREEMP_PRIORITY_LEVEL, EXTI_SUB_PRIORITY_LEVEL);
 	  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 #elif(VERSION_EBOX == 15)
 	/* EXTI interrupt init*/
-	  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+	  HAL_NVIC_SetPriority(EXTI9_5_IRQn, EXTI_PREEMP_PRIORITY_LEVEL, EXTI_SUB_PRIORITY_LEVEL);
 	  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 #elif(VERSION_EBOX == 1)
-	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(EXTI15_10_IRQn, EXTI_PREEMP_PRIORITY_LEVEL, EXTI_SUB_PRIORITY_LEVEL);
 	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 #endif
 }
