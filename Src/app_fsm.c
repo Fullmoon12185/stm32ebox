@@ -23,6 +23,7 @@
 #include "app_string.h"
 
 #include "app_led_display.h"
+#include "app_power_meter_485.h"
 
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
@@ -38,6 +39,8 @@ extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_VOLTAGE[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
+extern uint8_t PUBLISH_TOPIC_POWERMETER[MAX_TOPIC_LENGTH];
+
 
 
 extern uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
@@ -519,6 +522,22 @@ void Update_Publish_Fota_Status_Message(uint16_t fota_status){
 
 
 
+void Update_Publish_Power_Meter_Message(){
+	POWER_t* power = POWERMETER485_get_latest();
+	publish_message_length = snprintf((char*)publish_message,
+									MQTT_MESSAGE_BUFFER_LENGTH,
+									"%f,%f,%f,%f,%f,%f", //voltage, current, active_power, power_factor, frequency, total_active_power
+									power->voltage,
+									power->current,
+									power->active_power,
+									power->power_factor,
+									power->frequency,
+									power->total_active_power);
+}
+
+
+
+
 
 void Server_Communication(void){
 	if(Is_Reset_Module_Sim()){
@@ -601,9 +620,15 @@ void Server_Communication(void){
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
 								publish_message, publish_message_length);
 					} else if (publishTopicIndex == 4) {
-						publishTopicIndex = 0;
+						publishTopicIndex = 5;
 						Update_Publish_Current_Message_All_Outlets();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
+								publish_message, publish_message_length);
+					}
+					else if (publishTopicIndex == 5) {
+						publishTopicIndex = 0;
+						Update_Publish_Power_Meter_Message();
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERMETER,
 								publish_message, publish_message_length);
 					}
 

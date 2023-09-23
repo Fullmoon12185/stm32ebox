@@ -34,6 +34,7 @@
 #include "app_i2c_lcd.h"
 #include "app_init.h"
 #include "app_send_sms.h"
+#include "app_power_meter_485.h"
 
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
@@ -62,6 +63,7 @@ int main(void)
 	UART3_SendToHost((uint8_t*)log);
 
 	PCF_Init();
+	MODBUS_init();
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
@@ -93,7 +95,7 @@ int main(void)
 	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
 #if(WATCHDOG_ENABLE == 1)
 	if(runtestState == NORMAL_RUN){
-	    MX_IWDG_Init();
+//	    MX_IWDG_Init();
 	}
 #endif
 	while (1){
@@ -122,13 +124,14 @@ void Test_Timer(void){
 void Main_FSM(void){
 
 #if(WATCHDOG_ENABLE == 1)
-	if(Is_Watchdog_Reset() == 0
-//			&& !isConnectionLost()
-			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
-		Watchdog_Refresh();
-	}
+//	if(Is_Watchdog_Reset() == 0
+////			&& !isConnectionLost()
+//			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
+//		Watchdog_Refresh();
+//	}
 #endif
 	PowerConsumption_FSM();
+	POWERMETER485_fsm();
 	FSM_Process_Data_Received_From_Sim3g();
 
 	switch(mainState){

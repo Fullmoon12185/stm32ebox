@@ -111,6 +111,7 @@ uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_VOLTAGE[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_CURRENT[MAX_TOPIC_LENGTH];
 uint8_t PUBLISH_TOPIC_POWERFACTOR[MAX_TOPIC_LENGTH];
+uint8_t PUBLISH_TOPIC_POWERMETER[MAX_TOPIC_LENGTH];
 
 
 uint8_t publish_message[MQTT_MESSAGE_BUFFER_LENGTH];
@@ -334,6 +335,23 @@ void Set_Up_Topic_Names(void){
 	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
 	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
 	PUBLISH_TOPIC_POWERFACTOR[indexTopicCharacter++] = 0;
+
+	indexTopicCharacter = 0;
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = 'P';
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = 'M';
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = 'E';
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = 'b';
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = 'o';
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = 'x';
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = '_';
+
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[6];
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[7];
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[8];
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = SUBSCRIBE_TOPIC_1[9];
+	PUBLISH_TOPIC_POWERMETER[indexTopicCharacter++] = 0;
+
+
 
 	indexTopicCharacter = 0;
 	CLIENT_ID[indexTopicCharacter++] = 'E';

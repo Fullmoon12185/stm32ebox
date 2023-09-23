@@ -25,6 +25,7 @@
 
 extern TIM_HandleTypeDef    TimHandle;
 extern UART_HandleTypeDef Uart1Handle;
+extern UART_HandleTypeDef Uart5Handle;
 extern DMA_HandleTypeDef Hdma_adc1Handle;
 extern ADC_HandleTypeDef ADC1Handle;
 /******************************************************************************/
@@ -190,6 +191,13 @@ void USART1_IRQHandler(void)
 {
 	HAL_UART_IRQHandler(&Uart1Handle);
  }
+
+
+void UART5_IRQHandler(void)
+{
+	HAL_UART_IRQHandler(&Uart5Handle);
+}
+
 
 
 /**

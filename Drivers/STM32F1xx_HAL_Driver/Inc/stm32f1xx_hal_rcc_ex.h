@@ -1905,4 +1905,3 @@ HAL_StatusTypeDef HAL_RCCEx_DisablePLL2(void);
 #endif /* __STM32F1xx_HAL_RCC_EX_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
