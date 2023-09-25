@@ -126,6 +126,32 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 		GPIO_InitStruct.Pin = USART3_RX_PIN;
 
 		HAL_GPIO_Init(USART3_RX_GPIO_PORT, &GPIO_InitStruct);
+	} else if(huart->Instance == UART5){
+		/*##-1- Enable peripherals and GPIO Clocks #################################*/
+		/* Enable GPIO TX/RX clock */
+		UART5_TX_GPIO_CLK_ENABLE();
+		UART5_RX_GPIO_CLK_ENABLE();
+
+
+		/* Enable USARTx clock */
+		UART5_CLK_ENABLE();
+
+		/*##-2- Configure peripheral GPIO ##########################################*/
+		/* UART TX GPIO pin configuration  */
+		GPIO_InitStruct.Pin       = UART5_TX_PIN;
+		GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull      = GPIO_PULLUP;
+		GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
+
+		HAL_GPIO_Init(UART5_TX_GPIO_PORT, &GPIO_InitStruct);
+
+		/* UART RX GPIO pin configuration  */
+		GPIO_InitStruct.Pin = UART5_RX_PIN;
+		GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+
+		HAL_GPIO_Init(UART5_RX_GPIO_PORT, &GPIO_InitStruct);
+		HAL_NVIC_SetPriority(UART5_IRQn, 0, 2);
+		HAL_NVIC_EnableIRQ(UART5_IRQn);
 	}
 }
 
@@ -172,6 +198,17 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 		  HAL_GPIO_DeInit(USART3_TX_GPIO_PORT, USART3_TX_PIN);
 		  /* Configure UART Rx as alternate function  */
 		  HAL_GPIO_DeInit(USART3_RX_GPIO_PORT, USART3_RX_PIN);
+	} else if(huart->Instance == UART5){
+		/*##-1- Reset peripherals ##################################################*/
+		  UART5_FORCE_RESET();
+		  UART5_RELEASE_RESET();
+
+		  /*##-2- Disable peripherals and GPIO Clocks #################################*/
+		  /* Configure UART Tx as alternate function  */
+		  HAL_GPIO_DeInit(UART5_TX_GPIO_PORT, UART5_TX_PIN);
+		  /* Configure UART Rx as alternate function  */
+		  HAL_GPIO_DeInit(UART5_RX_GPIO_PORT, UART5_RX_PIN);
+		  HAL_NVIC_DisableIRQ(UART5_IRQn);
 	}
 }
 
