@@ -50,7 +50,6 @@ void System_Initialization(void)
 //        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"GPIO_INIT - ADC_DMA_Init - Done \r\n"));
             break;
         case UART_INIT:
-        	UART5_Init();
         	UART3_Init();
         	UART1_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"UART_INIT - Done \r\n"));

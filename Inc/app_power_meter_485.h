@@ -7,6 +7,8 @@
 #define	DDX		0x01
 #define SDM120 	0x02
 
+uint16_t PowerVoltage(void);
+
 typedef struct {
 	float voltage;
 	float current;

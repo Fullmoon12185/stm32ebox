@@ -36,6 +36,8 @@
 #include "app_send_sms.h"
 #include "app_power_meter_485.h"
 
+#include "modbus.h"
+
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
 
@@ -63,8 +65,9 @@ int main(void)
 	UART3_SendToHost((uint8_t*)log);
 
 	PCF_Init();
-	MODBUS_init();
+
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	MODBUS_init();
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
@@ -95,9 +98,12 @@ int main(void)
 	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
 #if(WATCHDOG_ENABLE == 1)
 	if(runtestState == NORMAL_RUN){
-//	    MX_IWDG_Init();
+	    MX_IWDG_Init();
 	}
 #endif
+
+
+
 	while (1){
 		SCH_Dispatch_Tasks();
 		if(runtestState == NORMAL_RUN){
@@ -124,14 +130,17 @@ void Test_Timer(void){
 void Main_FSM(void){
 
 #if(WATCHDOG_ENABLE == 1)
-//	if(Is_Watchdog_Reset() == 0
-////			&& !isConnectionLost()
-//			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
-//		Watchdog_Refresh();
-//	}
+	if(Is_Watchdog_Reset() == 0
+//			&& !isConnectionLost()
+			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
+		Watchdog_Refresh();
+	}
 #endif
 	PowerConsumption_FSM();
+
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	POWERMETER485_fsm();
+#endif
 	FSM_Process_Data_Received_From_Sim3g();
 
 	switch(mainState){

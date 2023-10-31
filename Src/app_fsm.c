@@ -522,6 +522,7 @@ void Update_Publish_Fota_Status_Message(uint16_t fota_status){
 
 
 
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 void Update_Publish_Power_Meter_Message(){
 	POWER_t* power = POWERMETER485_get_latest();
 	publish_message_length = snprintf((char*)publish_message,
@@ -535,7 +536,7 @@ void Update_Publish_Power_Meter_Message(){
 									power->total_active_power);
 }
 
-
+#endif
 
 
 
@@ -573,7 +574,7 @@ void Server_Communication(void){
 	case SIM3G_SETUP_SUBSCRIBE_TOPICS:
 		if(Uart1_Received_Buffer_Available() == 0){
 			if(MQTT_Run()){
-				Set_Sim3G_State(RESET_SIM3G);
+				Set_Sim3G_State(POWER_OFF_SIM3G);
 				serverCommunicationFsmState = SIM3G_OPEN_CONNECTION;
 			} else {
 				if(Is_Ready_To_Send_MQTT_Data()){
@@ -620,18 +621,23 @@ void Server_Communication(void){
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
 								publish_message, publish_message_length);
 					} else if (publishTopicIndex == 4) {
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 						publishTopicIndex = 5;
+#else
+						publishTopicIndex = 0;
+#endif
 						Update_Publish_Current_Message_All_Outlets();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
 								publish_message, publish_message_length);
 					}
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 					else if (publishTopicIndex == 5) {
 						publishTopicIndex = 0;
 						Update_Publish_Power_Meter_Message();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERMETER,
 								publish_message, publish_message_length);
 					}
-
+#endif
 					Set_Mqtt_State(MQTT_PUBLISH_STATE);
 					Clear_Publish_Message_Timeout_Flag();
 					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
@@ -639,8 +645,10 @@ void Server_Communication(void){
 					ClearCounter();
 					Clear_Counter_For_Reset_Module_Sim();
 					Clear_For_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message();
+#if(BEEP_ON == 1)
 					Turn_On_Buzzer();
 					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
+#endif
 					#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 						Network_Connected();
 					#endif

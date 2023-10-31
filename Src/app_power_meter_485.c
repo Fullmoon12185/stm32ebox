@@ -6,12 +6,16 @@
  */
 
 #include <app_power_meter_485.h>
-#include "modbus.h"
-#include "utils/utils_logger.h"
+#include <modbus.h>
+#include "app_uart.h"
+
+#define		DEBUG_485(X)					X
 
 #define POWERMETER485_REQUEST_INTERVAL		5000
 #define POWERMETER485_APP_TIMEOUT			5000
 
+
+static uint8_t strtmpPowerMeter[50];
 
 enum {
 	POWERMETER485_INIT,
@@ -139,6 +143,17 @@ static bool powermeter485_process_done = true;
 static float POWERMETER485_calculate_float(uint8_t * data_p, uint8_t data_size);
 static void POWERMETER_assign_data_by_index(POWER_t * power, POWER_idx_t index , float data);
 
+
+uint16_t PowerVoltage(void){
+	uint16_t tempVoltage = (uint16_t)power.voltage;
+	if(tempVoltage > 240){
+		tempVoltage = 230;
+	} else if(tempVoltage < 220){
+		tempVoltage = 230;
+	}
+	return tempVoltage;
+}
+
 void POWERMETER485_fsm(void){
 	static uint32_t start_tx_time = 0;
 	MODBUS_run();
@@ -147,7 +162,8 @@ void POWERMETER485_fsm(void){
 			// Scan 485 address from 0 -> 255
 			if(!address_found){
 				read_req.address++;
-				utils_log_debug("Change address to 0x%x\r\n", read_req.address);
+				DEBUG_485(sprintf((char*) strtmpPowerMeter, "Change address to 0x%x\r\n", (int) read_req.address););
+				DEBUG_485(UART3_SendToHost((uint8_t*)strtmpPowerMeter));
 			}
 			powermeter485_state = POWERMETER485_SEND_REQUEST;
 			break;
@@ -176,14 +192,15 @@ void POWERMETER485_fsm(void){
 				float data = POWERMETER485_calculate_float(response.data.read_res.data , response.data.read_res.byte_cnt);
 				POWERMETER_assign_data_by_index(&power,power_index,data);
 				
-				 utils_log_debug("%s: %f\r\n",power_mapping_table[power_index].name,
-				 							data);
+//				DEBUG_485(sprintf((char*) strtmpPowerMeter, "%s: %f\r\n", power_mapping_table[power_index].name, data););
+//				DEBUG_485(UART3_SendToHost((uint8_t*)strtmpPowerMeter));
 				// Increase Power Index
 				power_index++;
 				powermeter485_state = POWERMETER485_SEND_REQUEST;
 			}
 			if (HAL_GetTick() - start_tx_time > POWERMETER485_APP_TIMEOUT){
-				utils_log_error("Modbus timeout for receive -> Try to other address\r\n");
+//				utils_log_error("Modbus timeout for receive -> Try to other address\r\n");
+				DEBUG_485(UART3_SendToHost((uint8_t*)"Modbus timeout for receive -> Try to other address\r\n"));
 				address_found = false;
 				powermeter485_state = POWERMETER485_INIT;
 			}
@@ -226,7 +243,8 @@ static void POWERMETER_assign_data_by_index(POWER_t * power, POWER_idx_t index ,
 
 static float POWERMETER485_calculate_float(uint8_t * data_p, uint8_t data_size){
 	if(data_size != 4){
-		utils_log_error("Float data size invalid\r\n");
+//		utils_log_error("Float data size invalid\r\n");
+		DEBUG_485(UART3_SendToHost((uint8_t*)"Float data size invalid\r\n"));
 		return 0;
 	}
 	f32_cast_t cast;

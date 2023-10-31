@@ -16,6 +16,8 @@
 #include "app_string.h"
 #include <math.h>
 
+#include "app_power_meter_485.h"
+
 
 #define		DEBUG_POWER(X)							X
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
@@ -25,7 +27,7 @@
 	#define		MAX_CURRENT								700000
 	#define		MAX_CURRENT_1							1000000
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	#define		MAX_CURRENT								800000
+	#define		MAX_CURRENT								850000
 	#define		MAX_CURRENT_1							1600000
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	#define		MAX_CURRENT								1600000
@@ -80,7 +82,7 @@
 
 #define	    TIME_OUT_AFTER_DETECTING_OVER_MONEY							(10000/INTERRUPT_TIMER_PERIOD)
 #define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT							(5000/INTERRUPT_TIMER_PERIOD)
-#define		COUNT_FOR_DETECT_MAX_CURRENT								5
+#define		COUNT_FOR_DETECT_MAX_CURRENT								10
 
 #define			COUNT_FOR_DECIDE_UNPLUG									200
 #define			COUNT_FOR_DECIDE_CHARGE_FULL							10
@@ -92,7 +94,7 @@ typedef struct PowerNodes {
 	uint32_t previousCurrent;
 	uint32_t previousCurrent_1;
 	uint32_t maxNodeCurrent;
-	uint8_t voltage;	// = 220
+	uint16_t voltage;	// = 220
 //	uint8_t frequency;	// = 50 in Hz
 	uint8_t powerFactor; // = 1pF
 	uint32_t lastPower;
@@ -449,7 +451,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 			}
 		}
 
-		Main.nodes[tempOutletID].voltage = voltage;
+		Main.nodes[tempOutletID].voltage = PowerVoltage();
 		tempCurrent = (float)(Main.nodes[tempOutletID].current)/100000;//in mA	// /100
 		tempPower = (float)(Main.nodes[tempOutletID].voltage * tempCurrent * Main.nodes[tempOutletID].powerFactor);
 
@@ -464,24 +466,26 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
 		}
-//		if(tempOutletID == 0){
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.workingTime););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
-//		}
+		if(tempOutletID == 0){
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.workingTime););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "v:%d\t", (int) Main.nodes[tempOutletID].voltage););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
+			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
+		}
 	}
 }
 

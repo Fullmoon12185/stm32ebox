@@ -814,20 +814,6 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 				processDataState = PROCESSING_UPDATE_TOTAL_POWER_CONSUMPTION;
 				Clear_Sim3gDataProcessingBuffer();
 			}
-//#if (VERSION_EBOX >= VERSION_5_WITH_8CT_10A_2CT_20A)
-//			else if((preReadCharacter == SUBSCRIBE_RECEIVE_MESSAGE_TYPE)
-//				&& (readCharacter == LEN_SUBSCRIBE_RECEIVE_MESSAGE_FOTA)){ //For update firmware
-//
-//				DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"123131231312"););
-//				Clear_Sim3gDataProcessingBuffer();
-//
-//			}
-//#endif
-//			else if((preReadCharacter == COMMAND_SENDING_SMS_MESSAGE)
-//					&& (readCharacter == COMMAND_SENDING_SMS_MESSAGE)){
-//				Start_Sending_Sms_Message();
-//				Clear_Sim3gDataProcessingBuffer();
-//			}
 			else {
 				Sim3gDataProcessingBuffer[sim3gDataProcessingBufferIndex++] = readCharacter;
 			}

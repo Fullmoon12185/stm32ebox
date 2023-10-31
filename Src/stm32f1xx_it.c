@@ -193,11 +193,12 @@ void USART1_IRQHandler(void)
  }
 
 
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 void UART5_IRQHandler(void)
 {
 	HAL_UART_IRQHandler(&Uart5Handle);
 }
-
+#endif
 
 
 /**
