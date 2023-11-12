@@ -221,7 +221,7 @@ uint8_t atCommandArrayIndexForCheckingSim3g = 0;
 const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+CREG?\r",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CSQ\r",  							(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CREG=1\r",  							(uint8_t*)"OK\r"		},
 
 		{(uint8_t*)"AT+CGATT?\r",  							(uint8_t*)"OK\r"		},
