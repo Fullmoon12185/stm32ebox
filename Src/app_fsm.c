@@ -25,6 +25,10 @@
 #include "app_led_display.h"
 #include "app_power_meter_485.h"
 
+#if defined(MODULE_WIFI) && MODULE_WIFI == 1
+	#include "app_mqtt.h"
+#endif
+
 
 #define		TIME_FOR_PING_REQUEST		6000 //5s
 #define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
@@ -69,7 +73,11 @@ typedef enum {
 	MAX_SERVER_COMMUNICATION_FSM_NUMBER_STATES
 } SERVER_COMMUNICATION_FSM_STATE;
 
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 SERVER_COMMUNICATION_FSM_STATE serverCommunicationFsmState = SIM3G_OPEN_CONNECTION;
+#elif defined(MODULE_WIFI) && MODULE_WIFI == 1
+SERVER_COMMUNICATION_FSM_STATE serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;		// MQTT stack will be run at app_mqtt.c
+#endif
 
 
 
@@ -541,13 +549,16 @@ void Update_Publish_Power_Meter_Message(){
 
 void Server_Communication(void){
 	if(Is_Reset_Module_Sim()){
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 		UART3_SendToHost((uint8_t*)"Is_Reset_Module_Sim\r\n");
 		Clear_Counter_For_Reset_Module_Sim();
 		Set_Sim3G_State(POWER_OFF_SIM3G);
 		Set_Mqtt_State(MQTT_WAIT_FOR_NEW_COMMAND);
 		serverCommunicationFsmState = SIM3G_OPEN_CONNECTION;
+#endif
 	}
 	switch(serverCommunicationFsmState){
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 	case SIM3G_OPEN_CONNECTION:
 		
 		if(Sim3g_Run()){
@@ -583,7 +594,9 @@ void Server_Communication(void){
 			}
 		}
 		break;
+#endif
 	case SIM3G_SETUP_PUBLISH_TOPICS:
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 		if(!Is_Ready_To_Send_MQTT_Data()){
 			serverCommunicationFsmState = SIM3G_SETUP_SUBSCRIBE_TOPICS;
 		} else if(Is_Set_Send_Sms_Flag()) {
@@ -595,49 +608,109 @@ void Server_Communication(void){
 			SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, 3000, 0);
 			serverCommunicationFsmState = SIM3G_UPDATE_FIRMWARE;
 		} else {
+#endif
 			if(is_Set_Relay_Timeout()){
 				if(Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET){
 					publishTopicIndex = 0;
-				} else if (is_Publish_Message_Timeout()){
+				} else
+					if (is_Publish_Message_Timeout()){
 					if (publishTopicIndex == 0) {
 						publishTopicIndex = 1;
 						Update_Publish_Status_Message();
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS,
 								publish_message, publish_message_length);
+#elif defined(MODULE_WIFI) && MODULE_WIFI == 1
+						MQTT_message_t message;
+						strcpy(message.topic, PUBLISH_TOPIC_STATUS);
+						memcpy(message.payload, publish_message, publish_message_length);
+						message.qos = 1;
+						message.retain = 1;
+						MQTT_sent_message(&message);
+#endif
 					} else if (publishTopicIndex == 1) {
 						publishTopicIndex = 2;
 						Update_Publish_Power_Message_All_Outlets();
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,
 								publish_message, publish_message_length);
+#elif defined(MODULE_WIFI) && MODULE_WIFI == 1
+						MQTT_message_t message;
+						strcpy(message.topic, PUBLISH_TOPIC_POWER);
+						memcpy(message.payload, publish_message, publish_message_length);
+						message.qos = 1;
+						message.retain = 1;
+						MQTT_sent_message(&message);
+#endif
 					} else if (publishTopicIndex == 2) {
 						publishTopicIndex = 3;
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 						Update_Publish_Power_Factor_Message_All_Outlets();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR,
 								publish_message, publish_message_length);
+#elif defined(MODULE_WIFI) && MODULE_WIFI == 1
+						MQTT_message_t message;
+						strcpy(message.topic, PUBLISH_TOPIC_POWERFACTOR);
+						memcpy(message.payload, publish_message, publish_message_length);
+						message.qos = 1;
+						message.retain = 1;
+						MQTT_sent_message(&message);
+#endif
 					} else if (publishTopicIndex == 3) {
 						publishTopicIndex = 4;
 						Update_Publish_Voltage_Message_All_Outlets();
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
 								publish_message, publish_message_length);
+#elif defined(MODULE_WIFI) && MODULE_WIFI == 1
+						MQTT_message_t message;
+						strcpy(message.topic, PUBLISH_TOPIC_VOLTAGE);
+						memcpy(message.payload, publish_message, publish_message_length);
+						message.qos = 1;
+						message.retain = 1;
+						MQTT_sent_message(&message);
+#endif
 					} else if (publishTopicIndex == 4) {
+						
 						publishTopicIndex = 5;
 						Update_Publish_Current_Message_All_Outlets();
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
 								publish_message, publish_message_length);
+#elif defined(MODULE_WIFI) && MODULE_WIFI == 1
+						MQTT_message_t message;
+						strcpy(message.topic, PUBLISH_TOPIC_CURRENT);
+						memcpy(message.payload, publish_message, publish_message_length);
+						message.qos = 1;
+						message.retain = 1;
+						MQTT_sent_message(&message);
+#endif
 					}
 					else if (publishTopicIndex == 5) {
 						publishTopicIndex = 0;
 						Update_Publish_Power_Meter_Message();
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERMETER,
 								publish_message, publish_message_length);
+#elif defined(MODULE_WIFI) && MODULE_WIFI == 1
+						MQTT_message_t message;
+						strcpy(message.topic, PUBLISH_TOPIC_POWERMETER);
+						memcpy(message.payload, publish_message, publish_message_length);
+						message.qos = 1;
+						message.retain = 1;
+						MQTT_sent_message(&message);
+#endif
 					}
-
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 					Set_Mqtt_State(MQTT_PUBLISH_STATE);
+#endif		
 					Clear_Publish_Message_Timeout_Flag();
 					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
 
 					ClearCounter();
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 					Clear_Counter_For_Reset_Module_Sim();
+#endif
 					Clear_For_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message();
 					Turn_On_Buzzer();
 					SCH_Add_Task(Turn_Off_Buzzer, TIME_FOR_BUZZER, 0);
@@ -646,8 +719,11 @@ void Server_Communication(void){
 					#endif
 				}
 			}
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 		}
+#endif
 		break;
+#if defined(MODULE_SIM) && MODULE_SIM == 1
 	case SIM3G_SEND_SMS_MESSAGE:
 		FSM_For_Sending_SMS_Message();
 		if(Is_Done_Sending_Sms_Message()){
@@ -660,6 +736,7 @@ void Server_Communication(void){
 			Jump_To_Fota_Firmware();
 		}
 		break;
+#endif
 	default:
 		break;
 	}

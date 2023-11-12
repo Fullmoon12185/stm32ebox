@@ -19,6 +19,7 @@
 UART_HandleTypeDef Uart1Handle;
 UART_HandleTypeDef Uart2Handle;
 UART_HandleTypeDef Uart3Handle;
+UART_HandleTypeDef Uart4Handle;
 UART_HandleTypeDef Uart5Handle;
 
 /* Buffer used for transmission */
@@ -29,6 +30,14 @@ uint8_t  aUART_TxBuffer[] = "";
 uint8_t aUART_RxBuffer[RXBUFFERSIZE];
 uint8_t receiveBufferIndexHead = 0;
 uint8_t receiveBufferIndexTail = 0;
+
+
+/* Buffer used for UART4 */
+uint8_t UART4_buffer[RXBUFFERSIZE];
+uint8_t UART4_receiveBufferIndexHead = 0;
+uint8_t UART4_receiveBufferIndexTail = 0;
+__IO ITStatus UART4_TransmitReady = SET;
+__IO ITStatus UART4_ReceiveReady = RESET;
 
 /* Buffer used for UART5 */
 uint8_t UART5_buffer[RXBUFFERSIZE];
@@ -106,6 +115,25 @@ void UART3_Init(void)
 //   printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
 //   printf("** Test finished successfully. ** \n\r");
 
+}
+
+void UART4_Init(void){
+	Uart4Handle.Instance          = UART4;
+
+	Uart4Handle.Init.BaudRate     = 115200;
+	Uart4Handle.Init.WordLength   = UART_WORDLENGTH_8B;
+	Uart4Handle.Init.StopBits     = UART_STOPBITS_1;
+	Uart4Handle.Init.Parity       = UART_PARITY_NONE;
+	Uart4Handle.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
+	Uart4Handle.Init.Mode         = UART_MODE_TX_RX;
+
+	if(HAL_UART_DeInit(&Uart4Handle) != HAL_OK){
+		Error_Handler();
+	}
+	if(HAL_UART_Init(&Uart4Handle) != HAL_OK){
+		Error_Handler();
+	}
+	HAL_UART_Receive_IT(&Uart4Handle, UART4_buffer, RXBUFFERSIZE);
 }
 
 /**
@@ -211,20 +239,31 @@ HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart)
 			  return HAL_OK;
 		  }
 	}
+	else if(huart->Instance == UART4){
+	  /* Check that a Rx process is ongoing */
+		if (huart->RxState == HAL_UART_STATE_BUSY_RX)
+		{
+			huart->ErrorCode = HAL_UART_ERROR_NONE;
+			huart->RxState = HAL_UART_STATE_BUSY_RX;
+			UART4_buffer[UART4_receiveBufferIndexHead] = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
+			UART4_receiveBufferIndexHead = (UART4_receiveBufferIndexHead + 1) % RXBUFFERSIZE;
+			return HAL_OK;
+		}
+	}
 	else if(huart->Instance == UART5){
 	  /* Check that a Rx process is ongoing */
-	  if (huart->RxState == HAL_UART_STATE_BUSY_RX)
-	  {
-		  huart->ErrorCode = HAL_UART_ERROR_NONE;
-		  huart->RxState = HAL_UART_STATE_BUSY_RX;
-		  UART5_buffer[UART5_receiveBufferIndexHead] = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
-		  UART5_receiveBufferIndexHead = (UART5_receiveBufferIndexHead + 1) % RXBUFFERSIZE;
-		  return HAL_OK;
-	  }
-	  }
-	  else {
+		if (huart->RxState == HAL_UART_STATE_BUSY_RX)
+		{
+			huart->ErrorCode = HAL_UART_ERROR_NONE;
+			huart->RxState = HAL_UART_STATE_BUSY_RX;
+			UART5_buffer[UART5_receiveBufferIndexHead] = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
+			UART5_receiveBufferIndexHead = (UART5_receiveBufferIndexHead + 1) % RXBUFFERSIZE;
+			return HAL_OK;
+		}
+	}
+	else {
 		return HAL_BUSY;
-	  }
+	}
 }
 
 uint8_t Uart1_Received_Buffer_Available(void){
@@ -279,6 +318,33 @@ ITStatus isSim3gTransmissionReady(void){
 	}
 
 }
+
+
+void UART4_transmit(uint8_t * data, uint32_t data_len){
+	if(HAL_UART_Transmit(&Uart4Handle, (uint8_t*)data, data_len, 0xFFFF)!= HAL_OK){
+		Error_Handler();
+	}
+}
+
+uint8_t UART4_Read_Available(){
+	if(UART4_receiveBufferIndexTail != UART4_receiveBufferIndexHead){
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+uint8_t UART4_Read_Received_Buffer(){
+	uint8_t buffer[2];
+	if(UART4_receiveBufferIndexTail == UART4_receiveBufferIndexHead) return 0xff;
+	uint8_t ch = UART4_buffer[UART4_receiveBufferIndexTail];
+	UART4_receiveBufferIndexTail = (UART4_receiveBufferIndexTail + 1) % RXBUFFERSIZE;
+	buffer[0] = ch;
+	buffer[1] = 0;
+	UART3_SendToHost(buffer);
+	return ch;
+}
+
 
 void UART5_transmit(uint8_t * data, uint32_t data_len){
 	if(HAL_UART_Transmit(&Uart5Handle, (uint8_t*)data, data_len, 0xFFFF)!= HAL_OK){

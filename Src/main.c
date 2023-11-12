@@ -36,6 +36,10 @@
 #include "app_send_sms.h"
 #include "app_power_meter_485.h"
 
+#if defined(MODULE_WIFI) && MODULE_WIFI == 1
+	#include "app_mqtt.h"
+#endif
+
 #define		NORMAL_RUN	0
 #define		TEST_RUN	1
 
@@ -61,9 +65,12 @@ int main(void)
 	UART3_SendToHost((uint8_t*)"Start program \r\n");
 	sprintf(log,"Ebox Version: %d\r\n", (uint8_t)VERSION_EBOX);
 	UART3_SendToHost((uint8_t*)log);
-
 	PCF_Init();
 	MODBUS_init();
+#if defined(MODULE_WIFI) && MODULE_WIFI == 1
+	MQTT_init();
+#endif
+
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
@@ -129,6 +136,9 @@ void Main_FSM(void){
 //			&& !Is_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message()){
 //		Watchdog_Refresh();
 //	}
+#endif
+#if defined(MODULE_WIFI) && MODULE_WIFI == 1
+	MQTT_run();
 #endif
 	PowerConsumption_FSM();
 	POWERMETER485_fsm();
