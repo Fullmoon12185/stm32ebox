@@ -57,11 +57,11 @@
 #define 	MIN_PF									1
 
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A  || VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-#define		MIN_CURRENT								10000
-#define		MIN_CURRENT_DETECTING_FULL_CHARGE		10000
-#define		MIN_CURRENT_DETECTING_UNPLUG			10000
-#define		MIN_CURRENT_FOR_START_CHARGING			10000
-#define 	CURRENT_CHANGING_THRESHOLD				10000
+#define		MIN_CURRENT								30000
+#define		MIN_CURRENT_DETECTING_FULL_CHARGE		30000
+#define		MIN_CURRENT_DETECTING_UNPLUG			30000
+#define		MIN_CURRENT_FOR_START_CHARGING			30000
+#define 	CURRENT_CHANGING_THRESHOLD				30000
 
 #if(BOX_PLACE == BOX_AT_XI)
 	#define 	MIN_PF									20
@@ -90,7 +90,7 @@
 #define		TIME_OUT_AFTER_CHARGE_FULL									(50000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_STOP_FROM_APP								(10000/INTERRUPT_TIMER_PERIOD)
 
-#define		TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL					(20*60*1000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL					(30*60*1000/INTERRUPT_TIMER_PERIOD)
 
 #define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(1000/INTERRUPT_TIMER_PERIOD)
 
@@ -167,8 +167,12 @@ void Power_Set_Timeout_Flag_4(void);
 void Power_Set_Timeout_Flag_5(void);
 void Power_Set_Timeout_Flag_6(void);
 void Power_Set_Timeout_Flag_7(void);
+
+#if(VERSION_EBOX != VERSION_6_WITH_8CT_20A)
 void Power_Set_Timeout_Flag_8(void);
 void Power_Set_Timeout_Flag_9(void);
+#endif
+
 uint8_t Is_Power_Timeout_Flag(uint8_t outletID);
 uint8_t Is_Main_Current_Over_Max_Current(void);
 
@@ -233,13 +237,18 @@ void Set_Power_Timeout_Flag_6(void){
 void Set_Power_Timeout_Flag_7(void){
 	power_TimeoutFlag[7] = 1;
 }
+
+#if(VERSION_EBOX != VERSION_6_WITH_8CT_20A)
 void Set_Power_Timeout_Flag_8(void){
 	power_TimeoutFlag[8] = 1;
 }
 void Set_Power_Timeout_Flag_9(void){
 	power_TimeoutFlag[9] = 1;
 }
+#endif
+
 uint8_t Is_Power_Timeout_Flag(uint8_t outletID){
+	if(outletID >= NUMBER_OF_RELAYS) return 0;
 	uint8_t tempStatus = power_TimeoutFlag[outletID];
 	if(tempStatus == 1)
 		Clear_Power_Timeout_Flag(outletID);
@@ -247,6 +256,9 @@ uint8_t Is_Power_Timeout_Flag(uint8_t outletID){
 }
 
 void Set_Power_Timeout_Flags(uint8_t outletID, uint32_t PowerTimeOut){
+
+	if(outletID >= NUMBER_OF_RELAYS) return;
+
 	SCH_Delete_Task(power_Timeout_Task_ID[outletID]);
 	Clear_Power_Timeout_Flag(outletID);
 	if(outletID == 0){
@@ -265,11 +277,14 @@ void Set_Power_Timeout_Flags(uint8_t outletID, uint32_t PowerTimeOut){
 		power_Timeout_Task_ID[outletID] = SCH_Add_Task(Set_Power_Timeout_Flag_6, PowerTimeOut, 0);
 	} else if(outletID == 7){
 		power_Timeout_Task_ID[outletID] = SCH_Add_Task(Set_Power_Timeout_Flag_7, PowerTimeOut, 0);
-	} else if(outletID == 8){
+	}
+#if(VERSION_EBOX != VERSION_6_WITH_8CT_20A)
+	else if(outletID == 8){
 		power_Timeout_Task_ID[outletID] = SCH_Add_Task(Set_Power_Timeout_Flag_8, PowerTimeOut, 0);
 	} else if(outletID == 9){
 		power_Timeout_Task_ID[outletID] = SCH_Add_Task(Set_Power_Timeout_Flag_9, PowerTimeOut, 0);
 	}
+#endif
 }
 
 
@@ -471,7 +486,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 
 		Main.nodes[tempOutletID].power = round((float)tempPower);
 
-		if (Main.nodes[tempOutletID].limitEnergy > 0 || Get_Relay_Status(tempOutletID) == SET){
+		if (Get_Relay_Status(tempOutletID) == SET){
 			Main.energy += Main.nodes[tempOutletID].power*time_period/100;
 			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period/100;
 			Main.nodes[tempOutletID].workingTime++;
@@ -637,9 +652,9 @@ void Detect_Charge_Full(uint8_t outletID){
 			outletCounter[outletID]++;
 			if(outletCounter[outletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
 				outletCounter[outletID] = 0;
-				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL);
-				Main.nodes[outletID].nodeStatus = NODE_READY;
-				outletState[outletID] = OUTLET_CHARGE_FULL_STATE;
+				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_CHARGE_FULL);
+				Main.nodes[outletID].nodeStatus = CHARGEFULL;
+				outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
 		}
 	} else {
 		outletCounter[outletID] = 0;
@@ -655,9 +670,9 @@ void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 		DEBUG_POWER(sprintf((char*) strtmpPower, "tempDefference = %d\r\n", (int) tempDefference););
 		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 		if (tempDefference > threshold)	{
-			Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL);
-			Main.nodes[outletID].nodeStatus = NODE_READY;
-			outletState[outletID] = OUTLET_UNPLUG_STATE;
+			Main.nodes[outletID].nodeStatus = UNPLUG;
+			Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
+			outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
 		}
 	}
 }
@@ -798,7 +813,7 @@ void Process_Outlets(void){
 		case OUTLET_CHARGING_STATE:
 			if(Main.nodes[tempOutletID].nodeStatus == TOTAL_OVER_CURRRENT) {
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT);
-				outletState[tempOutletID] = 3;
+				outletState[tempOutletID] = OUTLET_ERROR_STATE;
 			} else if(Main.nodes[tempOutletID].nodeStatus == CHARGING) {
 				if(isNewCurrents(tempOutletID) == 1){
 					if(Get_Relay_Status(tempOutletID) == SET){
@@ -815,24 +830,45 @@ void Process_Outlets(void){
 				}
 			}
 			break;
-
 		case OUTLET_CHARGE_FULL_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
 				Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
 				outletState[tempOutletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
-			} else if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
-				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
+			} else if(isNewCurrents(tempOutletID) == 1){
+				if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
+					outletCounter[tempOutletID]++;
+					if(outletCounter[tempOutletID] > 20){
+						outletState[tempOutletID] = OUTLET_CHARGING_STATE;
+						Main.nodes[tempOutletID].nodeStatus = CHARGING;
+						outletCounter[tempOutletID] = 0;
+					}
+				} else {
+					outletCounter[tempOutletID] = 0;
+				}
+
+			} else if(Get_Relay_Status(tempOutletID) == RESET){
+				Detect_Stop_From_App(tempOutletID);
 			}
 			break;
 		case OUTLET_UNPLUG_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
 				Main.nodes[tempOutletID].nodeStatus = UNPLUG;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_UNPLUG);
-
 				outletState[tempOutletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
-			} else if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
-				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
+			} else if(isNewCurrents(tempOutletID) == 1){
+				if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
+					outletCounter[tempOutletID]++;
+					if(outletCounter[tempOutletID] > 20){
+						outletState[tempOutletID] = OUTLET_CHARGING_STATE;
+						Main.nodes[tempOutletID].nodeStatus = CHARGING;
+						outletCounter[tempOutletID] = 0;
+					}
+				} else {
+					outletCounter[tempOutletID] = 0;
+				}
+			} else if(Get_Relay_Status(tempOutletID) == RESET){
+				Detect_Stop_From_App(tempOutletID);
 			}
 			break;
 		case OUTLET_ERROR_STATE:

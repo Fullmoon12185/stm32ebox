@@ -23,20 +23,23 @@
 Date: 22/02/2023
 Content:
    - Add version and update fota
-
+.0.2
+- still on outlet when full charge or unplug
 */
+
+
 #if(BOX_PLACE == BOX_WITH_6_OUTLETS)
 	const uint8_t firmwareVersion[] =  "6OLs-";
 #else
 
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
-	const uint8_t firmwareVersion[] =  "3.0.1-";
+	const uint8_t firmwareVersion[] =  "3.0.2-";
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
-	const uint8_t firmwareVersion[] =  "4.0.1-";
+	const uint8_t firmwareVersion[] =  "4.0.2-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	const uint8_t firmwareVersion[] =  "5.0.1-";
+	const uint8_t firmwareVersion[] =  "5.0.2-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.0.0-";
+	const uint8_t firmwareVersion[] =  "6.0.2-";
 
 #endif
 

@@ -25,7 +25,7 @@ void Lcd_Goto_XY (int row, int col); //set proper location on screen
 
 
 void Show_Box_ID(uint16_t bID);
-void Show_KWH(uint32_t ws);
+void Show_KWH(uint64_t ws);
 
 
 
