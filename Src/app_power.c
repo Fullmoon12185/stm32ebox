@@ -138,6 +138,8 @@ typedef struct PowerSystems {
 
 PowerSystem Main;
 POWER_FSM_STATE powerFsmState = POWER_FINISH_STATE;
+
+
 uint32_t lastTimeErr, lastReport;
 
 uint8_t strtmpPower[] = "                                      ";

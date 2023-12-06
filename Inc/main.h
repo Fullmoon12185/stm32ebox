@@ -116,6 +116,10 @@ void Error_Handler(void);
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	#define   CT_20A_1                        0
 	#define   CT_20A_2                        1
+
+	#define   CT_10A_FILTER_1                        4
+	#define   CT_10A_FILTER_2                        5
+
 #endif
 
 #define   VOLTAGE_USAGE       			228
