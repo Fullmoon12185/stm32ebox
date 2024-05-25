@@ -14,6 +14,8 @@
 #include "app_test.h"
 #include "app_power.h"
 
+#include "app_pcf8574.h"
+
 
 #define		DEBUG_ADC(X)								X
 #define 	NUMBER_OF_SAMPLES_FOR_SMA					12
@@ -166,17 +168,17 @@
 //This is for CT 10 A
 
 #define		CT_10A_THRESHOLD_1							300
-#define		CT_10A_COEFF_1								1755
+#define		CT_10A_COEFF_1								1745
 #define		CT_10A_THRESHOLD_2A							280
-#define		CT_10A_COEFF_2A								1755
+#define		CT_10A_COEFF_2A								CT_10A_COEFF_1
 #define		CT_10A_THRESHOLD_2B							260
-#define		CT_10A_COEFF_2B								1755
+#define		CT_10A_COEFF_2B								CT_10A_COEFF_1
 
 #define		CT_10A_THRESHOLD_2							240
-#define		CT_10A_COEFF_2								1755
+#define		CT_10A_COEFF_2								CT_10A_COEFF_1
 
 #define		CT_10A_THRESHOLD_3							200
-#define		CT_10A_COEFF_3								1755
+#define		CT_10A_COEFF_3								CT_10A_COEFF_1
 
 #define		CT_10A_THRESHOLD_4							180
 #define		CT_10A_COEFF_4								1768
@@ -185,64 +187,64 @@
 #define		CT_10A_COEFF_5								1755
 
 #define		CT_10A_THRESHOLD_6							154
-#define		CT_10A_COEFF_6								1755
+#define		CT_10A_COEFF_6								CT_10A_COEFF_5
 #define		CT_10A_THRESHOLD_7							145
-#define		CT_10A_COEFF_7								1755
+#define		CT_10A_COEFF_7								CT_10A_COEFF_5
 #define		CT_10A_THRESHOLD_8							137
-#define		CT_10A_COEFF_8								1755
+#define		CT_10A_COEFF_8								CT_10A_COEFF_5
 
 #define		CT_10A_THRESHOLD_9							134
-#define		CT_10A_COEFF_9								1755
+#define		CT_10A_COEFF_9								CT_10A_COEFF_5
 #define		CT_10A_THRESHOLD_10							129
-#define		CT_10A_COEFF_10								1755
+#define		CT_10A_COEFF_10								CT_10A_COEFF_5
 #define		CT_10A_THRESHOLD_11							119
-#define		CT_10A_COEFF_11								1755
+#define		CT_10A_COEFF_11								CT_10A_COEFF_5
 #define		CT_10A_THRESHOLD_12							115
-#define		CT_10A_COEFF_12								1755
+#define		CT_10A_COEFF_12								CT_10A_COEFF_5
 #define		CT_10A_THRESHOLD_13							110
-#define		CT_10A_COEFF_13								1755
+#define		CT_10A_COEFF_13								CT_10A_COEFF_5
 
 #define		CT_10A_THRESHOLD_14							103
-#define		CT_10A_COEFF_14								1755
+#define		CT_10A_COEFF_14								CT_10A_COEFF_5
 #define		CT_10A_THRESHOLD_15							100
-#define		CT_10A_COEFF_15								1755
+#define		CT_10A_COEFF_15								CT_10A_COEFF_5
 
-#define		CT_10A_COEFF_16								1757
+#define		CT_10A_COEFF_16								CT_10A_COEFF_5
 
 
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2785
+#define		CT_20A_COEFF_1								2745
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2745
+#define		CT_20A_COEFF_2								2735
 
 #define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2730
+#define		CT_20A_COEFF_3								2715
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2730
+#define		CT_20A_COEFF_4								2715
 
 #define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2600
+#define		CT_20A_COEFF_5								2585
 
 
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2780
+#define		CT_20A_COEFF_1								2745
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2740
+#define		CT_20A_COEFF_2								2735
 
 #define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2725
+#define		CT_20A_COEFF_3								2715
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2725
+#define		CT_20A_COEFF_4								2715
 
 #define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2595
+#define		CT_20A_COEFF_5								2585
 
 #else
 
@@ -1052,24 +1054,47 @@ void PowerConsumption_FSM(void){
 					}
 				}
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-				if(i == CT_20A_1 || i == CT_20A_2){
-					if(tempIrmsADCValue > 200){
-						coefficientForPF = 300;
-					} else if(tempIrmsADCValue > 100)
-						coefficientForPF = 360;
-					else {
-						coefficientForPF = 320;
+				//test for hd mon 127
+				if(Get_Box_ID() == HD_MON_2){
+					if(i == CT_20A_1 || i == CT_20A_2){
+						if(tempIrmsADCValue > 200){
+							coefficientForPF = 300;
+						} else if(tempIrmsADCValue > 100)
+							coefficientForPF = 360;
+						else {
+							coefficientForPF = 320;
+						}
+
+					} else {
+						if(tempIrmsADCValue > 230){
+							coefficientForPF = 320;
+						} else if(tempIrmsADCValue > 100)
+							coefficientForPF = 320;
+						else {
+							coefficientForPF = 320;
+						}
 					}
+//					coefficientForPF = coefficientForPF*2/3;
 
 				} else {
-					if(tempIrmsADCValue > 230){
-						coefficientForPF = 320;
-					} else if(tempIrmsADCValue > 100)
-						coefficientForPF = 320;
-					else {
-						coefficientForPF = 320;
-					}
+					if(i == CT_20A_1 || i == CT_20A_2){
+						if(tempIrmsADCValue > 200){
+							coefficientForPF = 300;
+						} else if(tempIrmsADCValue > 100)
+							coefficientForPF = 360;
+						else {
+							coefficientForPF = 320;
+						}
 
+					} else {
+						if(tempIrmsADCValue > 230){
+							coefficientForPF = 320;
+						} else if(tempIrmsADCValue > 100)
+							coefficientForPF = 320;
+						else {
+							coefficientForPF = 320;
+						}
+					}
 				}
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 					if(tempIrmsADCValue > 200){
@@ -1093,7 +1118,7 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 #else
-				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 15){
+				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 5){
 					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
 				} else {
 					tempPowerFactor = 0.0;

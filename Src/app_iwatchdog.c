@@ -13,7 +13,7 @@
 
 IWDG_HandleTypeDef hiwdg;
 static uint8_t counterForWatchdogReset = 0;
-static uint8_t counterForResetModuleSim = 0;
+static uint16_t counterForResetModuleSim = 0;
 static uint16_t counterForWatchdogResetDueToNotSendingMqttMessage = 0;
 /**
   * @brief IWDG Initialization Function

@@ -15,7 +15,7 @@
 #define		DEBUG_SEND_SMS(x)		x
 #define		SMS_BUFFER_LENGTH		30
 
-#define		CTRL_Z	26
+#define		CTRL_Z					26
 
 /*====================================================================*/
 /*Firmware version management*/
@@ -25,21 +25,28 @@ Content:
    - Add version and update fota
 .0.2
 - still on outlet when full charge or unplug
+.0.3
+- add features specific for HD mon, but still compatible with other boxes
+- update current measurement for Datbike
+.0.4
+- add condition to report no fuse and no relay
+.0.5
+-delay when detect unplug, testing at Hausinco
 */
 
 
 #if(BOX_PLACE == BOX_WITH_6_OUTLETS)
-	const uint8_t firmwareVersion[] =  "6OLs-";
+	const uint8_t firmwareVersion[] =  "6OLs-5.0.5";
 #else
 
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
-	const uint8_t firmwareVersion[] =  "3.0.2-";
+	const uint8_t firmwareVersion[] =  "3.0.5-";
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
-	const uint8_t firmwareVersion[] =  "4.0.2-";
+	const uint8_t firmwareVersion[] =  "4.0.5-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	const uint8_t firmwareVersion[] =  "5.0.2-";
+	const uint8_t firmwareVersion[] =  "5.0.5-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.0.2-";
+	const uint8_t firmwareVersion[] =  "6.0.5-";
 
 #endif
 
