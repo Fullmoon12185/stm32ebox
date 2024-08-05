@@ -27,6 +27,7 @@ extern I2C_HandleTypeDef I2cHandle;
 uint8_t I2CReceiveBuffer[2];
 //uint32_t Relay_and_Fuse_Statuses = 0;
 
+static uint16_t boxID = 0;
 
 uint8_t strpcf[] = "                           ";
 
@@ -50,7 +51,7 @@ void PCF_Init(void){
 		HAL_Delay(100);
 	}
 
-	sprintf((char*) strpcf, "boxID = %d\r\n", (int) Get_Box_ID());
+	sprintf((char*) strpcf, "boxID = %d\r\n", (int) Get_Box_ID_From_PCFData());
 	UART3_SendToHost((uint8_t *)strpcf);
 }
 
@@ -81,7 +82,14 @@ uint32_t Get_All_Relay_Fuse_Statuses(void){
 	return pcfData.Relay_and_Fuse_Statuses;
 }
 
+
+
 uint16_t Get_Box_ID(void){
+	return boxID;
+}
+
+
+uint16_t Get_Box_ID_From_PCFData(void){
 #if(VERSION_EBOX == 2  || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	uint8_t tempHi = pcfData.bytePCFData[2] & 0xf0;
 	uint8_t tempHiReversed = 0, temp;
@@ -91,8 +99,8 @@ uint16_t Get_Box_ID(void){
 		if(temp)
 			tempHiReversed |= (1 << ((8 - 1) - i));
 	}
-
-	return (uint16_t)((tempHiReversed & 0x0f) << 8) | pcfData.bytePCFData[3];
+	boxID = (uint16_t)((tempHiReversed & 0x0f) << 8) | pcfData.bytePCFData[3];
+	return boxID;
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	uint8_t tempHi = pcfData.bytePCFData[2] & 0xf0;
 	uint8_t tempHiReversed = 0, temp;
@@ -102,12 +110,13 @@ uint16_t Get_Box_ID(void){
 		if(temp)
 			tempHiReversed |= (1 << ((8 - 1) - i));
 	}
-
-	return (uint16_t)((tempHiReversed & 0x0f) << 8) | pcfData.bytePCFData[3];
+	boxID = (uint16_t)((tempHiReversed & 0x0f) << 8) | pcfData.bytePCFData[3];
+	return boxID;
 #else
 	return 5;
 #endif
 }
+
 
 void PCF_read(void){
 	static uint8_t pcfReadState = 0;

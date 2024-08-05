@@ -27,6 +27,8 @@
 
 #define	OUTLET_UNPLUG_STATE						5
 #define OUTLET_CHARGE_FULL_STATE 				6
+#define OUTLET_AFTER_CHARGE_FULL_STATE			7
+#define OUTLET_CHARGE_FULL_HD_MON_STATE			8
 #define OUTLET_PREPARE_TO_AVAILABLE_STATE 		2
 
 
@@ -57,12 +59,12 @@
 #define 	MIN_PF									1
 
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A  || VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-#define		MIN_CURRENT											10000
-#define		MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE	10000
+#define		MIN_CURRENT											27000
+#define		MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE	27000
 #define		MIN_CURRENT_DETECTING_FULL_CHARGE					30000
-#define		THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE		100000
+#define		THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE		50000
 
-#define		MIN_CURRENT_DETECTING_UNPLUG						30000
+#define		MIN_CURRENT_DETECTING_UNPLUG						5000
 #define		MIN_CURRENT_DETECTING_UNPLUG_HD_MON					30000
 
 #define		MIN_CURRENT_FOR_START_CHARGING						30000
@@ -159,7 +161,6 @@ static uint32_t power_Input_Source_Task_ID = NO_TASK_ID;
 static uint8_t outletState[NUMBER_OF_RELAYS];
 static uint32_t outletCounter[NUMBER_OF_RELAYS];
 static uint32_t outletCounterMaxCurrent[NUMBER_OF_RELAYS];
-static uint32_t outletCounterForUnplugDetection[NUMBER_OF_RELAYS] ;
 static FlagStatus is_Node_Status_Changed = RESET;
 
 
@@ -196,7 +197,6 @@ void Power_Init(void){
 		outletState[idx] = OUTLET_AVAILABLE_STATE;
 		outletCounter[idx] = 0;
 		outletCounterMaxCurrent[idx] = 0;
-		outletCounterForUnplugDetection[idx] = 0;
 		previousOutletStatus[idx] = NODE_NORMAL;
 	}
 }
@@ -472,10 +472,11 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		uint8_t tempOutletID = outletID;
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].previousCurrent_1;
 		Main.nodes[tempOutletID].previousCurrent_1 = Main.nodes[tempOutletID].current;
-		if ((Get_Relay_Status(tempOutletID) == RESET) || power_factor < MIN_PF)
+		if (Get_Relay_Status(tempOutletID) == RESET)
 		{
 			Main.nodes[tempOutletID].current = 0;
 			Main.nodes[tempOutletID].powerFactor = 0;
+			Main.nodes[tempOutletID].maxNodeCurrent = 0;
 		} else	{
 			Main.nodes[tempOutletID].current = current;
 			Main.nodes[tempOutletID].powerFactor = power_factor;
@@ -653,18 +654,12 @@ void Detect_Stop_From_App(uint8_t outletID){
 
 void Detect_Charge_Full(uint8_t outletID, uint32_t threshold){
 	if (Main.nodes[outletID].current < threshold){
-			outletCounter[outletID]++;
-			if(outletCounter[outletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
-				outletCounter[outletID] = 0;
-				if(Get_Box_ID() == HD_MON_1 || Get_Box_ID() == HD_MON_2){
-					Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL);
-					Main.nodes[outletID].nodeStatus = CHARGING;
-					outletState[outletID] = OUTLET_CHARGE_FULL_STATE;
-				} else {
-					Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_CHARGE_FULL);
-					Main.nodes[outletID].nodeStatus = CHARGEFULL;
-					outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
-				}
+		outletCounter[outletID]++;
+		if(outletCounter[outletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
+			outletCounter[outletID] = 0;
+			Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_CHARGE_FULL);
+			Main.nodes[outletID].nodeStatus = CHARGEFULL;
+			outletState[outletID] = OUTLET_CHARGE_FULL_STATE;
 		}
 	} else {
 		outletCounter[outletID] = 0;
@@ -675,33 +670,17 @@ void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 
 	DEBUG_POWER(sprintf((char*) strtmpPower, "threshold = %d\r\n", (int) threshold););
 	DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-	if(Get_Box_ID() == HD_MON_1 || Get_Box_ID() == HD_MON_2){
-		if(Main.nodes[outletID].current < MIN_CURRENT_DETECTING_UNPLUG_HD_MON){
-			int32_t tempDefference = (int32_t)(Main.nodes[outletID].previousCurrent - Main.nodes[outletID].current);
-			DEBUG_POWER(sprintf((char*) strtmpPower, "tempDefference = %d\r\n", (int) tempDefference););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			if (tempDefference > threshold)	{
-				outletCounter[outletID] = 0;
-				Main.nodes[outletID].nodeStatus = CHARGING;
-				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL);
-				outletState[outletID] = OUTLET_UNPLUG_STATE;
-			}
-		}
-	} else {
-		if(Main.nodes[outletID].current < MIN_CURRENT_DETECTING_UNPLUG){
-			int32_t tempDefference = (int32_t)(Main.nodes[outletID].previousCurrent - Main.nodes[outletID].current);
-			DEBUG_POWER(sprintf((char*) strtmpPower, "tempDefference = %d\r\n", (int) tempDefference););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-			if (tempDefference > threshold)	{
-				outletCounter[outletID] = 0;
-				Main.nodes[outletID].nodeStatus = UNPLUG;
-				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
-				outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
-
-			}
+	if(Main.nodes[outletID].current < MIN_CURRENT_DETECTING_UNPLUG){
+		int32_t tempDefference = (int32_t)(Main.nodes[outletID].previousCurrent - Main.nodes[outletID].current);
+		DEBUG_POWER(sprintf((char*) strtmpPower, "tempDefference = %d\r\n", (int) tempDefference););
+		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+		if (tempDefference > threshold)	{
+			outletCounter[outletID] = 0;
+			Main.nodes[outletID].nodeStatus = UNPLUG;
+			Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
+			outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
 		}
 	}
-
 }
 
 uint8_t isNewCurrents(uint8_t outletID){
@@ -818,7 +797,6 @@ void Process_Outlets(void){
 			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
 				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 				outletCounter[tempOutletID] = 0;
-				outletCounterForUnplugDetection[tempOutletID] = 0;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_STABABILITY);
 				outletState[tempOutletID] = OUTLET_STABLIZED_STATE;
 			} else {
@@ -831,13 +809,7 @@ void Process_Outlets(void){
 			break;
 		case OUTLET_STABLIZED_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
-				if (Main.nodes[tempOutletID].current >= MIN_CURRENT) {
-					outletCounter[tempOutletID] = 0;
-					outletCounterForUnplugDetection[tempOutletID] = 0;
-					outletState[tempOutletID] = OUTLET_CHARGING_STATE;
-				} else {
-					outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
-				}
+				outletState[tempOutletID] = OUTLET_CHARGING_STATE;
 			} else if(Get_Relay_Status(tempOutletID) == RESET){
 				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
 			}
@@ -854,12 +826,37 @@ void Process_Outlets(void){
 						} else {
 							Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*3/4);
 						}
-
-						if(Main.nodes[tempOutletID].maxNodeCurrent > THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE){
-							Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE);
+						if(Get_Box_ID() == HD_MON_1 || Get_Box_ID() == HD_MON_2){
+							if(Is_Charging_More_Than_An_Hour(tempOutletID, 8*60*60)){
+								Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
+								Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
+								outletState[tempOutletID] = OUTLET_CHARGE_FULL_HD_MON_STATE;
+							} else {
+								if(Main.nodes[tempOutletID].maxNodeCurrent > THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE){
+									Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE);
+								}
+								else {
+									Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE);
+								}
+							}
+						} else if(Get_Box_ID() == ESTELLA_HEIGHTS){
+							if(Is_Charging_More_Than_An_Hour(tempOutletID, 8*60*60)){
+								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE*4);
+							} else if (Is_Charging_More_Than_An_Hour(tempOutletID, 6*60*60)) {
+								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE*3);
+							} else if (Is_Charging_More_Than_An_Hour(tempOutletID, 4*60*60)) {
+								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE*2);
+							} else {
+								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE);
+							}
 						}
 						else {
-							Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE);
+							if(Main.nodes[tempOutletID].maxNodeCurrent > THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE){
+								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE);
+							}
+							else {
+								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE);
+							}
 						}
 					} else {
 						Detect_Stop_From_App(tempOutletID);
@@ -867,44 +864,33 @@ void Process_Outlets(void){
 				}
 			}
 			break;
+
 		case OUTLET_CHARGE_FULL_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
-				Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
-				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
-				outletState[tempOutletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
-			} else if(isNewCurrents(tempOutletID) == 1){
-				if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
-					outletCounter[tempOutletID]++;
-					if(outletCounter[tempOutletID] > 20){
-						outletState[tempOutletID] = OUTLET_CHARGING_STATE;
-						Main.nodes[tempOutletID].nodeStatus = CHARGING;
-						outletCounter[tempOutletID] = 0;
-					}
-				} else {
-					outletCounter[tempOutletID] = 0;
-				}
-
-			} else if(Get_Relay_Status(tempOutletID) == RESET){
+				outletState[tempOutletID] = OUTLET_AFTER_CHARGE_FULL_STATE;
+			}
+			if(Get_Relay_Status(tempOutletID) == RESET){
 				Detect_Stop_From_App(tempOutletID);
 			}
 			break;
-		case OUTLET_UNPLUG_STATE:
-			if(Is_Power_Timeout_Flag(tempOutletID)){
-				Main.nodes[tempOutletID].nodeStatus = UNPLUG;
-				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_UNPLUG);
-				outletState[tempOutletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
-			} else if(isNewCurrents(tempOutletID) == 1){
-				if(Main.nodes[tempOutletID].current >= MIN_CURRENT){
-					outletCounter[tempOutletID]++;
-					if(outletCounter[tempOutletID] > 5){
-						outletState[tempOutletID] = OUTLET_CHARGING_STATE;
-						Main.nodes[tempOutletID].nodeStatus = CHARGING;
-						outletCounter[tempOutletID] = 0;
-					}
-				} else {
+		case OUTLET_AFTER_CHARGE_FULL_STATE:
+			if(Get_Relay_Status(tempOutletID) == SET){
+				if (Main.nodes[tempOutletID].current >= MIN_CURRENT*3) {
+					Main.nodes[tempOutletID].nodeStatus = CHARGING;
 					outletCounter[tempOutletID] = 0;
+					outletState[tempOutletID] = OUTLET_CHARGING_STATE;
+				} else {
+					Main.nodes[tempOutletID].nodeStatus = NODE_READY;
 				}
-			} else if(Get_Relay_Status(tempOutletID) == RESET){
+			} else {
+				Detect_Stop_From_App(tempOutletID);
+			}
+			break;
+		case OUTLET_CHARGE_FULL_HD_MON_STATE:
+			if(Is_Power_Timeout_Flag(tempOutletID)){
+				Main.nodes[tempOutletID].nodeStatus = NODE_READY;
+			}
+			if(Get_Relay_Status(tempOutletID) == RESET){
 				Detect_Stop_From_App(tempOutletID);
 			}
 			break;

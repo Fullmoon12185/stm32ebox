@@ -146,10 +146,10 @@ static void POWERMETER_assign_data_by_index(POWER_t * power, POWER_idx_t index ,
 
 uint16_t PowerVoltage(void){
 	uint16_t tempVoltage = (uint16_t)power.voltage;
-	if(tempVoltage > 240){
+	if(tempVoltage > 250){
 		tempVoltage = 230;
-	} else if(tempVoltage < 220){
-		tempVoltage = 230;
+	} else if(tempVoltage < 200){
+		tempVoltage = 200;
 	}
 	return tempVoltage;
 }

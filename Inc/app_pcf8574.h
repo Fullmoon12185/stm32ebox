@@ -10,6 +10,7 @@
 
 void PCF_Init(void);
 uint16_t Get_Box_ID(void);
+uint16_t Get_Box_ID_From_PCFData(void);
 uint32_t Get_All_Relay_Fuse_Statuses(void);
 uint8_t PCF_Scan();
 

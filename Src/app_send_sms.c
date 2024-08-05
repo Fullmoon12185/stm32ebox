@@ -32,21 +32,34 @@ Content:
 - add condition to report no fuse and no relay
 .0.5
 -delay when detect unplug, testing at Hausinco
+.1.0
+- update for new backend
+- delete all delay for unplug and charge full
+- change stablized time from 20s to 10s, during stablized time, do nothing and change to charging state
+.1.2
+- update code for detecting full charging
+- change stablize time back to 20s
+- update code for detecting unplug, threshold < 50mA
+- update for HD mon, allow to charge up to 8 hours
+
+.1.3
+- Update checking voltage < 215 and > 240
+
 */
 
 
 #if(BOX_PLACE == BOX_WITH_6_OUTLETS)
-	const uint8_t firmwareVersion[] =  "6OLs-5.0.5";
+	const uint8_t firmwareVersion[] =  "6OLs-5.1.3";
 #else
 
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
-	const uint8_t firmwareVersion[] =  "3.0.5-";
+	const uint8_t firmwareVersion[] =  "3.1.3-";
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
-	const uint8_t firmwareVersion[] =  "4.0.5-";
+	const uint8_t firmwareVersion[] =  "4.1.3-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	const uint8_t firmwareVersion[] =  "5.0.5-";
+	const uint8_t firmwareVersion[] =  "5.1.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.0.5-";
+	const uint8_t firmwareVersion[] =  "6.1.3-";
 
 #endif
 

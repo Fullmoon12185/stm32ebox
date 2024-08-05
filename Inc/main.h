@@ -79,6 +79,7 @@ void Error_Handler(void);
 
 #define		HD_MON_1					126
 #define		HD_MON_2					127
+#define 	ESTELLA_HEIGHTS				129
 
 #define 	BEEP_ON					1
 

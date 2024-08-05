@@ -214,37 +214,37 @@
 
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2745
+#define		CT_20A_COEFF_1								2730
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2735
+#define		CT_20A_COEFF_2								2720
 
 #define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2715
+#define		CT_20A_COEFF_3								2700
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2715
+#define		CT_20A_COEFF_4								2700
 
 #define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2585
+#define		CT_20A_COEFF_5								2570
 
 
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2745
+#define		CT_20A_COEFF_1								2740
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2735
+#define		CT_20A_COEFF_2								2730
 
 #define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2715
+#define		CT_20A_COEFF_3								2710
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2715
+#define		CT_20A_COEFF_4								2710
 
 #define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2585
+#define		CT_20A_COEFF_5								2580
 
 #else
 
@@ -985,11 +985,7 @@ void PowerConsumption_FSM(void){
 					} else if(tempPeakPeak < 60){
 						tempPeakPeak = 0;
 					}
-//					if(cycleCounter == 0){
-//						AdcBufferPeakPeak[channelIndex] = tempPeakPeak;
-//					} else {
-//						AdcBufferPeakPeak[channelIndex] = AdcBufferPeakPeak[channelIndex] + tempPeakPeak;
-//					}
+
 					AdcBufferPeakPeak[channelIndex][indexForAverageCurrent] = tempPeakPeak;
 					AdcBufferAveragePeakPeak[channelIndex] += AdcBufferPeakPeak[channelIndex][indexForAverageCurrent]
 												- AdcBufferPeakPeak[channelIndex][(indexForAverageCurrent + 1 + NUMBER_OF_SAMPLES_FOR_SMA)%NUMBER_OF_SAMPLES_FOR_SMA];
@@ -1015,15 +1011,12 @@ void PowerConsumption_FSM(void){
 		if(cycleCounter >= NUMBER_OF_SAMPLES_PER_AVERAGE){
 			cycleCounter = 0;
 			for (uint8_t i = 0; i < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; i++){
-//				AdcBufferPeakPeak[i] = AdcBufferPeakPeak[i] >> SAMPLE_STEPS;
 				array_Of_Average_Vrms_ADC_Values[i] = array_Of_Average_Vrms_ADC_Values[i] >> SAMPLE_STEPS;
 				if(array_Of_Average_Vrms_ADC_Values[i] < 5 && i != MAIN_INPUT){
 					array_Of_Average_Vrms_ADC_Values[i] = 0;
 				}
 				uint32_t tempIrmsADCValue = array_Of_Average_Irms_ADC_Values[i]/NUMBER_OF_SAMPLES_FOR_SMA;
 
-//				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i]*1000 * 100 * 2) / (AdcBufferPeakPeak[i] * 707);
-//				PowerFactor[i] = (array_Of_Average_Vrms_ADC_Values[i] * 283) / (AdcBufferAveragePeakPeak[i]/NUMBER_OF_SAMPLES_FOR_SMA);
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 				if(tempIrmsADCValue > 230){
 					coefficientForPF = 300;
@@ -1054,49 +1047,7 @@ void PowerConsumption_FSM(void){
 					}
 				}
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-				//test for hd mon 127
-				if(Get_Box_ID() == HD_MON_2){
-					if(i == CT_20A_1 || i == CT_20A_2){
-						if(tempIrmsADCValue > 200){
-							coefficientForPF = 300;
-						} else if(tempIrmsADCValue > 100)
-							coefficientForPF = 360;
-						else {
-							coefficientForPF = 320;
-						}
-
-					} else {
-						if(tempIrmsADCValue > 230){
-							coefficientForPF = 320;
-						} else if(tempIrmsADCValue > 100)
-							coefficientForPF = 320;
-						else {
-							coefficientForPF = 320;
-						}
-					}
-//					coefficientForPF = coefficientForPF*2/3;
-
-				} else {
-					if(i == CT_20A_1 || i == CT_20A_2){
-						if(tempIrmsADCValue > 200){
-							coefficientForPF = 300;
-						} else if(tempIrmsADCValue > 100)
-							coefficientForPF = 360;
-						else {
-							coefficientForPF = 320;
-						}
-
-					} else {
-						if(tempIrmsADCValue > 230){
-							coefficientForPF = 320;
-						} else if(tempIrmsADCValue > 100)
-							coefficientForPF = 320;
-						else {
-							coefficientForPF = 320;
-						}
-					}
-				}
-#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+				if(i == CT_20A_1 || i == CT_20A_2){
 					if(tempIrmsADCValue > 200){
 						coefficientForPF = 300;
 					} else if(tempIrmsADCValue > 100)
@@ -1104,6 +1055,25 @@ void PowerConsumption_FSM(void){
 					else {
 						coefficientForPF = 320;
 					}
+
+				} else {
+					if(tempIrmsADCValue > 230){
+						coefficientForPF = 320;
+					} else if(tempIrmsADCValue > 100)
+						coefficientForPF = 320;
+					else {
+						coefficientForPF = 320;
+					}
+				}
+
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+				if(tempIrmsADCValue > 200){
+					coefficientForPF = 300;
+				} else if(tempIrmsADCValue > 100)
+					coefficientForPF = 360;
+				else {
+					coefficientForPF = 320;
+				}
 
 #endif
 
@@ -1356,9 +1326,7 @@ void PowerConsumption_FSM(void){
 		break;
 
 	case ADC_REPORT_POWER_DATA:
-		if(is_Adc_Reading_Timeout())
-//		if(zeroPointCounter >= 50*2)
-		{
+		if(is_Adc_Reading_Timeout()) {
 			HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
 			for (uint8_t channelIndex = 0; channelIndex < NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION; channelIndex++) {
 				array_Of_Vrms_ADC_Values[channelIndex]  = 0;
@@ -1381,24 +1349,6 @@ void Adc_State_Display(void){
 	if(pre_adcState != adcState){
 		pre_adcState = adcState;
 		switch(adcState){
-//		case ADC_SETUP_TIMER_ONE_SECOND:
-//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_SETUP_TIMER_ONE_SECOND"););
-//
-//			break;
-//		case ADC_FIND_ZERO_VOLTAGE_POINT:
-//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_FIND_ZERO_VOLTAGE_POINT"););
-//			break;
-//		case ADC_START_GETTING:
-//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_START_GETTING\r"););
-//			break;
-//		case ADC_WAIT_FOR_DATA_COMPLETE_TRANSMIT:
-//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_WAIT_FOR_DATA_COMPLETE_TRANSMIT\r"););
-//
-//			break;
-//		case ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE:
-//			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_COMPUTE_PEAK_TO_PEAK_VOLTAGE\r"););
-//			break;
-
 		case ADC_REPORT_POWER_DATA:
 			DEBUG_ADC(UART3_SendToHost((uint8_t*)"ADC_REPORT_POWER_DATA\r"););
 			break;
