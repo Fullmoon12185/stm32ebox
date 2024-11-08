@@ -145,6 +145,7 @@ static void POWERMETER_assign_data_by_index(POWER_t * power, POWER_idx_t index ,
 
 
 uint16_t PowerVoltage(void){
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	uint16_t tempVoltage = (uint16_t)power.voltage;
 	if(tempVoltage > 250){
 		tempVoltage = 230;
@@ -152,6 +153,10 @@ uint16_t PowerVoltage(void){
 		tempVoltage = 200;
 	}
 	return tempVoltage;
+#else
+	return 230;
+#endif
+
 }
 
 void POWERMETER485_fsm(void){

@@ -75,7 +75,7 @@
 #elif(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 	#define 	MIN_PF									20
 #else
-	#define 	MIN_PF									10
+	#define 	MIN_PF									15
 #endif
 
 #elif(VERSION_EBOX == 15)
@@ -99,7 +99,7 @@
 
 #define		TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL					(10*60*1000/INTERRUPT_TIMER_PERIOD)
 
-#define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(1000/INTERRUPT_TIMER_PERIOD)
+#define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(30000/INTERRUPT_TIMER_PERIOD)
 
 #define	    TIME_OUT_AFTER_DETECTING_OVER_MONEY							(10000/INTERRUPT_TIMER_PERIOD)
 #define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT							(5000/INTERRUPT_TIMER_PERIOD)
@@ -472,7 +472,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		uint8_t tempOutletID = outletID;
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].previousCurrent_1;
 		Main.nodes[tempOutletID].previousCurrent_1 = Main.nodes[tempOutletID].current;
-		if (Get_Relay_Status(tempOutletID) == RESET)
+		if (Get_Relay_Status(tempOutletID) == RESET || Main.nodes[tempOutletID].powerFactor < MIN_PF)
 		{
 			Main.nodes[tempOutletID].current = 0;
 			Main.nodes[tempOutletID].powerFactor = 0;
@@ -702,30 +702,35 @@ void Process_Outlets(void){
 
 	Display_OutLet_Status(tempOutletID);
 
-	if (isNoFuseAvailable(tempOutletID)){
+	if ((Get_Box_ID() != ANTRUNG_BUILDING) && isNoFuseAvailable(tempOutletID)){
 		if(Get_Relay_Status(tempOutletID) == RESET) {	//return NOFUSE
-			Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
-			Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_FUSE);
-			outletState[tempOutletID] = OUTLET_ERROR_STATE;
+			if(outletState[tempOutletID] != OUTLET_ERROR_STATE){
+				Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_FUSE);
+				outletState[tempOutletID] = OUTLET_ERROR_STATE;
+			}
 		}
 	}
 	else if (isRelayOff(tempOutletID)
 			&& (Get_Relay_Status(tempOutletID) == SET)
 			&& is_Set_Relay_Timeout()
 			&& (Get_Current(tempOutletID) == 0)) {	//relay not working MUST and is Working
+		if(outletState[tempOutletID] != OUTLET_ERROR_STATE){
 				Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
 				outletState[tempOutletID] = OUTLET_ERROR_STATE;
+		}
 	}
 
-	else if(isRelayOn(tempOutletID)
+	else if((Get_Box_ID() != ANTRUNG_BUILDING) && isRelayOn(tempOutletID)
 			&& (Get_Relay_Status(tempOutletID) == RESET)
 			&& is_Set_Relay_Timeout()){
-		Main.nodes[tempOutletID].nodeStatus = RELAY_BROKEN;
-		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
-		outletState[tempOutletID] = OUTLET_ERROR_STATE;
+		if(outletState[tempOutletID] != OUTLET_ERROR_STATE){
+			Main.nodes[tempOutletID].nodeStatus = RELAY_BROKEN;
+			Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
+			outletState[tempOutletID] = OUTLET_ERROR_STATE;
+		}
 	}
-
 
 #if (VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 	else if (Main.nodes[tempOutletID].current > MAX_CURRENT) {	// nodeValue from 0 to 1860

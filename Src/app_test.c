@@ -1,3 +1,5 @@
+
+
 /*
  * app_test.c
  *
@@ -23,7 +25,7 @@ extern uint8_t SUBSCRIBE_TOPIC_2[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_STATUS[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_FOTA_STATUS[MAX_TOPIC_LENGTH];
 extern uint8_t PUBLISH_TOPIC_POWER[MAX_TOPIC_LENGTH];
-uint8_t strTest[] = "                                                                                        ";
+uint8_t strTest[16];
 void test1(void){
 
 
@@ -93,26 +95,21 @@ void test7(void){
 	TestSendATcommand();
 }
 
-void test9(void){
-	static uint8_t rw = 0;
-	static uint8_t counterWrite = 0;
-	uint8_t i = 0,s;
-	uint32_t e, l,w;
-	if(rw == 0){
-		counterWrite = Read_First_Byte();
-		sprintf((char*) strTest, "readfirst = %d\r\n", (int) counterWrite);
-		UART3_SendToHost((uint8_t *)strTest);
-		rw = 1;
-	} else if (rw == 1){
-		Write_First_Byte(counterWrite++);
-		sprintf((char*) strTest, "readsecond = %d\r\n", (int) Read_First_Byte());
-		UART3_SendToHost((uint8_t *)strTest);
-		rw = 3;
+void Flash_Testing(void){
+	static uint8_t counterWrite = 55;
+	uint8_t counterWrite1;
+	char strEeprom[16];
+	Write_First_Byte(counterWrite);
+	counterWrite1 = Read_First_Byte();
+	if(counterWrite1 == 55){
+		Lcd_Goto_XY(1, 0);
+		sprintf((char*) strEeprom, "Flash ok: %d", (int) counterWrite1);
+		Lcd_Send_String((char*)strEeprom);
 	} else {
-		Eeprom_Read_Outlet(0, &s, &e, &l, &w);
-		sprintf((char*) strTest, "i:%d\t s:%d\t e:%d\t l:%d\t \r\n", (int) i, (int)s, (int)e, (int)l);
-		UART3_SendToHost((uint8_t *)strTest);
-		rw = 0;
+
+		sprintf((char*) strEeprom, "flash fail: %d", (int) counterWrite1);
+		Lcd_Goto_XY(1, 0);
+		Lcd_Send_String((char*)strEeprom);
 	}
 }
 

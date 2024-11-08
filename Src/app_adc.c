@@ -214,16 +214,16 @@
 
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2730
+#define		CT_20A_COEFF_1								2700
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2720
+#define		CT_20A_COEFF_2								2700
 
 #define		CT_20A_THRESHOLD_3							200
 #define		CT_20A_COEFF_3								2700
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2700
+#define		CT_20A_COEFF_4								2710
 
 #define		CT_20A_THRESHOLD_5							0
 #define		CT_20A_COEFF_5								2570
@@ -232,10 +232,10 @@
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2740
+#define		CT_20A_COEFF_1								2710
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2730
+#define		CT_20A_COEFF_2								2710
 
 #define		CT_20A_THRESHOLD_3							200
 #define		CT_20A_COEFF_3								2710
@@ -1088,7 +1088,7 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 #else
-				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 5){
+				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 10){
 					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
 				} else {
 					tempPowerFactor = 0.0;

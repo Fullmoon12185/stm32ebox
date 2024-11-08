@@ -134,21 +134,10 @@ void Relay_Init(void){
 }
 
 void Set_All(void){
-	Set_Relay(0);
-	HAL_Delay(1000);
-	Set_Relay(1);
-	HAL_Delay(1000);
-	Set_Relay(2);
-	HAL_Delay(1000);
-	Set_Relay(3);
-	HAL_Delay(1000);
-	Set_Relay(4);
-	HAL_Delay(1000);
-	Set_Relay(5);
-	HAL_Delay(1000);
-	Set_Relay(6);
-	HAL_Delay(1000);
-	Set_Relay(7);
+	static unsigned char rIndex = 0;
+	Set_Relay(rIndex);
+	rIndex = (rIndex + 1)%8;
+
 }
 void Set_Relay1(uint8_t relayIndex){
 	if(relayIndex >= NUMBER_OF_RELAYS) return;

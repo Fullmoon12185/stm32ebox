@@ -44,22 +44,30 @@ Content:
 
 .1.3
 - Update checking voltage < 215 and > 240
+1.4
+- Increase time for detecting over current
+- Decrease measurement for high current
 
+1.5
+- Allow to charge free for all outlet with id 4095
+
+1.6
+- add power factor < 10, we reset current = 0
 */
 
 
 #if(BOX_PLACE == BOX_WITH_6_OUTLETS)
-	const uint8_t firmwareVersion[] =  "6OLs-5.1.3";
+	const uint8_t firmwareVersion[] =  "6OLs-5.1.6";
 #else
 
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
-	const uint8_t firmwareVersion[] =  "3.1.3-";
+	const uint8_t firmwareVersion[] =  "3.1.6-";
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
-	const uint8_t firmwareVersion[] =  "4.1.3-";
+	const uint8_t firmwareVersion[] =  "4.1.6-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	const uint8_t firmwareVersion[] =  "5.1.3-";
+	const uint8_t firmwareVersion[] =  "5.1.6-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.1.3-";
+	const uint8_t firmwareVersion[] =  "6.1.6-";
 
 #endif
 
