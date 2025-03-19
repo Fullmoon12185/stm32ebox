@@ -18,6 +18,8 @@ void SystemClock_Config(void)
 	RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 	/** Initializes the CPU, AHB and APB busses clocks
 	*/
+#if(VERSION_EBOX != VERSION_6_WITH_8CT_20A)
+
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
 	RCC_OscInitStruct.HSEState        = RCC_HSE_OFF;
 	RCC_OscInitStruct.LSEState        = RCC_LSE_OFF;
@@ -32,6 +34,20 @@ void SystemClock_Config(void)
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK){
 		Error_Handler();
 	}
+#else
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+	Error_Handler();
+  }
+
+#endif
 	/** Initializes the CPU, AHB and APB busses clocks
 	*/
 	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK

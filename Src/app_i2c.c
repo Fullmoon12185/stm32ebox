@@ -11,7 +11,7 @@
 #define I2C_ADDRESS        0x30F
 
 /* I2C SPEEDCLOCK define to max value: 400 KHz on STM32F1xx*/
-#define I2C_SPEEDCLOCK   400000
+#define I2C_SPEEDCLOCK   100000
 #define I2C_DUTYCYCLE    I2C_DUTYCYCLE_2
 
 /* Private macro -------------------------------------------------------------*/

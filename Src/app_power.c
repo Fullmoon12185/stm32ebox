@@ -33,6 +33,9 @@
 
 
 
+
+
+
 #define		DEBUG_POWER(X)							X
 #if(VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A)
 	#define		MAX_CURRENT								800000
@@ -44,11 +47,21 @@
 	#define		MAX_CURRENT								850000
 	#define		MAX_CURRENT_1							1600000
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+//for testing
+//	#define		MAX_CURRENT								402000
+//	#define		MAX_CURRENT_1							402000
+//for running
 	#define		MAX_CURRENT								1600000
 	#define		MAX_CURRENT_1							1600000
+
 #endif
 
-#define 	MAX_TOTAL_CURRENT							31000		//in miliampere
+#define 		MAX_CURRENT_FOR_CABLE_25				16000
+#define 		MAX_CURRENT_FOR_CABLE_40				20000
+#define 		MAX_CURRENT_FOR_CABLE_60				31000
+
+static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
+
 
 #if(VERSION_EBOX == VERSION_TEST_EBOX)
 #define		MIN_CURRENT								3000
@@ -62,7 +75,7 @@
 #define		MIN_CURRENT											27000
 #define		MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE	27000
 #define		MIN_CURRENT_DETECTING_FULL_CHARGE					30000
-#define		THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE		50000
+#define		THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE		200000
 
 #define		MIN_CURRENT_DETECTING_UNPLUG						5000
 #define		MIN_CURRENT_DETECTING_UNPLUG_HD_MON					30000
@@ -148,7 +161,7 @@ POWER_FSM_STATE powerFsmState = POWER_FINISH_STATE;
 
 uint32_t lastTimeErr, lastReport;
 
-uint8_t strtmpPower[] = "                                      ";
+uint8_t strtmpPower[] = "                                                                              ";
 static uint8_t power_TimeoutFlag[NUMBER_OF_RELAYS];
 static uint32_t power_Timeout_Task_ID[NUMBER_OF_RELAYS];
 static NodeStatus previousOutletStatus[NUMBER_OF_RELAYS];
@@ -163,6 +176,7 @@ static uint32_t outletCounter[NUMBER_OF_RELAYS];
 static uint32_t outletCounterMaxCurrent[NUMBER_OF_RELAYS];
 static FlagStatus is_Node_Status_Changed = RESET;
 
+static unit8_t isChargingFullStatus[NUMBER_OF_RELAYS];
 
 static void Node_Setup(void);
 void Power_Clear_Timeout_Flag(uint8_t outletID);
@@ -180,6 +194,7 @@ void Power_Set_Timeout_Flag_8(void);
 void Power_Set_Timeout_Flag_9(void);
 #endif
 
+void Set_MAX_TOTAL_CURRENT(void);
 uint8_t Is_Power_Timeout_Flag(uint8_t outletID);
 uint8_t Is_Main_Current_Over_Max_Current(void);
 
@@ -198,9 +213,20 @@ void Power_Init(void){
 		outletCounter[idx] = 0;
 		outletCounterMaxCurrent[idx] = 0;
 		previousOutletStatus[idx] = NODE_NORMAL;
+		isChargingFullStatus[idx] = 0;
 	}
+	Set_MAX_TOTAL_CURRENT();
 }
 
+
+void Set_MAX_TOTAL_CURRENT(void){
+	uint16_t boxID = Get_Box_ID();
+	if(boxID == PEGASUS_BIENHOA){
+		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_25; //in miliampere
+	} else {
+		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60; //in miliampere
+	}
+}
 void Process_System_Power(void){
 	if(Process_Input_Source() == SYSTEM_NORMAL){
 		Process_Outlets();
@@ -409,6 +435,7 @@ uint32_t Get_Main_Current(void){
 	return Main.currentTotal;
 }
 uint8_t Is_Main_Current_Over_Max_Current(void){
+
 	if(Get_Main_Current() > MAX_TOTAL_CURRENT){
 		return 1;
 	} else {
@@ -472,7 +499,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		uint8_t tempOutletID = outletID;
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].previousCurrent_1;
 		Main.nodes[tempOutletID].previousCurrent_1 = Main.nodes[tempOutletID].current;
-		if (Get_Relay_Status(tempOutletID) == RESET || Main.nodes[tempOutletID].powerFactor < MIN_PF)
+		if (Get_Relay_Status(tempOutletID) == RESET || power_factor < MIN_PF)
 		{
 			Main.nodes[tempOutletID].current = 0;
 			Main.nodes[tempOutletID].powerFactor = 0;
@@ -499,27 +526,28 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 
 		} else {
 			Main.nodes[tempOutletID].energy = 0;
+			Main.nodes[tempOutletID].workingTime = 0;
 		}
-//		if(tempOutletID == 0){
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.workingTime););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "v:%d\t", (int) Main.nodes[tempOutletID].voltage););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
-//		}
+		if(tempOutletID <= 7){
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.workingTime););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "v:%d\t", (int) Main.nodes[tempOutletID].voltage););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
+			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
+		}
 	}
 }
 
@@ -613,6 +641,9 @@ void Display_OutLet_Status(uint8_t outletID){
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
 		case TOTAL_OVER_CURRRENT:
+			DEBUG_POWER(sprintf((char*) strtmpPower, "G_M_C() = %d, M_TO_C = %d, relayIndex = %d\r\n", (int) Get_Main_Current(), (int)MAX_TOTAL_CURRENT, (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
 			DEBUG_POWER(sprintf((char*) strtmpPower, "TOTAL_OVER_CURRRENT=%d\r\n", (int) outletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
@@ -653,7 +684,10 @@ void Detect_Stop_From_App(uint8_t outletID){
 }
 
 void Detect_Charge_Full(uint8_t outletID, uint32_t threshold){
-	if (Main.nodes[outletID].current < threshold){
+
+	uint32_t tempRealCurrent = Get_Current(outletID)* Get_Power_Factor(outletID);
+
+	if (tempRealCurrent < threshold){
 		outletCounter[outletID]++;
 		if(outletCounter[outletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
 			outletCounter[outletID] = 0;
@@ -831,20 +865,7 @@ void Process_Outlets(void){
 						} else {
 							Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*3/4);
 						}
-						if(Get_Box_ID() == HD_MON_1 || Get_Box_ID() == HD_MON_2){
-							if(Is_Charging_More_Than_An_Hour(tempOutletID, 8*60*60)){
-								Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_CHARGE_FULL);
-								Main.nodes[tempOutletID].nodeStatus = CHARGEFULL;
-								outletState[tempOutletID] = OUTLET_CHARGE_FULL_HD_MON_STATE;
-							} else {
-								if(Main.nodes[tempOutletID].maxNodeCurrent > THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE){
-									Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE);
-								}
-								else {
-									Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE);
-								}
-							}
-						} else if(Get_Box_ID() == ESTELLA_HEIGHTS){
+						if(Get_Box_ID() == ESTELLA_HEIGHTS){
 							if(Is_Charging_More_Than_An_Hour(tempOutletID, 8*60*60)){
 								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE*4);
 							} else if (Is_Charging_More_Than_An_Hour(tempOutletID, 6*60*60)) {
@@ -880,7 +901,20 @@ void Process_Outlets(void){
 			break;
 		case OUTLET_AFTER_CHARGE_FULL_STATE:
 			if(Get_Relay_Status(tempOutletID) == SET){
-				if (Main.nodes[tempOutletID].current >= MIN_CURRENT*3) {
+				uint32_t tempThreshold = 0;
+				if(Main.nodes[tempOutletID].maxNodeCurrent > THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE){
+					if(Is_Charging_More_Than_An_Hour(tempOutletID, 4*60*60)){
+						tempThreshold = MIN_CURRENT*3;
+					}
+					else if(Is_Charging_More_Than_An_Hour(tempOutletID, 2*60*60)){
+						tempThreshold = MIN_CURRENT*2;
+					}else {
+						tempThreshold = MIN_CURRENT;
+					}
+				} else{
+					tempThreshold = MIN_CURRENT;
+				}
+				if (Main.nodes[tempOutletID].current >= tempThreshold) {
 					Main.nodes[tempOutletID].nodeStatus = CHARGING;
 					outletCounter[tempOutletID] = 0;
 					outletState[tempOutletID] = OUTLET_CHARGING_STATE;
@@ -921,11 +955,12 @@ void Process_Outlets(void){
 void Process_Main_Current_Over_Max_Current(void){
 	uint8_t relayIndex = NUMBER_OF_RELAYS;
 	if(Is_Main_Current_Over_Max_Current() == 1){
+//		DEBUG_POWER(sprintf((char*) strtmpPower, "G_M_C() = %d, M_TO_C = %d, relayIndex = %d\r\n", (int) Get_Main_Current(), (int)MAX_TOTAL_CURRENT, (int) relayIndex););
+		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 		relayIndex = Reset_Latest_Relay();
 		Main.nodes[relayIndex].nodeStatus = TOTAL_OVER_CURRRENT;
 		Clear_Counter_For_Checking_Total_Current();
-		DEBUG_POWER(sprintf((char*) strtmpPower, "relayIndex = %d\r\n", (int) relayIndex););
-		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
 	} else if(Is_Timeout_For_Checking_Total_Current() == 0){
 		Increase_Counter_For_Checking_Total_Current();
 	} else {

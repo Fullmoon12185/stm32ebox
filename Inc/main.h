@@ -82,6 +82,9 @@ void Error_Handler(void);
 #define 	ESTELLA_HEIGHTS				129
 #define		ANTRUNG_BUILDING			161
 
+#define		PEGASUS_BIENHOA 			222
+
+
 #define 	BEEP_ON					1
 
 /*

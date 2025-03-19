@@ -53,6 +53,23 @@ Content:
 
 1.6
 - add power factor < 10, we reset current = 0
+
+2.0
+- use external oscillator for box new version
+
+2.1
+- decrease i2c frequency from 400khz to 50khz
+
+2.2
+- use current*powerfactor to detect full charging
+
+2.3
+- user MAX_TOTAL_CURRENT based on Box ID
+2.4
+- reset working time for each outlet
+- set threshold for back to charge based on time
+2.6
+- check full charge for small bike and large bike
 */
 
 
@@ -65,9 +82,9 @@ Content:
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 	const uint8_t firmwareVersion[] =  "4.1.6-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	const uint8_t firmwareVersion[] =  "5.1.6-";
+	const uint8_t firmwareVersion[] =  "5.2.4-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.1.6-";
+	const uint8_t firmwareVersion[] =  "6.2.6-";
 
 #endif
 
