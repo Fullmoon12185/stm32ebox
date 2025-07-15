@@ -26,8 +26,8 @@
 #include "app_power_meter_485.h"
 
 
-#define		TIME_FOR_PING_REQUEST		6000 //5s
-#define		TIME_FOR_PUBLISH_MESSAGE	300 //5s
+#define		TIME_FOR_PING_REQUEST		6000 //60s
+#define		TIME_FOR_PUBLISH_MESSAGE	800 //6s
 
 
 #define 	TIME_FOR_BUZZER				3
@@ -527,10 +527,10 @@ void Update_Publish_Power_Meter_Message(){
 	POWER_t* power = POWERMETER485_get_latest();
 	publish_message_length = snprintf((char*)publish_message,
 									MQTT_MESSAGE_BUFFER_LENGTH,
-									"%f,%f,%f,%f,%f,%f", //voltage, current, active_power, power_factor, frequency, total_active_power
-									power->voltage,
+									"%d,%.3f,%d,%.2f,%.1f,%.1f", //voltage, current, active_power, power_factor, frequency, total_active_power
+									(int)power->voltage,
 									power->current,
-									power->active_power,
+									(int)power->active_power,
 									power->power_factor,
 									power->frequency,
 									power->total_active_power);
@@ -603,39 +603,39 @@ void Server_Communication(void){
 					if (publishTopicIndex == 0) {
 						publishTopicIndex = 1;
 						Update_Publish_Status_Message();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS,
-								publish_message, publish_message_length);
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
 					} else if (publishTopicIndex == 1) {
 						publishTopicIndex = 2;
 						Update_Publish_Power_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,
-								publish_message, publish_message_length);
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,	publish_message, publish_message_length);
 					} else if (publishTopicIndex == 2) {
 						publishTopicIndex = 3;
-						Update_Publish_Power_Factor_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR,
-								publish_message, publish_message_length);
+						if(isChargingInProgress()){
+							Update_Publish_Power_Factor_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR, publish_message, publish_message_length);
+						}
 					} else if (publishTopicIndex == 3) {
 						publishTopicIndex = 4;
-						Update_Publish_Voltage_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE,
-								publish_message, publish_message_length);
+						if(isChargingInProgress()){
+							Update_Publish_Voltage_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE, publish_message, publish_message_length);
+						}
 					} else if (publishTopicIndex == 4) {
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 						publishTopicIndex = 5;
 #else
 						publishTopicIndex = 0;
 #endif
-						Update_Publish_Current_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT,
-								publish_message, publish_message_length);
+						if(isChargingInProgress()){
+							Update_Publish_Current_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT, publish_message, publish_message_length);
+						}
 					}
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 					else if (publishTopicIndex == 5) {
 						publishTopicIndex = 0;
 						Update_Publish_Power_Meter_Message();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERMETER,
-								publish_message, publish_message_length);
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERMETER, publish_message, publish_message_length);
 					}
 #endif
 					Set_Mqtt_State(MQTT_PUBLISH_STATE);

@@ -697,6 +697,7 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 				Set_Limit_Energy(relayIndex, 0xffffffff);
 				Start_Working_Time(relayIndex);
 				Clear_Max_Node_Current(relayIndex);
+				Clear_Charging_Full_Status(relayIndex);
 			} else {
 				Reset_Relay(relayIndex);
 				Set_Limit_Energy(relayIndex, 0);
@@ -726,7 +727,7 @@ void Processing_Update_Total_Power_Consumption(uint8_t * sub_topic, uint16_t box
 			for(uint8_t idx = 1; idx <= 10; idx++){
 				updateTotalPowerConsumption = updateTotalPowerConsumption*10 + (Sim3gDataProcessingBuffer[2 + lentopic + idx] - 0x30);
 			}
-			Set_Main_Power_Consumption(updateTotalPowerConsumption);
+			Set_Main_Power_Consumption(updateTotalPowerConsumption*3600*1000);
 		}
 	}
 }

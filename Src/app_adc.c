@@ -214,37 +214,37 @@
 
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2700
+#define		CT_20A_COEFF_1								2650
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2700
+#define		CT_20A_COEFF_2								2650
 
 #define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2700
-
-#define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2710
-
-#define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2570
-
-
-#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-//this is for 20A
-#define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2670
-
-#define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2670
-
-#define		CT_20A_THRESHOLD_3							200
-#define		CT_20A_COEFF_3								2670
+#define		CT_20A_COEFF_3								2650
 
 #define		CT_20A_THRESHOLD_4							100
 #define		CT_20A_COEFF_4								2670
 
 #define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2570
+#define		CT_20A_COEFF_5								2670
+
+
+#elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+//this is for 20A
+#define		CT_20A_THRESHOLD_1							400
+#define		CT_20A_COEFF_1								2650
+
+#define		CT_20A_THRESHOLD_2							300
+#define		CT_20A_COEFF_2								2650
+
+#define		CT_20A_THRESHOLD_3							200
+#define		CT_20A_COEFF_3								2650
+
+#define		CT_20A_THRESHOLD_4							100
+#define		CT_20A_COEFF_4								2670
+
+#define		CT_20A_THRESHOLD_5							0
+#define		CT_20A_COEFF_5								2670
 
 #else
 

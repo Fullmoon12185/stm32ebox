@@ -79,7 +79,8 @@ typedef struct Commands {
 	uint8_t data;
 } Command;
 
-void Power_Off_Sim3g(void);
+
+uint8_t isChargingInProgress(void);
 
 void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t power_factor, uint8_t time_period);
 
@@ -105,4 +106,6 @@ void Power_Loop(void);
 void Process_System_Power(void);
 
 void Process_Main_Current_Over_Max_Current(void);
+
+void Clear_Charging_Full_Status(uint8_t outletID);
 #endif /* APP_POWER_H_ */

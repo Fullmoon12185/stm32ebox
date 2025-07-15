@@ -65,6 +65,10 @@ void Power_Signal_Low(void);
 void Power_Signal_High(void);
 void Reset_Signal_Low(void);
 void Reset_Signal_High(void);
+
+
+void Power_Off_Sim3g(void);
+
 void Sim3g_Clear_Timeout_Flag(void);
 void Sim3g_Command_Timeout(void);
 uint8_t is_Sim3g_Command_Timeout(void);

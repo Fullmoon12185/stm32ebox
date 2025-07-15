@@ -70,6 +70,17 @@ Content:
 - set threshold for back to charge based on time
 2.6
 - check full charge for small bike and large bike
+3.0
+- update power consumption using kwh (old using ws)
+3.1
+- update frequency sending data
+- update sending sms
+3.2
+- update pf = 30
+
+3.3
+- update send message
+- increase measurement for small bike
 */
 
 
@@ -82,9 +93,9 @@ Content:
 #elif(VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A)
 	const uint8_t firmwareVersion[] =  "4.1.6-";
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
-	const uint8_t firmwareVersion[] =  "5.2.4-";
+	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.2.6-";
+	const uint8_t firmwareVersion[] =  "6.3.3-";
 
 #endif
 
