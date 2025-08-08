@@ -522,6 +522,12 @@ void Error_Handler(void);
 
 #endif
 
+//estop
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	#define ESTOP_PIN 							GPIO_PIN_2
+	#define ESTOP_PORT 							GPIOB
+
+#endif
 
 
 #if(VERSION_EBOX == 2 || VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
@@ -564,6 +570,9 @@ void Error_Handler(void);
 #define		MAIN_INPUT										    (NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION - 1)
 
 #define		POWER_CONSUMPTION_OF_MCU						    6
+
+
+
 
 #ifdef __cplusplus
 }

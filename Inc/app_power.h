@@ -45,13 +45,15 @@ typedef enum  {
 	NO_POWER			=	5,
 	NO_FUSE				=	6,
 	NO_RELAY			=	7,
-
 	NODE_OVER_CURRENT	=	8,
 	TOTAL_OVER_CURRRENT =   9,
 	NODE_OVER_MONEY		=	10,
 	NODE_OVER_TIME		=	11,
 	RELAY_BROKEN 		=   12,
-	STOP_FROM_APP		= 	13
+	STOP_FROM_APP		= 	13,
+	ESTOP_PRESSED		=  14,
+	MAX_ENUM
+
 	 
 
 }NodeStatus;

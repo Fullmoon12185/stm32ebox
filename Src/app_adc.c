@@ -24,6 +24,7 @@
 
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	#define		REFERENCE_1V8_VOLTAGE_INDEX					10
+
 #else
 	#define		REFERENCE_1V8_VOLTAGE_INDEX					12
 #endif

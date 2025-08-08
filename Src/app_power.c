@@ -14,6 +14,7 @@
 #include "app_scheduler.h"
 #include "app_eeprom.h"
 #include "app_string.h"
+#include "app_gpio.h"
 #include <math.h>
 
 #include "app_power_meter_485.h"
@@ -48,11 +49,11 @@
 	#define		MAX_CURRENT_1							1600000
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //for testing
-//	#define		MAX_CURRENT								402000
-//	#define		MAX_CURRENT_1							402000
-//for running
-	#define		MAX_CURRENT								1600000
-	#define		MAX_CURRENT_1							1600000
+	#define		MAX_CURRENT								400000
+	#define		MAX_CURRENT_1							400000
+////for running
+//	#define		MAX_CURRENT								1600000
+//	#define		MAX_CURRENT_1							1600000
 
 #endif
 
@@ -106,6 +107,7 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define		TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT					(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_UNPLUG										(10000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE							(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_DETECTING_ESTOP_PRESSED						(2000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY							(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_CHARGE_FULL									(50000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_STOP_FROM_APP								(10000/INTERRUPT_TIMER_PERIOD)
@@ -686,6 +688,11 @@ void Display_OutLet_Status(uint8_t outletID){
 			DEBUG_POWER(sprintf((char*) strtmpPower, "RELAY_BROKEN=%d\r\n", (int) outletID););
 			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			break;
+		case ESTOP_PRESSED:
+			DEBUG_POWER(sprintf((char*) strtmpPower, "ESTOP_PRESSED=%d\r\n", (int) outletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
+			break;
 
 		default:
 			break;
@@ -701,7 +708,7 @@ uint8_t isChargingInProgress(void){
 			return 1;
 		}
 	}
-	return 0;
+	return 1;
 }
 
 
@@ -780,7 +787,12 @@ void Process_Outlets(void){
 
 	Display_OutLet_Status(tempOutletID);
 
-	if ((Get_Box_ID() != ANTRUNG_BUILDING) && isNoFuseAvailable(tempOutletID)){
+	if(isEstopPressed()){
+		Main.nodes[tempOutletID].nodeStatus = ESTOP_PRESSED;
+		Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_ESTOP_PRESSED);
+		outletState[tempOutletID] = OUTLET_ERROR_STATE;
+	}
+	else if ((Get_Box_ID() != ANTRUNG_BUILDING) && isNoFuseAvailable(tempOutletID)){
 		if(Get_Relay_Status(tempOutletID) == RESET) {	//return NOFUSE
 			if(outletState[tempOutletID] != OUTLET_ERROR_STATE){
 				Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
@@ -1012,8 +1024,6 @@ void Process_Main_Current_Over_Max_Current(void){
 		Clear_Counter_For_Checking_Total_Current();
 	}
 }
-
-
 
 
 

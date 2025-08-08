@@ -6,6 +6,7 @@
  */
 #include "main.h"
 #include "app_gpio.h"
+#include "app_uart.h"
 
 #define EXTI_PREEMP_PRIORITY_LEVEL 0
 #define EXTI_SUB_PRIORITY_LEVEL 0
@@ -15,7 +16,12 @@ void LED_Init(void);
 void GPIO_Relay_Init(void);
 void Buzzer_Init(void);
 void ZeroPoint_Detection_Pin_Init(void);
+void Estop_Init(void);
 
+
+static uint8_t estopPressed = 0;
+
+uint8_t strtmpGPIO[] = "                                                                              ";
 /**
   * @brief GPIO Initialization Function
   * @param None
@@ -34,11 +40,12 @@ void MX_GPIO_Init(void)
 //	/*Configure GPIO pin Output Level */
 //	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 //
-	LED_Init();
+//	LED_Init();
 	GPIO_Relay_Init();
 	Buzzer_Init();
 	SPI_CS_Init();
 	ZeroPoint_Detection_Pin_Init();
+	Estop_Init();
 }
 
 void LED_Init(void){
@@ -223,14 +230,52 @@ void Turn_Off_Buzzer(void){
 
 
 void Turn_On_LED(void){
-	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
+//	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, RESET);
 }
 
 void Turn_Off_LED(void){
-	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
+//	HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, SET);
+}
+
+void Estop_Init(void){
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	GPIO_InitStruct.Pin = ESTOP_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(ESTOP_PORT, &GPIO_InitStruct);
+
+	estopPressed = 0;
 }
 
 
+uint8_t isEstopPressed(void){
+
+	return estopPressed;
+}
+void Estop_Processing(void){
+	static GPIO_PinState bitstatus, bitstatus1, bitstatus2;
+	bitstatus2 = bitstatus1;
+	bitstatus1 = bitstatus;
+	bitstatus = HAL_GPIO_ReadPin(ESTOP_PORT, (uint16_t)ESTOP_PIN);
+	static uint8_t previousBitStatus = 0;
+
+	if((bitstatus == bitstatus1) && (bitstatus == bitstatus2)){
+		if (bitstatus == GPIO_PIN_RESET){
+			estopPressed = 1;
+			if(previousBitStatus != estopPressed){
+				previousBitStatus = estopPressed;
+				sprintf((char*) strtmpGPIO, "estopPressed = %d %d \n", (int) estopPressed, (int)HAL_GPIO_ReadPin(ESTOP_PORT, (uint16_t)ESTOP_PIN));
+				UART3_SendToHost((uint8_t *)strtmpGPIO);
+			}
+		}
+		else {
+			estopPressed = 0;
+		}
+	}
+
+
+}
 
 
 

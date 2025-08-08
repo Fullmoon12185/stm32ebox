@@ -9,6 +9,7 @@
 #include "app_pcf8574.h"
 #include "app_scheduler.h"
 #include "app_relay.h"
+#include "app_gpio.h"
 
 
 FlagStatus array_Of_Relay_Statuses[NUMBER_OF_RELAYS];
@@ -136,9 +137,28 @@ void Relay_Init(void){
 void Set_All(void){
 	static unsigned char rIndex = 0;
 	Set_Relay(rIndex);
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	rIndex = (rIndex + 1)%8;
-
+#else
+	rIndex = (rIndex + 1)%10;
+#endif
 }
+
+
+
+void Clear_All(void){
+	static unsigned char rIndex = 0;
+	if(isEstopPressed()){
+		Reset_Relay(rIndex);
+		#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+			rIndex = (rIndex + 1)%8;
+		#else
+			rIndex = (rIndex + 1)%10;
+		#endif
+
+	}
+}
+
 void Set_Relay1(uint8_t relayIndex){
 	if(relayIndex >= NUMBER_OF_RELAYS) return;
 	if(array_Of_Relay_Statuses[relayIndex] == RESET){

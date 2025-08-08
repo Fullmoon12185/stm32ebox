@@ -82,7 +82,13 @@ int main(void)
 	SCH_Add_Task(PCF_read, 13, 23);
 	SCH_Add_Task(Start_Sending_Sms_Message, 6000*2, 6000*60*24*30);
 
-	if(Get_Box_ID() >= 4000){
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	SCH_Add_Task(Estop_Processing, 1, 10);
+	SCH_Add_Task(Clear_All, 1, 200);
+
+#endif
+
+	if(Get_Box_ID() >= 4090){
 		SCH_Add_Task(Set_All, 9, 107);
 	} else {
 		HAL_Delay(2000);
