@@ -537,8 +537,8 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.nodes[tempOutletID].power = round((float)tempPower);
 
 		if (Get_Relay_Status(tempOutletID) == SET){
-			Main.energy += Main.nodes[tempOutletID].power*time_period/100;
-			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power*time_period/100;
+			Main.energy += Main.nodes[tempOutletID].power/100;
+			Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + Main.nodes[tempOutletID].power/100;
 			Main.nodes[tempOutletID].workingTime++;
 			Eeprom_Update_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
 
@@ -701,7 +701,7 @@ uint8_t isChargingInProgress(void){
 			return 1;
 		}
 	}
-	return 0;
+	return 1;
 }
 
 

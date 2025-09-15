@@ -33,6 +33,8 @@ void UART3_Transmit(uint8_t * buffer, uint8_t buffer_len);
 
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 void UART5_Init(void);
+void UART5_DeInit(void);
+
 void UART5_transmit(uint8_t * data, uint32_t data_len);
 uint8_t UART5_Read_Available();
 uint8_t UART5_Read_Received_Buffer();

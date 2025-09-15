@@ -81,6 +81,9 @@ Content:
 3.3
 - update send message
 - increase measurement for small bike
+3.4
+- add uart error handler for uart 5 rs485
+
 */
 
 
@@ -95,7 +98,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.3.3-";
+	const uint8_t firmwareVersion[] =  "6.3.4-";
 
 #endif
 

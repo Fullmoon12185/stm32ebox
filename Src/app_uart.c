@@ -145,10 +145,35 @@ void UART5_Init(void)
 	if (HAL_UART_Init(&Uart5Handle) != HAL_OK) {
 		Error_Handler();
 	}
+	__HAL_UART_ENABLE_IT(&Uart5Handle, UART_IT_ERR); // Enable PE, FE, NE, ORE
+
 	HAL_UART_Receive_IT(&Uart5Handle, (uint8_t *)UART5_buffer, RXBUFFERSIZE);
 }
 
+void UART5_DeInit(void)
+{
+	Uart5Handle.Instance = UART5;
+	Uart5Handle.Init.BaudRate = 9600;
+#if defined(MODBUS_MODEL) && MODBUS_MODEL == 0x01
+	Uart5Handle.Init.WordLength = UART_WORDLENGTH_9B;
+	Uart5Handle.Init.StopBits = UART_STOPBITS_1;
+	Uart5Handle.Init.Parity = UART_PARITY_EVEN;
+#elif defined(MODBUS_MODEL) && MODBUS_MODEL == 0x02
+	Uart5Handle.Init.WordLength = UART_WORDLENGTH_8B;
+	Uart5Handle.Init.StopBits = UART_STOPBITS_1;
+	Uart5Handle.Init.Parity = UART_PARITY_NONE;
 #endif
+
+	Uart5Handle.Init.Mode = UART_MODE_TX_RX;
+	Uart5Handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	Uart5Handle.Init.OverSampling = UART_OVERSAMPLING_16;
+
+	if(HAL_UART_DeInit(&Uart5Handle) != HAL_OK){
+		Error_Handler();
+	}
+}
+#endif
+
 
 HAL_StatusTypeDef Sim3g_Receive_Setup(void){
 	if(HAL_UART_Receive_IT(&Uart1Handle, (uint8_t *)aUART_RxBuffer, RXBUFFERSIZE) != HAL_OK){
@@ -162,10 +187,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle){
   UartTransmitReady = SET;
 }
 
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle){
-    Error_Handler();
-}
 
 
 
@@ -239,6 +260,34 @@ HAL_StatusTypeDef Custom_UART_Receive_IT(UART_HandleTypeDef *huart)
 	  }
 #endif
 }
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+
+	if(huart->Instance == UART5){
+		if (huart->ErrorCode & HAL_UART_ERROR_ORE)
+		{
+			__HAL_UART_CLEAR_OREFLAG(huart);
+			uint8_t dummy;
+			HAL_UART_Receive(huart, &dummy, 1, 0); // read & discard
+		}
+
+		if (huart->ErrorCode & HAL_UART_ERROR_FE)
+			__HAL_UART_CLEAR_FEFLAG(huart);
+
+		if (huart->ErrorCode & HAL_UART_ERROR_NE)
+			__HAL_UART_CLEAR_NEFLAG(huart);
+
+		if (huart->ErrorCode & HAL_UART_ERROR_PE)
+			__HAL_UART_CLEAR_PEFLAG(huart);
+
+	}
+#endif
+}
+
+
+
 
 uint8_t Uart1_Received_Buffer_Available(void){
 	if(receiveBufferIndexTail != receiveBufferIndexHead){
