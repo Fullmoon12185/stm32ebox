@@ -81,7 +81,9 @@ const uint8_t PASSWORD[] 			= "1kiNIcfT5";
 #else
 //35.198.196.5
 //PRODUCTION
-const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.158.2\",8883\r";
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.158.2\",8883\r";
+
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt.eboost.vn\",8883\r";
 const uint8_t USERNAME[] 			= "eboost-k2";
 const uint8_t PASSWORD[] 			= "ZbHzPb5W";
 #endif

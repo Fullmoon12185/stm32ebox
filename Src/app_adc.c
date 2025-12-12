@@ -225,8 +225,11 @@
 #define		CT_20A_THRESHOLD_4							100
 #define		CT_20A_COEFF_4								2670
 
-#define		CT_20A_THRESHOLD_5							0
+#define		CT_20A_THRESHOLD_5							50
 #define		CT_20A_COEFF_5								2670
+
+#define		CT_20A_THRESHOLD_6							0
+#define		CT_20A_COEFF_6								2720
 
 
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
@@ -241,10 +244,13 @@
 #define		CT_20A_COEFF_3								2650
 
 #define		CT_20A_THRESHOLD_4							100
-#define		CT_20A_COEFF_4								2670
+#define		CT_20A_COEFF_4								2700
 
-#define		CT_20A_THRESHOLD_5							0
-#define		CT_20A_COEFF_5								2670
+#define		CT_20A_THRESHOLD_5							50
+#define		CT_20A_COEFF_5								2730
+
+#define		CT_20A_THRESHOLD_6							0
+#define		CT_20A_COEFF_6								2740
 
 #else
 
@@ -253,6 +259,8 @@
 #define		COEFFICIENT_3								252
 
 #endif
+
+
 ADC_HandleTypeDef ADC1Handle;
 DMA_HandleTypeDef Hdma_adc1Handle;
 
@@ -1088,7 +1096,7 @@ void PowerConsumption_FSM(void){
 					PowerFactor[i] = 100;
 				}
 #else
-				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 10){
+				if(AdcBufferAveragePeakPeak[i] != 0 && tempIrmsADCValue > 5){
 					tempPowerFactor = (double)(array_Of_Average_Vrms_ADC_Values[i] * coefficientForPF*NUMBER_OF_SAMPLES_FOR_SMA) / (AdcBufferAveragePeakPeak[i]);
 				} else {
 					tempPowerFactor = 0.0;
@@ -1099,7 +1107,7 @@ void PowerConsumption_FSM(void){
 				}
 #endif
 
-//				if(i == 0 || i == 1)
+//				if(i == 0)
 //				{
 //					sprintf((char*) strtmp, "%d: %d\t", (int) i, (int) PowerFactor[i]);
 //					UART3_SendToHost((uint8_t *)strtmp);
@@ -1298,6 +1306,8 @@ void PowerConsumption_FSM(void){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				} else if(tempIrmsADCValue >= CT_20A_THRESHOLD_5){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				}else if(tempIrmsADCValue >= CT_20A_THRESHOLD_6){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				}
 #else
 				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];

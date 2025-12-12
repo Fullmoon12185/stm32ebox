@@ -18,6 +18,11 @@ void Turn_Off_LED(void);
 void SPI_CS_Init(void);
 void MX_GPIO_Init(void);
 
+#if(ESTOP_BUTTON == 1)
+	uint8_t isEstopPressed(void);
+	void Estop_Processing(void);
+#endif
+
 #endif /* APP_GPIO_H_ */
 
 

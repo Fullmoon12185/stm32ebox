@@ -96,7 +96,7 @@ void Timer_Init(void){
 	  ----------------------------------------------------------------------- */
 
 	  /* Compute the prescaler value to have TIMx counter clock equal to 10000 Hz */
-	  uwPrescalerValue = (uint32_t)(SystemCoreClock / 1000000) - 1;
+	  uwPrescalerValue = (uint32_t)(SystemCoreClock / 2000000) - 1;
 
 	  /* Set TIMx instance */
 	  TimHandle.Instance = TIMx;
@@ -108,7 +108,7 @@ void Timer_Init(void){
 	       + Counter direction = Up
 	  */
 	  //previous 100-16, clock hơi nhanh, nên chỉnh lên 100-10
-	  TimHandle.Init.Period            = 10000-1065;
+	  TimHandle.Init.Period            = 20000-2055;
 	  TimHandle.Init.Prescaler         = uwPrescalerValue;
 	  TimHandle.Init.ClockDivision     = 0;
 	  TimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;

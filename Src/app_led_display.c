@@ -180,6 +180,11 @@ void Led_Update_Status_Buffer(uint8_t position, NodeStatus status){
 		} else if(status == RELAY_BROKEN) {
 			ledStatusBuffer[position] = (LED_COLOR)RED;
 		}
+#if(ESTOP_BUTTON == 1)
+		else if(status == ESTOP_PRESSED) {
+			ledStatusBuffer[position] = (LED_COLOR)BLINK_RED_FAST;
+		}
+#endif
 
 	}
 }

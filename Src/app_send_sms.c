@@ -84,6 +84,11 @@ Content:
 3.4
 - add uart error handler for uart 5 rs485
 
+3.5
+- add estop
+
+3.6
+- Update measuring low ampere
 */
 
 
@@ -98,7 +103,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.3.4-";
+	const uint8_t firmwareVersion[] =  "6.3.6-";
 
 #endif
 

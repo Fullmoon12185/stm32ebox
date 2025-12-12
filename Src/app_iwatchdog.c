@@ -9,7 +9,7 @@
 
 
 #define DURATION_FOR_RESET_MODULE_SIM	300
-#define DURATION_FOR_WATCH_DOG_RESET	3000
+#define DURATION_FOR_WATCH_DOG_RESET	30000
 
 IWDG_HandleTypeDef hiwdg;
 static uint8_t counterForWatchdogReset = 0;

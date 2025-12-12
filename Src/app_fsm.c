@@ -638,6 +638,7 @@ void Server_Communication(void){
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERMETER, publish_message, publish_message_length);
 					}
 #endif
+
 					Set_Mqtt_State(MQTT_PUBLISH_STATE);
 					Clear_Publish_Message_Timeout_Flag();
 					publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);

@@ -22,6 +22,7 @@ void Set_Relay1(uint8_t relayIndex);
 void Set_Relay(uint8_t relayIndex);
 void Reset_Relay(uint8_t relayIndex);
 void Set_All(void);
+void Clear_All(void);
 
 void Update_Relay_Physical_Status(void);
 FlagStatus Get_Relay_Status(uint8_t relayIndex);

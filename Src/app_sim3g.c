@@ -24,7 +24,7 @@
 #define TIME_OUT_FOR_STOP_CHARGING	            120 //1 unit corresponding 30s
 
 
-#define TIMER_TO_POWER_ON_SIM3G					(300/INTERRUPT_TIMER_PERIOD)
+#define TIMER_TO_POWER_ON_SIM3G					(1000/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_OFF_SIM3G				(3000/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_ON_SIM3G_TIMEOUT			(2000/INTERRUPT_TIMER_PERIOD)
 #define TIMER_TO_POWER_OFF_SIM3G_TIMEOUT		(30000/INTERRUPT_TIMER_PERIOD)
@@ -574,7 +574,7 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 		sim3gState = WAIT_FOR_NETWORK_ESTABLISHMENT;
 	} else if(isErrorFlag){
 		isErrorFlag = RESET;
-		sim3gState = POWER_OFF_SIM3G;;
+		sim3gState = POWER_OFF_SIM3G;
 	}
 	if(is_Sim3g_Command_Timeout() || isIPCloseFlag){
 		isIPCloseFlag = RESET;

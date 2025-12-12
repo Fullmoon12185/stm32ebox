@@ -65,6 +65,8 @@ void Error_Handler(void);
 
 #define		BOX_PLACE					BOX_GENERAL
 
+#define		ESTOP_BUTTON				1
+
 #define   VERSION_3_WITH_ALL_CT_5A       3
 #define   VERSION_4_WITH_8CT_5A_2CT_10A  4
 #define   VERSION_5_WITH_8CT_10A_2CT_20A 5
@@ -143,6 +145,13 @@ void Error_Handler(void);
     #define		SIM7600						1
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
     #define		SIM7600						1
+
+#endif
+
+//estop
+#if(ESTOP_BUTTON == 1)
+	#define ESTOP_PIN 							GPIO_PIN_13
+	#define ESTOP_PORT 							GPIOC
 
 #endif
 
