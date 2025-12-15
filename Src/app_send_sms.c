@@ -89,6 +89,9 @@ Content:
 
 3.6
 - Update measuring low ampere
+
+3.7
+- 3.6 mearsure too high, update for 3.7
 */
 
 
@@ -103,7 +106,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.3.6-";
+	const uint8_t firmwareVersion[] =  "6.3.7-";
 
 #endif
 
