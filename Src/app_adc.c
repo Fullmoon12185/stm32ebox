@@ -247,10 +247,10 @@
 #define		CT_20A_COEFF_4								2670
 
 #define		CT_20A_THRESHOLD_5							50
-#define		CT_20A_COEFF_5								2680
+#define		CT_20A_COEFF_5								2675
 
 #define		CT_20A_THRESHOLD_6							0
-#define		CT_20A_COEFF_6								2700
+#define		CT_20A_COEFF_6								2680
 
 #else
 
