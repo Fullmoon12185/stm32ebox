@@ -229,7 +229,7 @@
 #define		CT_20A_COEFF_5								2670
 
 #define		CT_20A_THRESHOLD_6							0
-#define		CT_20A_COEFF_6								2720
+#define		CT_20A_COEFF_6								2670
 
 
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
@@ -247,10 +247,10 @@
 #define		CT_20A_COEFF_4								2670
 
 #define		CT_20A_THRESHOLD_5							50
-#define		CT_20A_COEFF_5								2675
+#define		CT_20A_COEFF_5								2670
 
 #define		CT_20A_THRESHOLD_6							0
-#define		CT_20A_COEFF_6								2680
+#define		CT_20A_COEFF_6								2670
 
 #else
 

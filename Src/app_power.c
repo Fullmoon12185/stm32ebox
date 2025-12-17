@@ -87,15 +87,15 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define 	MIN_PF									1
 
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A  || VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-#define		MIN_CURRENT											30000
-#define		MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE	27000
-#define		MIN_CURRENT_DETECTING_FULL_CHARGE					30000
+#define		MIN_CURRENT											35000
+#define		MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE	30000
+#define		MIN_CURRENT_DETECTING_FULL_CHARGE					35000
 #define		THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE		200000
 
 #define		MIN_CURRENT_DETECTING_UNPLUG						5000
 #define		MIN_CURRENT_DETECTING_UNPLUG_HD_MON					30000
 
-#define		MIN_CURRENT_FOR_START_CHARGING						30000
+#define		MIN_CURRENT_FOR_START_CHARGING						35000
 #define 	CURRENT_CHANGING_THRESHOLD							30000
 
 #if(BOX_PLACE == BOX_AT_XI)
@@ -1031,7 +1031,7 @@ void Process_Outlets(void){
 		outletCounterMaxCurrent[tempOutletID] = 0;
 		switch(outletState[tempOutletID]){
 		case OUTLET_AVAILABLE_STATE:
-			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT && Main.nodes[tempOutletID].previousCurrent >= MIN_CURRENT) {
+			 if (Main.nodes[tempOutletID].current >= MIN_CURRENT_FOR_START_CHARGING && Main.nodes[tempOutletID].previousCurrent >= MIN_CURRENT_FOR_START_CHARGING) {
 				Main.nodes[tempOutletID].nodeStatus = CHARGING;
 				outletCounter[tempOutletID] = 0;
 				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_STABABILITY);
