@@ -1100,16 +1100,13 @@ void Process_Outlets(void){
 		case OUTLET_AFTER_CHARGE_FULL_STATE:
 			if(Get_Relay_Status(tempOutletID) == SET){
 				uint32_t tempThreshold = 0;
-				if(Main.nodes[tempOutletID].maxNodeCurrent > THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE){
-					if(Is_Charging_More_Than_An_Hour(tempOutletID, 4*60*60)){
-						tempThreshold = MIN_CURRENT*3;
-					}
-					else if(Is_Charging_More_Than_An_Hour(tempOutletID, 2*60*60)){
-						tempThreshold = MIN_CURRENT*2;
-					}else {
-						tempThreshold = MIN_CURRENT;
-					}
-				} else{
+
+				if(Is_Charging_More_Than_An_Hour(tempOutletID, 6*60*60)){
+					tempThreshold = MIN_CURRENT*3;
+				}
+				else if(Is_Charging_More_Than_An_Hour(tempOutletID, 3*60*60)){
+					tempThreshold = MIN_CURRENT*2;
+				}else {
 					tempThreshold = MIN_CURRENT;
 				}
 				if (Main.nodes[tempOutletID].current >= tempThreshold) {

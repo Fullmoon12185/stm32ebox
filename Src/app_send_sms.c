@@ -96,6 +96,9 @@ Content:
 3.8
 - update timer again
 - update adc coff_5 coff_6
+
+4.0
+- giam timer
 */
 
 
@@ -110,7 +113,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.3.8-";
+	const uint8_t firmwareVersion[] =  "6.4.1-";
 
 #endif
 
