@@ -844,7 +844,7 @@ uint8_t isChargingInProgress(void){
 			return 1;
 		}
 	}
-	return 1;
+	return 0;
 }
 
 

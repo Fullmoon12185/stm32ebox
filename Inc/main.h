@@ -87,6 +87,13 @@ void Error_Handler(void);
 #define		PEGASUS_BIENHOA 			222
 
 
+#define		PHU_MY_BLOCK_B				244
+
+#define		MY_PHUC_3 			        319
+#define		MY_PHUC_4 			        320
+
+
+
 #define 	BEEP_ON					1
 
 /*

@@ -108,7 +108,8 @@ void Timer_Init(void){
 	       + Counter direction = Up
 	  */
 	  //previous 100-16, clock hơi nhanh, nên chỉnh lên 100-10
-	  TimHandle.Init.Period            = 10000-500; //for my phuc, original 1065
+
+	  TimHandle.Init.Period            = 10000-350; //for my phuc, original 1065
 	  TimHandle.Init.Prescaler         = uwPrescalerValue;
 	  TimHandle.Init.ClockDivision     = 0;
 	  TimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;

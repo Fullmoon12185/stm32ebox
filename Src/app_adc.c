@@ -258,6 +258,10 @@
 #endif
 
 
+void ADC_Recover();
+
+
+
 ADC_HandleTypeDef ADC1Handle;
 DMA_HandleTypeDef Hdma_adc1Handle;
 
@@ -339,17 +343,7 @@ void Adc_Buffers_Init(void){
 	}
 }
 
-/**
-  * @brief  Conversion complete callback in non blocking mode
-  * @param  AdcHandle : AdcHandle handle
-  * @note   This example shows a simple way to report end of conversion
-  *         and get conversion result. You can add your own implementation.
-  * @retval None
-  */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *AdcHandle)
-{
-	AdcDmaStoreFlag = SET;
-}
+
 
 
 #if (VERSION_EBOX == VERSION_6_WITH_8CT_20A)
@@ -485,7 +479,10 @@ void ADC1_Init(void)
     Error_Handler();
   }
 
- // WatchDogAnalogInit();
+//  ADC_Stop_Getting_Values();            // ensure ADC idle
+  HAL_Delay(1);
+  HAL_ADCEx_Calibration_Start(&ADC1Handle);
+//  WatchDogAnalogInit();
 
   Adc_Buffers_Init();
 }
@@ -498,7 +495,7 @@ void WatchDogAnalogInit(void){
 	/* Analog watchdog 1 configuration */
 	  AnalogWDGConfig.WatchdogMode = ADC_ANALOGWATCHDOG_ALL_REG;
 	  AnalogWDGConfig.ITMode = ENABLE;
-	  AnalogWDGConfig.HighThreshold = 4000;
+	  AnalogWDGConfig.HighThreshold = 4095;
 	  AnalogWDGConfig.LowThreshold = 100;
 
 	  AnalogWDGConfig.Channel = ADC_CHANNEL_0;
@@ -832,25 +829,7 @@ void WatchDogAnalogInit(void){
 
 
 #endif
-/**
-  * @brief  Analog watchdog callback in non blocking mode.
-  * @param  hadc: ADC handle
-  * @retval None
-  */
-  void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
-{
-  /* Set variable to report analog watchdog out of window status to main      */
-  /* program.                                                                 */
-  ubAnalogWatchdogStatus = SET;
-  UART3_SendToHost((uint8_t *)"Level out\r\n");
-}
 
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	is_Ready_To_Find_Min_Max_Voltage = SET;
-	zeroPointCounter ++;
-	return;
-}
 /**
   * Enable DMA controller clock
   */
@@ -924,6 +903,7 @@ void PowerConsumption_FSM(void){
 			adcState = ADC_START_GETTING;
 		}
 		if(is_Adc_Reading_Timeout()){
+			ADC_Recover();
 			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
@@ -941,6 +921,7 @@ void PowerConsumption_FSM(void){
 			}
 		}
 		if(is_Adc_Reading_Timeout()){
+			ADC_Recover();
 			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
@@ -958,9 +939,13 @@ void PowerConsumption_FSM(void){
 			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
 				AdcDmaBufferIndexFilter = 0;
 			}
+			if(AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX] < 100){
+				ADC_Recover();
+			}
 			adcState = ADC_START_GETTING;
 		}
 		if(is_Adc_Reading_Timeout()){
+			ADC_Recover();
 			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
@@ -1325,6 +1310,7 @@ void PowerConsumption_FSM(void){
 		}
 
 		if(is_Adc_Reading_Timeout()){
+			ADC_Recover();
 			adcState = ADC_REPORT_POWER_DATA;
 
 		}
@@ -1368,3 +1354,60 @@ void Adc_State_Display(void){
 
 }
 
+
+/**
+  * @brief  Conversion complete callback in non blocking mode
+  * @param  AdcHandle : AdcHandle handle
+  * @note   This example shows a simple way to report end of conversion
+  *         and get conversion result. You can add your own implementation.
+  * @retval None
+  */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *AdcHandle)
+{
+	AdcDmaStoreFlag = SET;
+}
+
+void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc){
+	static uint8_t countADCErrorCallback = 0;
+	countADCErrorCallback ++;
+	if(countADCErrorCallback < 10){
+		ADC_Recover();
+	} else {
+		countADCErrorCallback = 0;
+		NVIC_SystemReset();
+	}
+
+	UART3_SendToHost((uint8_t *)"HAL_ADC_ErrorCallback\r\n");
+}
+/**
+  * @brief  Analog watchdog callback in non blocking mode.
+  * @param  hadc: ADC handle
+  * @retval None
+  */
+void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
+{
+  /* Set variable to report analog watchdog out of window status to main      */
+  /* program.                                                                 */
+	 static uint16_t counterWatchDogADC = 0;
+
+	  ubAnalogWatchdogStatus = SET;
+	  counterWatchDogADC = (counterWatchDogADC + 1)%500;
+	  if(counterWatchDogADC == 0)
+		  UART3_SendToHost((uint8_t *)"Level out\r\n");
+}
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	is_Ready_To_Find_Min_Max_Voltage = SET;
+	zeroPointCounter ++;
+	return;
+}
+
+void ADC_Recover()
+{
+	ADC_Stop_Getting_Values();
+    __HAL_RCC_ADC1_FORCE_RESET();
+    __HAL_RCC_ADC1_RELEASE_RESET();
+    ADC1_Init();
+    UART3_SendToHost((uint8_t *)"ADC_Recover\r\n");
+}

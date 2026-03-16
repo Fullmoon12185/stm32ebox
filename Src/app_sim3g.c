@@ -41,6 +41,8 @@
 
 #define		COMMAND_ONLY							'1'
 #define 	UPDATE_FIRMWARE							'x'
+
+#define 	RESET_MCU								'r'
 #define 	SEND_SMS_MESSAGE						's'
 #define		START_UPDATE_TOTAL_POWER_CONSUMPTION	'*'
 #define		END_UPDATE_TOTAL_POWER_CONSUMPTION		'#'
@@ -187,6 +189,12 @@ void Clear_Sim3gDataProcessingBuffer(void);
 uint8_t isEndOfCommand(uint8_t pre, uint8_t cur);
 uint8_t isMqttConnectedOk(uint8_t pre, uint8_t cur);
 uint8_t isSubscribedOk(uint8_t pre, uint8_t cur);
+
+
+
+void Reset_MCU(uint8_t lentopic);
+void Update_Firmware(uint8_t lentopic);
+void Send_SMS(uint8_t lentopic);
 
 
 Sim3g_Machine_Type Sim3G_State_Machine [] = {
@@ -660,6 +668,12 @@ FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message
 	return RESET;
 }
 
+void Reset_MCU(uint8_t lentopic){
+	if(Sim3gDataProcessingBuffer[2 + lentopic] == RESET_MCU){
+		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RESET MCU"););
+		NVIC_SystemReset();
+	}
+}
 void Update_Firmware(uint8_t lentopic){
 #if (VERSION_EBOX >= VERSION_5_WITH_8CT_10A_2CT_20A)
 	if(Sim3gDataProcessingBuffer[2 + lentopic] == UPDATE_FIRMWARE){
@@ -705,6 +719,7 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 		} else {
 			Update_Firmware(lentopic);
 			Send_SMS(lentopic);
+			Reset_MCU(lentopic);
 		}
 
 

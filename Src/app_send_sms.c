@@ -99,6 +99,12 @@ Content:
 
 4.0
 - giam timer
+4.3
+- timer 10000 - 350
+
+4.5
+- adding reset by command
+- adding
 */
 
 
@@ -113,7 +119,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.4.1-";
+	const uint8_t firmwareVersion[] =  "6.4.5-";
 
 #endif
 
