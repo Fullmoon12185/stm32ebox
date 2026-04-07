@@ -35,6 +35,7 @@
 #define	EEPROM_OUTLET_WORKING_TIME_ADDRESS				(EEPROM_OUTLET_LIMIT_ENERGY_ADDRESS + EEPROM_OUTLET_LIMIT_ENERGY_SIZE)
 #define	EEPROM_OUTLET_WORKING_TIME_SIZE 				5
 
+#define tenkWh											36000000
 
 uint8_t strtmp2[] = "                                     ";
 typedef struct {
@@ -55,10 +56,15 @@ typedef union EEPROM_BLOCKS_ARRAY{
 
 EEPROM_BLOCKS_ARRAY block[NUMBER_OF_RELAYS];
 
+uint8_t strtmpeeprom[50];
 
-uint32_t Eeprom_Get_LimitEnergy(uint8_t outletID);
-uint8_t Eeprom_Get_Status(uint8_t outletID);
-uint32_t Eeprom_Get_Energy(uint8_t outletID);
+
+
+uint32_t Eeprom_Get_Outlet_LimitEnergy(uint8_t outletID);
+uint8_t Eeprom_Get_Outlet_Status(uint8_t outletID);
+uint32_t Eeprom_Get_Outlet_Energy(uint8_t outletID);
+
+
 
 void Eeprom_Reset_Main_Energy(uint64_t main_energy);
 
@@ -75,16 +81,33 @@ void Eeprom_Initialize(){
 void Setup_Eeprom(void){
 	if(Get_Box_ID() == 0){
 		for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i ++){
-			Eeprom_Update_Status(i, 0);
+			Eeprom_Update_Outlet_Status(i, 0);
 			HAL_Delay(100);
-			Eeprom_Update_LimitEnergy(i, 0xffffffff);
+			Eeprom_Update_Outlet_LimitEnergy(i, 0xffffffff);
 			HAL_Delay(100);
-			Eeprom_Update_Energy(i, 0);
+			Eeprom_Update_Outlet_Energy(i, 0);
 			HAL_Delay(100);
-			Eeprom_Update_WorkingTime(i, 0);
+			Eeprom_Update_Outlet_WorkingTime(i, 0);
 			HAL_Delay(100);
 		}
 		Eeprom_Reset_Main_Energy(0);
+		HAL_Delay(100);
+	}
+}
+
+void Test_Eeprom(void){
+
+//	for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i ++){
+//		Eeprom_Update_Outlet_Energy(i, i*1000 + 1);
+//		sprintf((char*) strtmpeeprom, "write %d = %d\r\n", (int)i, i*1000 + 1);
+//		UART3_SendToHost((uint8_t *)strtmpeeprom);
+//		HAL_Delay(100);
+//	}
+
+	for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i ++){
+
+		sprintf((char*) strtmpeeprom, "read %d = %d\r\n", (int)i, Eeprom_Get_Outlet_Energy(i));
+		UART3_SendToHost((uint8_t *)strtmpeeprom);
 		HAL_Delay(100);
 	}
 }
@@ -106,9 +129,9 @@ void Write_First_Byte(uint8_t value){
 
 uint8_t Eeprom_Read_Outlet(uint8_t outletID, uint8_t *status, uint32_t *energy, uint32_t *limitEnergy, uint32_t *workingTime) {
 //	MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_STATUS_ADDRESS, block[outletID].eepromBuffer, EEPROM_BLOCK_SIZE);
-	*status = Eeprom_Get_Status(outletID);
-	*energy = Eeprom_Get_Energy(outletID);
-	*limitEnergy = Eeprom_Get_LimitEnergy(outletID);
+	*status = Eeprom_Get_Outlet_Status(outletID);
+	*energy = Eeprom_Get_Outlet_Energy(outletID);
+	*limitEnergy = Eeprom_Get_Outlet_LimitEnergy(outletID);
 	*workingTime = 0;
 	block[outletID].block_element.status = *status;
 	block[outletID].block_element.energy = *energy;
@@ -120,7 +143,7 @@ uint8_t Eeprom_Read_Outlet(uint8_t outletID, uint8_t *status, uint32_t *energy, 
 	}
 }
 
-uint8_t Eeprom_Get_Status(uint8_t outletID){
+uint8_t Eeprom_Get_Outlet_Status(uint8_t outletID){
 	uint8_t tempBuffer[2];
 	MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_STATUS_ADDRESS, tempBuffer, EEPROM_OUTLET_STATUS_SIZE);
 	if(tempBuffer[0] == (tempBuffer[1] ^ 0xff)){
@@ -128,7 +151,7 @@ uint8_t Eeprom_Get_Status(uint8_t outletID){
 	}
 	return 0;
 }
-void Eeprom_Update_Status(uint8_t outletID, uint8_t status){
+void Eeprom_Update_Outlet_Status(uint8_t outletID, uint8_t status){
 	if(block[outletID].block_element.status != status)
 	{
 		sprintf((char*) strtmp2, "status=%d\r\n", (int) status);
@@ -141,7 +164,7 @@ void Eeprom_Update_Status(uint8_t outletID, uint8_t status){
 		MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_STATUS_ADDRESS, tempBuffer, EEPROM_OUTLET_STATUS_SIZE);
 	}
 }
-uint32_t Eeprom_Get_LimitEnergy(uint8_t outletID){
+uint32_t Eeprom_Get_Outlet_LimitEnergy(uint8_t outletID){
 	uint8_t tempBuffer[5];
 	uint32_t tempLE = 0xffffffff;
 	MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_LIMIT_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_LIMIT_ENERGY_SIZE);
@@ -153,7 +176,7 @@ uint32_t Eeprom_Get_LimitEnergy(uint8_t outletID){
 	}
 	return tempLE;
 }
-void Eeprom_Update_LimitEnergy(uint8_t outletID, uint32_t limitEnergy){
+void Eeprom_Update_Outlet_LimitEnergy(uint8_t outletID, uint32_t limitEnergy){
 	if(block[outletID].block_element.limitEnergy != limitEnergy){
 		block[outletID].block_element.limitEnergy = limitEnergy;
 		uint8_t tempBuffer[5];
@@ -166,21 +189,31 @@ void Eeprom_Update_LimitEnergy(uint8_t outletID, uint32_t limitEnergy){
 	}
 }
 
-uint32_t Eeprom_Get_Energy(uint8_t outletID){
+uint32_t Eeprom_Get_Outlet_Energy(uint8_t outletID){
+
 		uint8_t tempBuffer[5];
 		uint32_t tempE = 0;
+		uint8_t checkSum = 0;
+
+		if(outletID >= NUMBER_OF_RELAYS) return 0;
+
 		MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_ENERGY_SIZE);
-		if(tempBuffer[4] == (tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3])){
+		for(uint8_t idx = 0; idx < EEPROM_OUTLET_ENERGY_SIZE - 1; idx ++){
+			checkSum ^= tempBuffer[idx];
+		}
+		if(tempBuffer[EEPROM_OUTLET_ENERGY_SIZE - 1] == checkSum){
 			tempE = (uint32_t)tempBuffer[0];
 			tempE |= (uint32_t)(tempBuffer[1] << 8);
 			tempE |= (uint32_t)(tempBuffer[2] << 16);
 			tempE |= (uint32_t)(tempBuffer[3] << 24);
+
+			if(tempE > tenkWh) return 0;
 		}
 		return tempE;
 }
 
 
-void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy){
+void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy){
 
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
@@ -192,7 +225,7 @@ void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy){
 		};
 #endif
 	if(outletID >= NUMBER_OF_RELAYS) return;
-	updateEnergy[outletID] = (updateEnergy[outletID] + 1) % 20;
+	updateEnergy[outletID] = (updateEnergy[outletID] + 1) % 60;
 	if(updateEnergy[outletID] == 0){
 		if(block[outletID].block_element.energy != energy){
 			block[outletID].block_element.energy = energy;
@@ -207,7 +240,8 @@ void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy){
 	}
 }
 
-void Eeprom_Update_WorkingTime(uint8_t outletID, uint32_t workingTime){
+
+void Eeprom_Update_Outlet_WorkingTime(uint8_t outletID, uint32_t workingTime){
 
 	if(block[outletID].block_element.workingTime != workingTime){
 		block[outletID].block_element.workingTime = workingTime;

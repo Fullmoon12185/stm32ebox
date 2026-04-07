@@ -90,6 +90,8 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 uint64_t Get_Main_Power_Consumption(void);
 void Set_Main_Power_Consumption(uint64_t totalPowerConsumption);
 
+void Set_Outlet_Energy(uint8_t outletID, uint32_t outlet_energy);
+
 uint8_t Get_Main_Power_Factor(void);
 uint32_t Get_Main_Current(void);
 SystemStatus Get_Main_Status(void);

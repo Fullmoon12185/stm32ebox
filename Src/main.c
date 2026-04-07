@@ -76,8 +76,8 @@ int main(void)
 #endif
 
 
-
 	Setup_Eeprom();
+
 	SCH_Add_Task(PCF_read, 13, 23);
 	SCH_Add_Task(Start_Sending_Sms_Message, 6000*5, 6000*60*24*30);
 #if(ESTOP_BUTTON == 1)

@@ -185,6 +185,7 @@ void Set_Relay(uint8_t relayIndex){
 	SCH_Delete_Task(relay_TimeoutFlag_Index);
 	Clear_Relay_Timeout_Flag();
 	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 100, 0);
+
 }
 
 void Reset_Relay(uint8_t relayIndex){
@@ -198,6 +199,7 @@ void Reset_Relay(uint8_t relayIndex){
 	SCH_Delete_Task(relay_TimeoutFlag_Index);
 	Clear_Relay_Timeout_Flag();
 	relay_TimeoutFlag_Index = SCH_Add_Task(Set_Relay_Timeout_Flag, 100, 0);
+
 }
 
 void Update_Relay_Physical_Status(void){

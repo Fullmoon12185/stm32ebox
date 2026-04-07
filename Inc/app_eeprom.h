@@ -26,6 +26,9 @@
 
 //void eeprom_write_outlet(uint8_t outletIndex, )
 void Setup_Eeprom(void);
+
+void Test_Eeprom(void);
+
 void Write_First_Byte(uint8_t value);
 uint8_t Read_First_Byte(void);
 
@@ -36,8 +39,10 @@ void Eeprom_Update_Main_Energy_Immediately(uint64_t main_energy);
 void Eeprom_Initialize();
 uint8_t Eeprom_Read_Outlet  (uint8_t outletIndex, uint8_t * status, uint32_t * energy, uint32_t * limitEnergy, uint32_t *workingTime);
 
-void Eeprom_Update_Status(uint8_t outletID, uint8_t status);
-void Eeprom_Update_LimitEnergy(uint8_t outletID, uint32_t limitEnergy);
-void Eeprom_Update_Energy(uint8_t outletID, uint32_t energy);
-void Eeprom_Update_WorkingTime(uint8_t outletID, uint32_t workingTime);
+void Eeprom_Update_Outlet_Status(uint8_t outletID, uint8_t status);
+void Eeprom_Update_Outlet_LimitEnergy(uint8_t outletID, uint32_t limitEnergy);
+
+uint32_t Eeprom_Get_Outlet_Energy(uint8_t outletID);
+void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy);
+void Eeprom_Update_Outlet_WorkingTime(uint8_t outletID, uint32_t workingTime);
 #endif

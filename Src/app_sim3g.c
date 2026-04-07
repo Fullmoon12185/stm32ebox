@@ -16,6 +16,7 @@
 #include "app_version.h"
 
 #include "app_led_display.h"
+#include "app_eeprom.h"
 
 
 #define DEBUG_SIM3G(X)    						X
@@ -708,14 +709,14 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
 			if(relayStatus == SET){
 				Set_Relay(relayIndex);
-				Set_Limit_Energy(relayIndex, 0xffffffff);
 				Start_Working_Time(relayIndex);
 				Clear_Max_Node_Current(relayIndex);
 				Clear_Charging_Full_Status(relayIndex);
+				Set_Outlet_Energy(relayIndex, 0);
 			} else {
 				Reset_Relay(relayIndex);
-				Set_Limit_Energy(relayIndex, 0);
 			}
+			Eeprom_Update_Outlet_Energy(relayIndex, 0);
 		} else {
 			Update_Firmware(lentopic);
 			Send_SMS(lentopic);
@@ -764,8 +765,10 @@ void Processing_Received_Data_From_Retained_Message(uint8_t * sub_topic, uint16_
 			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + i*4 + 2] - 0x30;
 			if(relayStatus == SET){
 				Set_Relay(relayIndex);
+				Set_Outlet_Energy(relayIndex, Eeprom_Get_Outlet_Energy(relayIndex));
 			} else {
 				Reset_Relay(relayIndex);
+				Set_Outlet_Energy(relayIndex, 0);
 			}
 		}
 	}
