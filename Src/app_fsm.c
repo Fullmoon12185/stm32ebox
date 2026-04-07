@@ -60,6 +60,8 @@ static uint32_t publish_message_TimeoutIndex = NO_TASK_ID;
 static uint8_t update_Firmware_TimeoutFlag = 0;
 
 static  uint8_t isSendingMQTTMessage = 0;
+static  uint8_t isSendingWhenNoCharging = 0;
+
 
 typedef enum {
 	SIM3G_OPEN_CONNECTION = 0,
@@ -581,7 +583,6 @@ void Server_Communication(void){
 			} else {
 				if(Is_Ready_To_Send_MQTT_Data()){
 					serverCommunicationFsmState = SIM3G_SETUP_PUBLISH_TOPICS;
-					
 				}
 			}
 		}
@@ -599,30 +600,37 @@ void Server_Communication(void){
 			serverCommunicationFsmState = SIM3G_UPDATE_FIRMWARE;
 		} else {
 			if(is_Set_Relay_Timeout()){
-				if((publishTopicIndex > 2) && (Get_Is_Update_Relay_Status() == SET || Get_Is_Node_Status_Changed() == SET)){
-
+				if(Get_Is_Update_Relay_Status() == SET){
+					publishTopicIndex = 0;
+				}
+				else if((publishTopicIndex > 2) && (Get_Is_Node_Status_Changed() == SET)){
 						publishTopicIndex = 0;
+						isSendingWhenNoCharging = 0;
 				} else if (is_Publish_Message_Timeout()){
 					if (publishTopicIndex == 0) {
+						if (isSendingWhenNoCharging < 255) isSendingWhenNoCharging++;
 						publishTopicIndex = 1;
 						Update_Publish_Status_Message();
 						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
 						isSendingMQTTMessage = 1;
+
 					} else if (publishTopicIndex == 1) {
 						publishTopicIndex = 2;
-						Update_Publish_Power_Message_All_Outlets();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,	publish_message, publish_message_length);
-						isSendingMQTTMessage = 1;
+						if(isChargingInProgress() || isSendingWhenNoCharging > 5){
+							Update_Publish_Power_Message_All_Outlets();
+							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,	publish_message, publish_message_length);
+							isSendingMQTTMessage = 1;
+						}
 					} else if (publishTopicIndex == 2) {
 						publishTopicIndex = 3;
-						if(isChargingInProgress()){
+						if(isChargingInProgress() || isSendingWhenNoCharging > 5){
 							Update_Publish_Current_Message_All_Outlets();
 							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_CURRENT, publish_message, publish_message_length);
 							isSendingMQTTMessage = 1;
 						}
 					} else if (publishTopicIndex == 3) {
 						publishTopicIndex = 4;
-						if(isChargingInProgress()){
+						if(isChargingInProgress() || isSendingWhenNoCharging > 5){
 							Update_Publish_Voltage_Message_All_Outlets();
 							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_VOLTAGE, publish_message, publish_message_length);
 							isSendingMQTTMessage = 1;
@@ -634,10 +642,12 @@ void Server_Communication(void){
 						publishTopicIndex = 0;
 #endif
 
-						if(isChargingInProgress()){
+						if(isChargingInProgress() || isSendingWhenNoCharging > 5){
 							Update_Publish_Power_Factor_Message_All_Outlets();
 							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWERFACTOR, publish_message, publish_message_length);
 							isSendingMQTTMessage = 1;
+
+							isSendingWhenNoCharging = 0;
 						}
 					}
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
@@ -650,11 +660,17 @@ void Server_Communication(void){
 #endif
 					if(isSendingMQTTMessage == 1) {
 						Set_Mqtt_State(MQTT_PUBLISH_STATE);
-						Clear_Publish_Message_Timeout_Flag();
-						publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
-
 						isSendingMQTTMessage = 0;
+
+						if(isChargingInProgress()){
+							Clear_Publish_Message_Timeout_Flag();
+							publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE, 0);
+						} else {
+							Clear_Publish_Message_Timeout_Flag();
+							publish_message_TimeoutIndex = SCH_Add_Task(Set_Publish_Message_Timeout_Flag, TIME_FOR_PUBLISH_MESSAGE*2, 0);
+						}
 					}
+
 					ClearCounter();
 					Clear_Counter_For_Reset_Module_Sim();
 					Clear_For_Watchdog_Reset_Due_To_Not_Sending_Mqtt_Message();

@@ -79,22 +79,59 @@ void Error_Handler(void);
 #define		VERSION_EBOX				VERSION_6_WITH_8CT_20A
 
 
-#define		HD_MON_1					126
-#define		HD_MON_2					127
-#define 	ESTELLA_HEIGHTS				129
-#define		ANTRUNG_BUILDING			161
+#define		CITIHOME_39						39
+#define		TOPAZ_119						119
+#define		TOPAZ_120						120
+#define		KINGDOM_121						121
+#define		EBOOST_OFFICE_177				177
 
-#define		PEGASUS_BIENHOA 			222
+#define		HD_MON_1_126					126
+#define		HD_MON_2_127					127
+#define 	ESTELLA_HEIGHTS_129				129
+#define 	BRIDGEVIEW_143					143
+
+#define 	HAI_THANH_159					159
+
+#define		ANTRUNG_BUILDING_161			161
+
+#define		PHU_MY_175						175
+#define		CHUONG_DUONG_HOME_197			197
+
+#define		N4_HOA_KHANH_204 				204
+#define		HIM_LAM_RIVER_SIDE_207 			207
+
+#define		MY_PHUC_1_209					209
+#define		RIVIERA_POINT_213 				213
+#define		THU_THIEM_GREEN_HOUSE_221		221
+#define		PEGASUS_BIENHOA_222 			222
+
+#define		N1_HOAKHANH_2_260				260
+
+#define 	PHU_DONG_SKY_GARDEN_282			282
+#define		DIAMOND_LOTUS_RIVERSIDE_285		285
+
+#define		MY_PHUC_2_255					255
+#define	    LOVERA_VISTA_293				293
 
 
-#define		PHU_MY_BLOCK_B				244
+#define		PHU_MY_BLOCK_B_244				244
+#define		THOI_AN_2_300 			        300
 
-#define		MY_PHUC_3 			        319
-#define		MY_PHUC_4 			        320
+#define		MY_PHUC_3_319 			        319
+#define		MY_PHUC_4_320 			        320
+
+#define 	TARA_327						327
+#define 	TARA_328						328
+
+#define     VO_DINH_338						338
+#define 	PHU_MY_THUAN_341				341
+#define 	HOANG_ANH_THANH_BINH_346		346
+#define 	PHUC_YEN_347					347
+
+#define 	HIM_LAM_PHU_DONG_348			348
 
 
-
-#define 	BEEP_ON					1
+#define 	BEEP_ON							1
 
 /*
  * Firmware Chosen
@@ -267,19 +304,19 @@ void Error_Handler(void);
 #define USART2_RX_PIN 					GPIO_PIN_3
 #define USART2_RX_GPIO_PORT 				GPIOA
 
-#define USART2_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE();
-#define DMA2_CLK_ENABLE()                __HAL_RCC_DMA2_CLK_ENABLE()
-#define USART2_RX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
-#define USART2_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
+#define USART2_CLK_ENABLE()              		__HAL_RCC_USART2_CLK_ENABLE();
+#define DMA2_CLK_ENABLE()                		__HAL_RCC_DMA2_CLK_ENABLE()
+#define USART2_RX_GPIO_CLK_ENABLE()      		__HAL_RCC_GPIOA_CLK_ENABLE()
+#define USART2_TX_GPIO_CLK_ENABLE()      		__HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define USART2_FORCE_RESET()             __HAL_RCC_USART2_FORCE_RESET()
-#define USART2_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
+#define USART2_FORCE_RESET()             		__HAL_RCC_USART2_FORCE_RESET()
+#define USART2_RELEASE_RESET()           		__HAL_RCC_USART2_RELEASE_RESET()
 
 ///////////////////////////////////////////////////////////////////////////////
-#define USART3_TX_PIN 					GPIO_PIN_10
-#define USART3_TX_GPIO_PORT 				GPIOB
-#define USART3_RX_PIN 					GPIO_PIN_11
-#define USART3_RX_GPIO_PORT 				GPIOB
+#define USART3_TX_PIN 							GPIO_PIN_10
+#define USART3_TX_GPIO_PORT 					GPIOB
+#define USART3_RX_PIN 							GPIO_PIN_11
+#define USART3_RX_GPIO_PORT 					GPIOB
 
 #define USART3_CLK_ENABLE()              		__HAL_RCC_USART3_CLK_ENABLE();
 #define DMA3_CLK_ENABLE()                		__HAL_RCC_DMA3_CLK_ENABLE()

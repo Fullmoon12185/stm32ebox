@@ -12,6 +12,9 @@
 void ADC1_Init(void);
 void ADC_DMA_Init(void);
 
+void ADC_Recover(void);
+void Handle_ADC_Error(void);
+
 void ADC_Start_Getting_Values(void);
 void ADC_Stop_Getting_Values(void);
 void PowerConsumption_FSM(void);

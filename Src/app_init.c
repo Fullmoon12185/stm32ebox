@@ -65,10 +65,6 @@ void System_Initialization(void)
         case FLASH_INIT:
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"FLASH_INIT - Done \r\n"));
         	break;
-        case TIMER_INIT:
-        	Timer_Init();
-        	DEBUG_INIT(UART3_SendToHost((uint8_t*)"TIMER_INIT - Done \r\n"));
-            break;
         case SPI_INIT:
         	SPI1_Init();
         	SPI2_Init();
@@ -86,6 +82,11 @@ void System_Initialization(void)
         	PCF_Init();
         	DEBUG_INIT(UART3_SendToHost((uint8_t*)"I2C_Init - Done \r\n"));
         	break;
+        case TIMER_INIT:
+			Timer_Init();
+			DEBUG_INIT(UART3_SendToHost((uint8_t*)"TIMER_INIT - Done \r\n"));
+			break;
+
         case ACCELERATOR_INIT:
         	break;
         case POWER_SETUP_INIT:

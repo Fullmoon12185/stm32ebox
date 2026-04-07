@@ -13,10 +13,7 @@
 #define EXTI_SUB_PRIORITY_LEVEL 0
 
 
-void LED_Init(void);
-void GPIO_Relay_Init(void);
-void Buzzer_Init(void);
-void ZeroPoint_Detection_Pin_Init(void);
+
 
 
 #if(ESTOP_BUTTON == 1)
@@ -211,6 +208,18 @@ void ZeroPoint_Detection_Pin_Init(void){
 	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 #endif
 }
+
+
+
+void ZeroPoint_Detection_Pin_Clear_Interrupt_Flag(void){
+    HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+
+    __HAL_GPIO_EXTI_CLEAR_IT(ZERO_POINT_DETECTION_PIN);
+
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+}
+
+
 
 
 

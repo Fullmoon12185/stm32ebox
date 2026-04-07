@@ -222,40 +222,60 @@ FlagStatus Get_Is_Update_Relay_Status(void){
 
 
 //For latest Relay
-void Clear_Counter_For_Checking_Total_Current(void){
+void Clear_Counter_For_Checking_Total_Current(void)
+{
 	timeoutForResetLatestRelayBuffer = 0;
 }
-void Increase_Counter_For_Checking_Total_Current(void){
+
+void Increase_Counter_For_Checking_Total_Current(void)
+{
 	timeoutForResetLatestRelayBuffer = timeoutForResetLatestRelayBuffer + 1;
 }
-uint8_t Is_Timeout_For_Checking_Total_Current(void){
-	if(timeoutForResetLatestRelayBuffer >= 60){
+
+uint8_t Is_Timeout_For_Checking_Total_Current(void)
+{
+	if(timeoutForResetLatestRelayBuffer >= 60)
+	{
 		return 1;
-	} else {
+	}
+	else
+	{
 		return 0;
 	}
 }
 
-void Clear_Latest_Relay_Buffer(void){
-	for (uint8_t index = 0; index < NUMBER_OF_RELAYS; index ++){
+void Clear_Latest_Relay_Buffer(void)
+{
+	for (uint8_t index = 0; index < NUMBER_OF_RELAYS; index ++)
+	{
 		latestRelay[index] = NUMBER_OF_RELAYS;
 	}
+
 	latestRelayIndex = 0;
 }
 uint8_t Reset_Latest_Relay(void){
 	uint8_t relayIndex = latestRelay[latestRelayIndex];
-	Reset_Relay(latestRelay[latestRelayIndex]);
+
+	if (relayIndex >= NUMBER_OF_RELAYS) {
+		return NUMBER_OF_RELAYS;        // or some error code meaning "buffer empty"
+	}
+
+	Reset_Relay(relayIndex);
 	latestRelay[latestRelayIndex] = NUMBER_OF_RELAYS;
+
 	if(latestRelayIndex == 0){
 		latestRelayIndex = NUMBER_OF_RELAYS - 1;
 	} else {
-		latestRelayIndex = latestRelayIndex - 1;
+		latestRelayIndex--;
 	}
+
 	return relayIndex;
 }
 
-void Update_Latest_Relay(uint8_t index){
+void Update_Latest_Relay(uint8_t index)
+{
 	if(index >= NUMBER_OF_RELAYS) return;
+
 	latestRelayIndex = (latestRelayIndex + 1)%NUMBER_OF_RELAYS;
 	latestRelay[latestRelayIndex] = index;
 	

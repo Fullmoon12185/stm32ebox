@@ -14,6 +14,8 @@
 #include "app_test.h"
 #include "app_power.h"
 
+#include "app_adc.h"
+#include "app_gpio.h"
 #include "app_pcf8574.h"
 
 
@@ -258,7 +260,7 @@
 #endif
 
 
-void ADC_Recover();
+
 
 
 
@@ -283,6 +285,8 @@ uint32_t array_Of_Average_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCU
 uint32_t array_Of_Average_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
 uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_FOR_SMA];
 
+volatile uint8_t adc_error_flag = 0;
+volatile uint8_t adc_error_count = 0;
 
 
 /* Variable to report ADC analog watchdog status:   */
@@ -875,6 +879,8 @@ FlagStatus Is_Done_Getting_ADC(void){
 }
 
 
+
+
 uint8_t filterNoiseState = 0;
 uint16_t coefficientForPF = 0;
 void PowerConsumption_FSM(void){
@@ -903,7 +909,7 @@ void PowerConsumption_FSM(void){
 			adcState = ADC_START_GETTING;
 		}
 		if(is_Adc_Reading_Timeout()){
-			ADC_Recover();
+			ZeroPoint_Detection_Pin_Clear_Interrupt_Flag();
 			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
@@ -921,7 +927,7 @@ void PowerConsumption_FSM(void){
 			}
 		}
 		if(is_Adc_Reading_Timeout()){
-			ADC_Recover();
+			ZeroPoint_Detection_Pin_Clear_Interrupt_Flag();
 			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
@@ -939,13 +945,10 @@ void PowerConsumption_FSM(void){
 			if(AdcDmaBufferIndexFilter % NUMBER_OF_SAMPLES_PER_SECOND == 0){
 				AdcDmaBufferIndexFilter = 0;
 			}
-			if(AdcDmaBuffer[REFERENCE_1V8_VOLTAGE_INDEX] < 100){
-				ADC_Recover();
-			}
+		
 			adcState = ADC_START_GETTING;
 		}
 		if(is_Adc_Reading_Timeout()){
-			ADC_Recover();
 			adcState = ADC_REPORT_POWER_DATA;
 		}
 		break;
@@ -1310,9 +1313,7 @@ void PowerConsumption_FSM(void){
 		}
 
 		if(is_Adc_Reading_Timeout()){
-			ADC_Recover();
 			adcState = ADC_REPORT_POWER_DATA;
-
 		}
 		break;
 
@@ -1367,18 +1368,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *AdcHandle)
 	AdcDmaStoreFlag = SET;
 }
 
-void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc){
-	static uint8_t countADCErrorCallback = 0;
-	countADCErrorCallback ++;
-	if(countADCErrorCallback < 10){
-		ADC_Recover();
-	} else {
-		countADCErrorCallback = 0;
-		NVIC_SystemReset();
-	}
 
-	UART3_SendToHost((uint8_t *)"HAL_ADC_ErrorCallback\r\n");
+void HAL_ADC_ErrorCallback(ADC_HandleTypeDef *hadc)
+{
+    if (adc_error_count < 255) adc_error_count++;  // prevent overflow
+    adc_error_flag = 1;  // signal main loop
 }
+
 /**
   * @brief  Analog watchdog callback in non blocking mode.
   * @param  hadc: ADC handle
@@ -1400,14 +1396,48 @@ void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	is_Ready_To_Find_Min_Max_Voltage = SET;
 	zeroPointCounter ++;
+	ZeroPoint_Detection_Pin_Clear_Interrupt_Flag();
 	return;
 }
 
-void ADC_Recover()
+void ADC_Recover(void)
 {
 	ADC_Stop_Getting_Values();
-    __HAL_RCC_ADC1_FORCE_RESET();
-    __HAL_RCC_ADC1_RELEASE_RESET();
+	HAL_ADC_DeInit(&ADC1Handle);
+	ADC_DMA_Init();
     ADC1_Init();
-    UART3_SendToHost((uint8_t *)"ADC_Recover\r\n");
+}
+
+void Handle_ADC_Error(void)
+{
+    static uint32_t last_recover_tick = 0;
+
+    uint32_t now = HAL_GetTick();
+    if (now - last_recover_tick < 1000){
+		return;
+	}
+	last_recover_tick = now;
+
+    if (!adc_error_flag) {
+    	if (adc_error_count > 0) adc_error_count --;
+    	return;
+    }
+    adc_error_flag = 0;
+
+
+
+    // 🟡 Retry with spacing (avoid hammering ADC)
+    if ((adc_error_count > 5) && adc_error_count < 10)
+    {
+        ADC_Recover();   // ✅ safe here
+        UART3_SendToHost((uint8_t *)"ADC recover\r\n");
+    }
+    else if(adc_error_count >= 10)
+    {
+        adc_error_count = 0;
+        UART3_SendToHost((uint8_t *)"ADC reset\r\n");
+
+        HAL_Delay(10);  // ensure UART flush (optional)
+        NVIC_SystemReset();
+    }
 }

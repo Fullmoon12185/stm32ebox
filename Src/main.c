@@ -64,7 +64,7 @@ int main(void)
 	sprintf(log,"Ebox Version: %d\r\n", (int)VERSION_EBOX);
 	UART3_SendToHost((uint8_t*)log);
 
-	PCF_Init();
+//	PCF_Init();
 
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	MODBUS_init();
@@ -74,7 +74,6 @@ int main(void)
 	Lcd_Initialization();
 	Show_Box_ID(Get_Box_ID());
 #endif
-
 
 
 
@@ -154,6 +153,8 @@ void Main_FSM(void){
 	POWERMETER485_fsm();
 #endif
 	FSM_Process_Data_Received_From_Sim3g();
+
+	Handle_ADC_Error();
 
 	switch(mainState){
 	case POWER_CONSUMPTION_CALCULATION:

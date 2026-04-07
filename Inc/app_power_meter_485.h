@@ -8,6 +8,7 @@
 #define SDM120 	0x02
 
 uint16_t PowerVoltage(void);
+uint16_t PowerCurrent(void);
 
 typedef struct {
 	float voltage;

@@ -104,7 +104,22 @@ Content:
 
 4.5
 - adding reset by command
-- adding
+
+4.6
+- settings up timers base on location
+
+4.7
+-update adc error handler
+
+4.8
+- update timer for box 328, 327, 39
+4.9
+- update timer for box 341, 120, 119
+- update 341 from 500 -> 550
+
+5.1
+
+
 */
 
 
@@ -119,7 +134,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.4.5-";
+	const uint8_t firmwareVersion[] =  "6.5.1-";
 
 #endif
 

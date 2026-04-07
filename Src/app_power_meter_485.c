@@ -15,7 +15,6 @@
 #define POWERMETER485_APP_TIMEOUT			5000
 
 
-static uint8_t strtmpPowerMeter[50];
 
 enum {
 	POWERMETER485_INIT,
@@ -156,8 +155,16 @@ uint16_t PowerVoltage(void){
 #else
 	return 230;
 #endif
-
 }
+uint16_t PowerCurrent(void){
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+	return (uint16_t)(power.current*1000);
+#else
+	return 0;
+#endif
+}
+
+
 
 void POWERMETER485_fsm(void){
 	static uint32_t start_tx_time = 0;

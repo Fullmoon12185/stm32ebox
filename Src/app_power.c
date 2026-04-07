@@ -18,7 +18,7 @@
 
 
 #include "app_gpio.h"
-
+#include "app_adc.h"
 #include "app_power_meter_485.h"
 
 
@@ -34,6 +34,7 @@
 #define OUTLET_CHARGE_FULL_HD_MON_STATE			8
 #define OUTLET_PREPARE_TO_AVAILABLE_STATE 		2
 
+#define OVERCURRENT_THRESHOLD_COUNT  			5
 
 
 
@@ -69,6 +70,9 @@ static uint32_t MAX_POWER_1  = 16 * 230 * 100; //16A, 230V và PF = 100%
 
 #endif
 
+
+
+
 #define 		MAX_CURRENT_FOR_CABLE_25				16000
 #define 		MAX_CURRENT_FOR_CABLE_40				20000
 #define 		MAX_CURRENT_FOR_CABLE_60				31000
@@ -95,7 +99,7 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define		MIN_CURRENT_DETECTING_UNPLUG						5000
 #define		MIN_CURRENT_DETECTING_UNPLUG_HD_MON					30000
 
-#define		MIN_CURRENT_FOR_START_CHARGING						35000
+#define		MIN_CURRENT_FOR_START_CHARGING						40000
 #define 	CURRENT_CHANGING_THRESHOLD							30000
 
 #if(BOX_PLACE == BOX_AT_XI)
@@ -133,7 +137,7 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 
 #define		TIME_OUT_AFTER_DETECT_UNPLUG_CHARGE_FULL					(10*60*1000/INTERRUPT_TIMER_PERIOD)
 
-#define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(30000/INTERRUPT_TIMER_PERIOD)
+#define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(60000/INTERRUPT_TIMER_PERIOD)
 
 #define	    TIME_OUT_AFTER_DETECTING_OVER_MONEY							(10000/INTERRUPT_TIMER_PERIOD)
 #define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT							(5000/INTERRUPT_TIMER_PERIOD)
@@ -240,6 +244,7 @@ uint8_t Is_Charging_Full_Status(uint8_t outletID);
 
 
 void Update_Max_Node_Current(uint8_t index, uint32_t current);
+void Checking_DMA_ADC_Reading(void);
 
 /////////////////////////////////////////////////////////////
 
@@ -273,7 +278,7 @@ uint8_t Is_Charging_Full_Status(uint8_t outletID){
 
 void Set_MAX_TOTAL_CURRENT(void){
 	uint16_t boxID = Get_Box_ID();
-	if(boxID == PEGASUS_BIENHOA){
+	if(boxID == PEGASUS_BIENHOA_222){
 		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_25; //in miliampere
 	} else {
 		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60; //in miliampere
@@ -282,6 +287,7 @@ void Set_MAX_TOTAL_CURRENT(void){
 void Process_System_Power(void){
 	if(Process_Input_Source() == SYSTEM_NORMAL){
 		Process_Outlets();
+		Checking_DMA_ADC_Reading();
 	}
 }
 void Set_Power_Input_Source_Timeout_Flag(void){
@@ -486,14 +492,43 @@ uint32_t Get_Main_Current(void){
 	}
 	return Main.currentTotal;
 }
-uint8_t Is_Main_Current_Over_Max_Current(void){
 
-	if(Get_Main_Current() > MAX_TOTAL_CURRENT){
-		return 1;
-	} else {
-		return 0;
-	}
+uint8_t Is_Main_Current_Over_Max_Current(void)
+{
+    static uint32_t last_check_tick = 0;
+    static uint8_t over_count = 0;
 
+    uint32_t now = HAL_GetTick();
+
+    if ((uint32_t)(now - last_check_tick) < 1000U)
+    {
+        return 0;
+    }
+
+    last_check_tick = now;
+
+    uint16_t current = PowerCurrent();
+
+    if (current <= 0)
+    {
+        current = Get_Main_Current();
+    }
+
+    if (current > MAX_TOTAL_CURRENT)
+    {
+
+        if (++over_count >= OVERCURRENT_THRESHOLD_COUNT)
+        {
+            over_count = 0;
+            return 1;
+        }
+    }
+    else
+    {
+        over_count = 0;
+    }
+
+    return 0;
 }
 
 SystemStatus Get_Main_Status(void){
@@ -570,7 +605,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.nodes[tempOutletID].voltage = PowerVoltage();
 
 #if (VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-		if(Main.nodes[tempOutletID].current < MAX_CURRENT_1){
+		if(Main.nodes[tempOutletID].current < MAX_CURRENT_1 && (Main.nodes[tempOutletID].nodeStatus != NODE_READY)){
 			tempCurrent = (float)(Main.nodes[tempOutletID].current)/100000;//in mA	// /100
 			tempPower = (float)(Main.nodes[tempOutletID].voltage * tempCurrent * Main.nodes[tempOutletID].powerFactor);
 		} else {
@@ -840,7 +875,7 @@ void Display_OutLet_Status(uint8_t outletID){
 uint8_t isChargingInProgress(void){
 	uint8_t outletID;
 	for (outletID = 0; outletID < NUMBER_OF_RELAYS; outletID++){
-		if(Main.nodes[outletID].nodeStatus == CHARGING){
+		if(Main.nodes[outletID].nodeStatus == CHARGING || Main.nodes[outletID].nodeStatus == NODE_READY){
 			return 1;
 		}
 	}
@@ -883,12 +918,8 @@ void Detect_Charge_Full(uint8_t outletID, uint32_t threshold){
 
 void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 
-	DEBUG_POWER(sprintf((char*) strtmpPower, "threshold = %d\r\n", (int) threshold););
-	DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 	if(Main.nodes[outletID].current < MIN_CURRENT_DETECTING_UNPLUG){
 		int32_t tempDefference = (int32_t)(Main.nodes[outletID].previousCurrent - Main.nodes[outletID].current);
-		DEBUG_POWER(sprintf((char*) strtmpPower, "tempDefference = %d\r\n", (int) tempDefference););
-		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 		if (tempDefference > threshold)	{
 			outletCounter[outletID] = 0;
 			if(Is_Charging_Full_Status(outletID)){
@@ -905,6 +936,10 @@ void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 }
 
 uint8_t isNewCurrents(uint8_t outletID){
+
+	if(outletID >= NUMBER_OF_RELAYS)
+		return 0;
+
 	static uint32_t previousWorkingTime[NUMBER_OF_RELAYS];
 	if(previousWorkingTime[outletID] != Main.workingTime){
 		previousWorkingTime[outletID] = Main.workingTime;
@@ -915,7 +950,46 @@ uint8_t isNewCurrents(uint8_t outletID){
 }
 
 
+void Checking_DMA_ADC_Reading(void)
+{
+    static uint16_t fault_counter = 0;
+    static uint32_t last_recover_tick = 0;
 
+    uint32_t now = HAL_GetTick();
+    if (now - last_recover_tick < 1000){
+    	return;
+    }else {
+    	last_recover_tick = now;
+    }
+
+    if (!isChargingInProgress()) {
+        fault_counter = 0;
+        return;
+    }
+
+    // Detect abnormal condition
+    bool is_fault = (Get_Main_Current() < 100) && (PowerCurrent() > 500);
+
+    if (!is_fault) {
+        fault_counter = 0;
+        return;
+    }
+
+    fault_counter++;
+
+    // 🟡 Step 1: Try recovery every 20000ms
+    if (fault_counter%20 == 0) {
+        ZeroPoint_Detection_Pin_Clear_Interrupt_Flag();
+        ADC_Recover();
+
+    }
+
+    // 🔴 Step 2: Hard reset if persistent failure
+    if (fault_counter >= 100) {
+        fault_counter = 0;
+        NVIC_SystemReset();
+    }
+}
 
 void Process_Outlets(void){
 	static uint8_t tempOutletID = 0;
@@ -932,7 +1006,7 @@ void Process_Outlets(void){
 	else
 #endif
 
-	if ((Get_Box_ID() != ANTRUNG_BUILDING)	&& isNoFuseAvailable(tempOutletID)){
+	if (isNoFuseAvailable(tempOutletID)){
 		if(Get_Relay_Status(tempOutletID) == RESET) {	//return NOFUSE
 			if(outletState[tempOutletID] != OUTLET_ERROR_STATE){
 				Main.nodes[tempOutletID].nodeStatus = NO_FUSE;
@@ -953,8 +1027,7 @@ void Process_Outlets(void){
 		}
 	}
 
-	else if((Get_Box_ID() != ANTRUNG_BUILDING)
-			&& isRelayOn(tempOutletID)
+	else if(isRelayOn(tempOutletID)
 			&& (Get_Relay_Status(tempOutletID) == RESET)
 			&& is_Set_Relay_Timeout()){
 		if(outletState[tempOutletID] != OUTLET_ERROR_STATE){
@@ -1063,7 +1136,7 @@ void Process_Outlets(void){
 						} else {
 							Detect_Un_Plug(tempOutletID, Main.nodes[tempOutletID].maxNodeCurrent*3/4);
 						}
-						if(Get_Box_ID() == ESTELLA_HEIGHTS){
+						if(Get_Box_ID() == ESTELLA_HEIGHTS_129){
 							if(Is_Charging_More_Than_An_Hour(tempOutletID, 8*60*60)){
 								Detect_Charge_Full(tempOutletID, MIN_CURRENT_DETECTING_FULL_CHARGE*4);
 							} else if (Is_Charging_More_Than_An_Hour(tempOutletID, 6*60*60)) {
@@ -1149,11 +1222,16 @@ void Process_Outlets(void){
 
 void Process_Main_Current_Over_Max_Current(void){
 	uint8_t relayIndex = NUMBER_OF_RELAYS;
-	if(Is_Main_Current_Over_Max_Current() == 1){
-//		DEBUG_POWER(sprintf((char*) strtmpPower, "G_M_C() = %d, M_TO_C = %d, relayIndex = %d\r\n", (int) Get_Main_Current(), (int)MAX_TOTAL_CURRENT, (int) relayIndex););
-		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+	if(Is_Main_Current_Over_Max_Current() == 1)
+	{
 		relayIndex = Reset_Latest_Relay();
+		if (relayIndex >= NUMBER_OF_RELAYS) {
+			return;
+		}
+
 		Main.nodes[relayIndex].nodeStatus = TOTAL_OVER_CURRRENT;
+		Set_Power_Timeout_Flags(relayIndex, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
+		outletState[relayIndex] = OUTLET_ERROR_STATE;
 		Clear_Counter_For_Checking_Total_Current();
 
 	} else if(Is_Timeout_For_Checking_Total_Current() == 0){

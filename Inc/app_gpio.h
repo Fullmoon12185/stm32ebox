@@ -18,6 +18,12 @@ void Turn_Off_LED(void);
 void SPI_CS_Init(void);
 void MX_GPIO_Init(void);
 
+void LED_Init(void);
+void GPIO_Relay_Init(void);
+void Buzzer_Init(void);
+void ZeroPoint_Detection_Pin_Init(void);
+void ZeroPoint_Detection_Pin_Clear_Interrupt_Flag(void);
+
 #if(ESTOP_BUTTON == 1)
 	uint8_t isEstopPressed(void);
 	void Estop_Processing(void);

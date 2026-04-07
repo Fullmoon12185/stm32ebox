@@ -186,6 +186,11 @@ void Set_Input_PCF_Pins(void){
 
 uint8_t isNoFuseAvailable(uint8_t outletId){
 	uint32_t tempRelayFuseStatuses = Get_All_Relay_Fuse_Statuses();
+	if(outletId % 2 == 0){
+		outletId = outletId + 1;
+	} else {
+		outletId = outletId - 1;
+	}
 	return ((tempRelayFuseStatuses >> (outletId*2) & 0x00000002) > 0);
 }
 
