@@ -118,7 +118,10 @@ Content:
 - update 341 from 500 -> 550
 
 5.1
-
+5.2
+- add saving eeprom for each outlet charging proccess
+5.3
+- adjust timer for some top locations
 
 */
 
@@ -134,7 +137,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.5.1-";
+	const uint8_t firmwareVersion[] =  "6.5.3-";
 
 #endif
 

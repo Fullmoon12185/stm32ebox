@@ -610,17 +610,18 @@ void Server_Communication(void){
 					if (publishTopicIndex == 0) {
 						if (isSendingWhenNoCharging < 255) isSendingWhenNoCharging++;
 						publishTopicIndex = 1;
-						Update_Publish_Status_Message();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-						isSendingMQTTMessage = 1;
-
-					} else if (publishTopicIndex == 1) {
-						publishTopicIndex = 2;
 						if(isChargingInProgress() || isSendingWhenNoCharging > 5){
 							Update_Publish_Power_Message_All_Outlets();
 							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,	publish_message, publish_message_length);
 							isSendingMQTTMessage = 1;
 						}
+
+					} else if (publishTopicIndex == 1) {
+						publishTopicIndex = 2;
+						Update_Publish_Status_Message();
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
+						isSendingMQTTMessage = 1;
+
 					} else if (publishTopicIndex == 2) {
 						publishTopicIndex = 3;
 						if(isChargingInProgress() || isSendingWhenNoCharging > 5){

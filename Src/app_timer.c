@@ -20,38 +20,65 @@ typedef struct {
     uint16_t offset;
 } BoxPeriodConfig_t;
 
-#define DEFAULT_TIMER_OFFSET		450
+#define DEFAULT_TIMER_OFFSET		650
 
 const BoxPeriodConfig_t boxConfig[] = {
-	{CITIHOME_39,  		 			480}, //previous 450
-	{TOPAZ_119,  		 			530}, //previous 450
-	{TOPAZ_120,  		 			470},
-	{KINGDOM_121,  		 			570}, //previous 500
-	{BRIDGEVIEW_143, 				500},
-	{HAI_THANH_159,					550}, //previous 500
-	{PHU_MY_175,					500},
-	{EBOOST_OFFICE_177,  			400},
-	{CHUONG_DUONG_HOME_197,			430},
-	{N4_HOA_KHANH_204,				450},
-	{HIM_LAM_RIVER_SIDE_207, 		550},
-	{MY_PHUC_1_209, 				500},
-	{RIVIERA_POINT_213,				450},
-	{THU_THIEM_GREEN_HOUSE_221,		500},
-	{N1_HOAKHANH_2_260,				530},
-	{PHU_DONG_SKY_GARDEN_282,		500},
-	{DIAMOND_LOTUS_RIVERSIDE_285,	500},
+	{CITIHOME_39,  		 			650}, //previous 500
+	{B3_HOAKHANH_116,	 			650}, //previous 550
+	{NETHOME_117,  		 			650}, //previous 550
+	{NETHOME_118,  		 			650}, //previous 550
+	{TOPAZ_119,  		 			620}, //previous 450
+	{TOPAZ_120,  		 			420},
+	{KINGDOM_121,  		 			650}, //previous 600
+	{N1_HOAKHANH_124,  	 			600}, //previous 600
+	{HDMON_1_126,  		 			600},
+	{HDMON_2_127,  		 			650},
+	{PHU_DONG_PREMIER_132, 			650}, //previous 450
+	{LINHTAY_139,		 			650}, //previous 450
+	{HAUSINCO_142,	 				600},
+	{BRIDGEVIEW_143, 				650},
+	{PETRO_LANDMARK_154, 			600},
+	{HAI_THANH_159,					650}, //previous 550
+	{PHU_MY_175,					670},
+	{HIMLAM_PHU_DONG_176,			600},
+	{EBOOST_OFFICE_177,  			450},
+	{PARKVIEW_179,		  			600},
+	{WESTERN_CAPITAL_193,			650},
+	{VAN_DO_196,					650},
+	{CHUONG_DUONG_HOME_197,			580},
+	{HUNG_VUONG_1_198,				660},
+	{N4_HOA_KHANH_204,				600},
+	{HIM_LAM_RIVER_SIDE_207, 		650},
+	{CHARM_PLAZA_208,				600},
+	{MY_PHUC_1_209, 				650},
+	{RIVIERA_POINT_213,				500},
+	{THU_THIEM_GREEN_HOUSE_221,		660},
+	{RICHMOND_236,					600},
+	{RICHMOND_237,					450},
+	{CITISOHO_240,					650},
+	{N1_HOAKHANH_2_260,				650},
+	{LUXCITY_277,					650},
+	{PHU_DONG_SKY_GARDEN_282,		650},
+	{DIAMOND_LOTUS_RIVERSIDE_285,	600},
 	{LOVERA_VISTA_293,				450},
+	{THOI_AN_1_299,      			650},
 	{THOI_AN_2_300,      			350},
-	{MY_PHUC_2_255,      			420}, //previous 450
-    {MY_PHUC_3_319,      			400},
-    {MY_PHUC_4_320,      			360},
-    {TARA_327,           			500},
-    {TARA_328,           			570}, // previous 470
-	{VO_DINH_338,					350}, //previous 400
-    {PHU_MY_THUAN_341,   			570}, //previous 500
-    {HOANG_ANH_THANH_BINH_346, 		500}, //previous 350
-	{PHUC_YEN_347,					500},
-    {HIM_LAM_PHU_DONG_348,   		500}, //previous 350
+	{MY_PHUC_2_255,      			450}, //previous 450
+    {VINAPHARM_311,      			650},
+    {MY_PHUC_3_319,      			520},
+    {MY_PHUC_4_320,      			400},
+    {EHOME_3_TAY_SAI_GON_322,		600},
+	{PRECIA_325,					550},
+    {TARA_327,           			650},
+    {TARA_328,           			650}, // previous 570
+    {THE_LIGHT_1_333,      			600},
+	{HOANG_ANH_2_336,				550}, //previous 400
+	{VO_DINH_338,					550}, //previous 400
+    {PHU_MY_THUAN_341,   			660}, //previous 570
+    {HOANG_ANH_THANH_BINH_346, 		550}, //previous 350
+	{PHUC_YEN_347,					600},
+    {HIM_LAM_PHU_DONG_348,   		650}, //previous 500
+    {BINH_KHANH_349, 		  		600}, //previous 500
 };
 
 uint16_t GetPeriodOffset(uint16_t boxID);
