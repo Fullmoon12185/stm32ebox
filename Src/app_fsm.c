@@ -615,7 +615,6 @@ void Server_Communication(void){
 							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,	publish_message, publish_message_length);
 							isSendingMQTTMessage = 1;
 						}
-
 					} else if (publishTopicIndex == 1) {
 						publishTopicIndex = 2;
 						Update_Publish_Status_Message();

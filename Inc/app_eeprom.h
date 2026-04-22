@@ -43,6 +43,6 @@ void Eeprom_Update_Outlet_Status(uint8_t outletID, uint8_t status);
 void Eeprom_Update_Outlet_LimitEnergy(uint8_t outletID, uint32_t limitEnergy);
 
 uint32_t Eeprom_Get_Outlet_Energy(uint8_t outletID);
-void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy);
+void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy, uint8_t updateNow);
 void Eeprom_Update_Outlet_WorkingTime(uint8_t outletID, uint32_t workingTime);
 #endif

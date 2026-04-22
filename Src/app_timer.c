@@ -20,65 +20,85 @@ typedef struct {
     uint16_t offset;
 } BoxPeriodConfig_t;
 
-#define DEFAULT_TIMER_OFFSET		650
+#define DEFAULT_TIMER_OFFSET		800
 
 const BoxPeriodConfig_t boxConfig[] = {
-	{CITIHOME_39,  		 			650}, //previous 500
-	{B3_HOAKHANH_116,	 			650}, //previous 550
-	{NETHOME_117,  		 			650}, //previous 550
-	{NETHOME_118,  		 			650}, //previous 550
-	{TOPAZ_119,  		 			620}, //previous 450
-	{TOPAZ_120,  		 			420},
-	{KINGDOM_121,  		 			650}, //previous 600
-	{N1_HOAKHANH_124,  	 			600}, //previous 600
-	{HDMON_1_126,  		 			600},
-	{HDMON_2_127,  		 			650},
-	{PHU_DONG_PREMIER_132, 			650}, //previous 450
-	{LINHTAY_139,		 			650}, //previous 450
-	{HAUSINCO_142,	 				600},
-	{BRIDGEVIEW_143, 				650},
-	{PETRO_LANDMARK_154, 			600},
-	{HAI_THANH_159,					650}, //previous 550
-	{PHU_MY_175,					670},
-	{HIMLAM_PHU_DONG_176,			600},
-	{EBOOST_OFFICE_177,  			450},
-	{PARKVIEW_179,		  			600},
-	{WESTERN_CAPITAL_193,			650},
-	{VAN_DO_196,					650},
-	{CHUONG_DUONG_HOME_197,			580},
-	{HUNG_VUONG_1_198,				660},
-	{N4_HOA_KHANH_204,				600},
-	{HIM_LAM_RIVER_SIDE_207, 		650},
-	{CHARM_PLAZA_208,				600},
-	{MY_PHUC_1_209, 				650},
-	{RIVIERA_POINT_213,				500},
-	{THU_THIEM_GREEN_HOUSE_221,		660},
-	{RICHMOND_236,					600},
-	{RICHMOND_237,					450},
-	{CITISOHO_240,					650},
-	{N1_HOAKHANH_2_260,				650},
-	{LUXCITY_277,					650},
-	{PHU_DONG_SKY_GARDEN_282,		650},
-	{DIAMOND_LOTUS_RIVERSIDE_285,	600},
-	{LOVERA_VISTA_293,				450},
-	{THOI_AN_1_299,      			650},
-	{THOI_AN_2_300,      			350},
-	{MY_PHUC_2_255,      			450}, //previous 450
-    {VINAPHARM_311,      			650},
-    {MY_PHUC_3_319,      			520},
-    {MY_PHUC_4_320,      			400},
-    {EHOME_3_TAY_SAI_GON_322,		600},
-	{PRECIA_325,					550},
-    {TARA_327,           			650},
-    {TARA_328,           			650}, // previous 570
-    {THE_LIGHT_1_333,      			600},
-	{HOANG_ANH_2_336,				550}, //previous 400
-	{VO_DINH_338,					550}, //previous 400
-    {PHU_MY_THUAN_341,   			660}, //previous 570
-    {HOANG_ANH_THANH_BINH_346, 		550}, //previous 350
+	{CITIHOME_39,  		 			920}, //previous 650
+	{B3_HOAKHANH_116,	 			950}, //previous 550
+	{NETHOME_117,  		 			850}, //previous 650
+	{NETHOME_118,  		 			940}, //previous 1000
+	{TOPAZ_119,  		 			900}, //previous 800
+	{TOPAZ_120,  		 			550}, //390
+	{KINGDOM_121,  		 			950}, //previous 850
+	{N1_HOAKHANH_124,  	 			750}, //previous 600
+	{HDMON_1_126,  		 			900},
+	{HDMON_2_127,  		 			900}, //previous 750
+	{PHU_DONG_PREMIER_132, 			900}, //previous 450
+	{THUYLOI_134, 					550}, //previous 350
+	{LINHTAY_139,		 			900}, //previous 750
+	{HAUSINCO_142,	 				750}, //prevous 650
+	{BRIDGEVIEW_143, 				900}, //previous 700
+	{PETRO_LANDMARK_154, 			630},
+	{HAI_THANH_159,					940}, //previous 650 , tháng sau nên giảm xuống còn 940
+	{ECOXUAN_BLOCK_A_172, 			600},
+	{PHU_MY_175,					940}, //previous 670 , tháng sau nên giảm xuống còn 940
+	{HIMLAM_PHU_DONG_176,			700}, //previous 600
+ 	{EBOOST_OFFICE_177,  			550},
+	{PARKVIEW_179,		  			700}, //previous 600
+	{THE_ASCENT_184,				650}, //previous 600
+	{DOCKLAND_189,					750}, //previous 650
+	{WESTERN_CAPITAL_193,			940}, //previous 850
+	{VAN_DO_196,					940}, //previous 850
+	{CHUONG_DUONG_HOME_197,			940}, //previous 850
+	{HUNG_VUONG_1_198,				940}, //previous 850
+	{N4_HOA_KHANH_204,				900}, //previous 780
+	{HIM_LAM_RIVER_SIDE_207, 		940}, //previous 650 , tháng sau nên giảm xuống còn 940
+	{CHARM_PLAZA_208,				700},
+	{MY_PHUC_1_209, 				950},
+	{RIVIERA_POINT_213,				750},
+	{THU_THIEM_GREEN_HOUSE_221,		930}, //tháng sau nên giảm xuống còn930
+	{THU_THIEM_DRAGON_232,			930}, //tháng sau nên giảm xuống còn 930
+	{DAO_DUY_TU_233,				920}, //previous 850
+	{DAO_DUY_TU_234,				750},
+	{SATRA_VO_VAN_KIET_235,			900},
+	{RICHMOND_236,					670},//previous 650
+	{RICHMOND_237,					670},//previous 650
+	{CITISOHO_240,					820}, //previous 850, tháng sau nên giảm xuống còn 820
+	{SON_AN_1_241,					650},
+	{PHU_MY_BLOCK_B_244,			650},
+	{MY_PHUC_2_255,      			850}, //previous 450
+	{N1_HOAKHANH_2_260,				930}, // tháng sau nên giảm xuống còn 930
+	{NGOC_DONG_DUONG_2_276,         650},
+	{LUXCITY_277,					950},
+	{PHU_DONG_SKY_GARDEN_282,		950}, // tháng sau nên giảm xuống còn 930
+	{DIAMOND_LOTUS_RIVERSIDE_285,	850},
+	{CC_8X_PLUS_287,				600},
+	{LOVERA_VISTA_293,				550},
+	{THOI_AN_1_299,      			850},
+	{THOI_AN_2_300,      			400},
+    {VINAPHARM_311,      			800}, //680
+	{GIA_PHUC_313,					650},
+	{VISION_1_315,					650},
+    {MY_PHUC_3_319,      			600},
+    {MY_PHUC_4_320,      			500},
+    {EHOME_3_TAY_SAI_GON_322,		930}, // tháng sau nên giảm xuống còn 930
+	{PRECIA_325,					750},
+    {TARA_327,           			930}, // 930
+    {TARA_328,           			930}, // 950 ok
+    {THE_LIGHT_1_333,      			950},
+	{HOANG_ANH_1_336,				850}, //previous 75
+	{HOANG_ANH_2_337,				850}, //previous 750
+	{VO_DINH_338,					500}, //previous 400
+    {PHU_MY_THUAN_341,   			930}, //ok, nen giam xuong con 930
+    {HOANG_ANH_THANH_BINH_345, 		750}, //previous 550
+    {HOANG_ANH_THANH_BINH_346, 		750}, //previous 550
 	{PHUC_YEN_347,					600},
-    {HIM_LAM_PHU_DONG_348,   		650}, //previous 500
-    {BINH_KHANH_349, 		  		600}, //previous 500
+    {HIM_LAM_PHU_DONG_348,   		850},
+    {BINH_KHANH_349, 		  		950}, //previous 500
+    {TRUONG_DINH_HOI_353, 		  	800}, //previous 500
+	{THU_THIEM_GREEN_HOUSE_354,		800},
+	{PHU_GIA_1_356,					700},
+	{PHU_GIA_2_357,					700},
 };
 
 uint16_t GetPeriodOffset(uint16_t boxID);
@@ -176,10 +196,8 @@ void Timer_Init(void){
 	      2) by calling HAL API function HAL_RCC_GetSysClockFreq()
 	      3) each time HAL_RCC_ClockConfig() is called to configure the system clock frequency
 	  ----------------------------------------------------------------------- */
-		uint8_t boxID = Get_Box_ID();
+		uint16_t boxID = Get_Box_ID();
 		uint8_t strpcf[] = "                           ";
-		sprintf((char*) strpcf, "boxID in timer = %d\r\n", (int) boxID);
-		UART3_SendToHost((uint8_t *)strpcf);
 	  /* Compute the prescaler value to have TIMx counter clock equal to 10000 Hz */
 	  uwPrescalerValue = (uint32_t)(SystemCoreClock / 1000000) - 1;
 
@@ -194,6 +212,9 @@ void Timer_Init(void){
 	  */
 	  //previous 100-16, clock hơi nhanh, nên chỉnh lên 100-10
 	  TimHandle.Init.Period = 10000 - GetPeriodOffset(boxID);
+	  sprintf((char*) strpcf, "boxID = %d --> GetPeriodOffset = %d\n", (int) boxID, GetPeriodOffset(boxID));
+	  UART3_SendToHost((uint8_t *)strpcf);
+
 	  TimHandle.Init.Prescaler         = uwPrescalerValue;
 	  TimHandle.Init.ClockDivision     = 0;
 	  TimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;

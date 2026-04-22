@@ -85,7 +85,7 @@ void Setup_Eeprom(void){
 			HAL_Delay(100);
 			Eeprom_Update_Outlet_LimitEnergy(i, 0xffffffff);
 			HAL_Delay(100);
-			Eeprom_Update_Outlet_Energy(i, 0);
+			Eeprom_Update_Outlet_Energy(i, 0, 1);
 			HAL_Delay(100);
 			Eeprom_Update_Outlet_WorkingTime(i, 0);
 			HAL_Delay(100);
@@ -213,7 +213,7 @@ uint32_t Eeprom_Get_Outlet_Energy(uint8_t outletID){
 }
 
 
-void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy){
+void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy, uint8_t updateNow){
 
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
@@ -226,8 +226,8 @@ void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy){
 #endif
 	if(outletID >= NUMBER_OF_RELAYS) return;
 	updateEnergy[outletID] = (updateEnergy[outletID] + 1) % 60;
-	if(updateEnergy[outletID] == 0){
-		if(block[outletID].block_element.energy != energy){
+	if(updateEnergy[outletID] == 0 || (updateNow == 1)){
+		if(block[outletID].block_element.energy != energy || (updateNow == 1)){
 			block[outletID].block_element.energy = energy;
 			uint8_t tempBuffer[5];
 			tempBuffer[0] = (uint8_t)(energy & 0xff);

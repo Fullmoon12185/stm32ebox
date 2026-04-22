@@ -122,7 +122,13 @@ Content:
 - add saving eeprom for each outlet charging proccess
 5.3
 - adjust timer for some top locations
+5.4
+- adjust timer for some top locations
+5.5
+- adjust timer for some top locations
 
+5.7
+-adjust timers
 */
 
 
@@ -137,7 +143,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.5.3-";
+	const uint8_t firmwareVersion[] =  "6.5.8-";
 
 #endif
 

@@ -91,9 +91,9 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define 	MIN_PF									1
 
 #elif(VERSION_EBOX == 2 || VERSION_EBOX == VERSION_3_WITH_ALL_CT_5A || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A  || VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-#define		MIN_CURRENT											35000
-#define		MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE	30000
-#define		MIN_CURRENT_DETECTING_FULL_CHARGE					35000
+#define		MIN_CURRENT											40000
+#define		MIN_CURRENT_DETECTING_FULL_CHARGE_FOR_SMALL_BIKE	40000
+#define		MIN_CURRENT_DETECTING_FULL_CHARGE					50000
 #define		THRESHOLD_BETWEEN_SMALL_BIKE_AND_NORMAL_BIKE		200000
 
 #define		MIN_CURRENT_DETECTING_UNPLUG						5000
@@ -128,7 +128,7 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define		TIME_OUT_AFTER_DETECTING_NO_RELAY							(20000/INTERRUPT_TIMER_PERIOD)
 
 #if(ESTOP_BUTTON == 1)
-	#define		TIME_OUT_AFTER_DETECTING_ESTOP_PRESSED						(2000/INTERRUPT_TIMER_PERIOD)
+	#define		TIME_OUT_AFTER_DETECTING_ESTOP_PRESSED					(2000/INTERRUPT_TIMER_PERIOD)
 #endif
 
 
@@ -447,8 +447,8 @@ uint64_t Get_Main_Power_Consumption(void)
 void Set_Outlet_Energy(uint8_t outletID, uint32_t outlet_energy){
 	if(outletID >= NUMBER_OF_RELAYS) return;
 	Main.nodes[outletID].energy = outlet_energy;
-	sprintf((char*) strtmpPower, "Set_Outlet_Energy:%d\t s:%d\t e:%lu\r\n", (int) outletID, (int)Main.nodes[outletID].energy, outlet_energy);
-	UART3_SendToHost((uint8_t *)strtmpPower);
+//	sprintf((char*) strtmpPower, "Set_Outlet_Energy:%d\t s:%d\t e:%lu\r\n", (int) outletID, (int)Main.nodes[outletID].energy, outlet_energy);
+//	UART3_SendToHost((uint8_t *)strtmpPower);
 
 }
 
@@ -564,9 +564,9 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		uint8_t tempOutletID = outletID;
 		DelayReadingCurrent(tempOutletID);
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].previousCurrent_2;
-
 		Main.nodes[tempOutletID].previousCurrent_2 = Main.nodes[tempOutletID].previousCurrent_1;
 		Main.nodes[tempOutletID].previousCurrent_1 = Main.nodes[tempOutletID].current;
+
 		if ((Get_Relay_Status(tempOutletID) == RESET) ||
 				(power_factor < MIN_PF) ||
 				(isStartCalculating[tempOutletID] == 0))
@@ -601,7 +601,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 				Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + tempEnergy;
 
 				Main.nodes[tempOutletID].workingTime++;
-				Eeprom_Update_Outlet_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
+				Eeprom_Update_Outlet_Energy(tempOutletID, Main.nodes[tempOutletID].energy, 0);
 			}
 
 		}
