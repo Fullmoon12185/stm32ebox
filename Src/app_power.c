@@ -20,6 +20,7 @@
 #include "app_gpio.h"
 #include "app_adc.h"
 #include "app_power_meter_485.h"
+#include "app_fsm.h"
 
 
 #define	OUTLET_AVAILABLE_STATE 					0
@@ -31,8 +32,8 @@
 #define	OUTLET_UNPLUG_STATE						5
 #define OUTLET_CHARGE_FULL_STATE 				6
 #define OUTLET_AFTER_CHARGE_FULL_STATE			7
-#define OUTLET_CHARGE_FULL_HD_MON_STATE			8
 #define OUTLET_PREPARE_TO_AVAILABLE_STATE 		2
+
 
 #define OVERCURRENT_THRESHOLD_COUNT  			5
 
@@ -398,7 +399,6 @@ static void Node_Setup(void) {
 			{
 				Main.nodes[outletID].energy = Eeprom_Get_Outlet_Energy(outletID);
 				Main.nodes[outletID].nodeStatus = NODE_NORMAL;
-				Main.nodes[outletID].workingTime = 0;
 			}
 			sprintf((char*) strtmpPower, "i:%d\t s:%d\t e:%lu\r\n", (int) outletID, (int)Main.nodes[outletID].nodeStatus,
 					(uint32_t)Main.nodes[outletID].energy);
@@ -447,8 +447,8 @@ uint64_t Get_Main_Power_Consumption(void)
 void Set_Outlet_Energy(uint8_t outletID, uint32_t outlet_energy){
 	if(outletID >= NUMBER_OF_RELAYS) return;
 	Main.nodes[outletID].energy = outlet_energy;
-//	sprintf((char*) strtmpPower, "Set_Outlet_Energy:%d\t s:%d\t e:%lu\r\n", (int) outletID, (int)Main.nodes[outletID].energy, outlet_energy);
-//	UART3_SendToHost((uint8_t *)strtmpPower);
+	sprintf((char*) strtmpPower, "Set_Outlet_Energy:%d\t s:%d\t e:%lu\r\n", (int) outletID, (int)Main.nodes[outletID].energy, outlet_energy);
+	UART3_SendToHost((uint8_t *)strtmpPower);
 
 }
 
@@ -555,6 +555,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 	float tempCurrent = 0.0;
 	float tempPower = 0.0;
 	uint32_t tempEnergy = 0;
+	static uint8_t counter_to_reset_energy_outlet[NUMBER_OF_RELAYS] = {0,0,0,0,0,0,0,0};
 
 	if (outletID == MAIN_INPUT) {	//setup for Main node
 		Main.energy +=  POWER_CONSUMPTION_OF_MCU;
@@ -566,6 +567,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 		Main.nodes[tempOutletID].previousCurrent = Main.nodes[tempOutletID].previousCurrent_2;
 		Main.nodes[tempOutletID].previousCurrent_2 = Main.nodes[tempOutletID].previousCurrent_1;
 		Main.nodes[tempOutletID].previousCurrent_1 = Main.nodes[tempOutletID].current;
+
 
 		if ((Get_Relay_Status(tempOutletID) == RESET) ||
 				(power_factor < MIN_PF) ||
@@ -592,6 +594,8 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 
 		if (isStartCalculating[tempOutletID] == 1){
 
+			counter_to_reset_energy_outlet[tempOutletID] = 0;
+
 			Main.nodes[tempOutletID].power = round((float)tempPower);
 			if(Main.nodes[tempOutletID].power < MAX_POWER_1){
 
@@ -603,7 +607,14 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 				Main.nodes[tempOutletID].workingTime++;
 				Eeprom_Update_Outlet_Energy(tempOutletID, Main.nodes[tempOutletID].energy, 0);
 			}
-
+		} else {
+			if(Is_Publishing_Message()){
+				if(counter_to_reset_energy_outlet[tempOutletID] < 60){
+					counter_to_reset_energy_outlet[tempOutletID]++;
+				} else {
+					Main.nodes[tempOutletID].energy = 0;
+				}
+			}
 		}
 #else
 		if(tempOutletID >= 2){
@@ -894,9 +905,9 @@ void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_CHARGE_FULL);
 				outletState[outletID] = OUTLET_CHARGE_FULL_STATE;
 			} else {
-				Main.nodes[outletID].nodeStatus = UNPLUG;
-				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
-				outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
+//				Main.nodes[outletID].nodeStatus = UNPLUG;
+//				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
+				outletState[outletID] = OUTLET_UNPLUG_STATE;
 			}
 		}
 	}
@@ -1160,14 +1171,7 @@ void Process_Outlets(void){
 				Detect_Stop_From_App(tempOutletID);
 			}
 			break;
-		case OUTLET_CHARGE_FULL_HD_MON_STATE:
-			if(Is_Power_Timeout_Flag(tempOutletID)){
-				Main.nodes[tempOutletID].nodeStatus = NODE_READY;
-			}
-			if(Get_Relay_Status(tempOutletID) == RESET){
-				Detect_Stop_From_App(tempOutletID);
-			}
-			break;
+
 		case OUTLET_ERROR_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
 				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;

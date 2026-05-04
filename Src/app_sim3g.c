@@ -708,14 +708,15 @@ void Processing_Received_Data(uint8_t * sub_topic, uint16_t boxID){
 			relayIndex = Sim3gDataProcessingBuffer[2 + lentopic + 1] - 0x30;
 			relayStatus = Sim3gDataProcessingBuffer[2 + lentopic + 2] - 0x30;
 			if(relayStatus == SET){
-				Set_Outlet_Energy(relayIndex, 0);
 				Set_Relay(relayIndex);
 				Start_Working_Time(relayIndex);
+				Set_Outlet_Energy(relayIndex, 0);
 				Clear_Max_Node_Current(relayIndex);
 				Clear_Charging_Full_Status(relayIndex);
 			} else {
 				Reset_Relay(relayIndex);
 			}
+
 			Eeprom_Update_Outlet_Energy(relayIndex, 0, 1);
 		} else {
 			Update_Firmware(lentopic);

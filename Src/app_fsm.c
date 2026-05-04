@@ -542,7 +542,9 @@ void Update_Publish_Power_Meter_Message(){
 
 #endif
 
-
+uint8_t Is_Publishing_Message(void){
+	return (serverCommunicationFsmState == SIM3G_SETUP_PUBLISH_TOPICS);
+}
 
 void Server_Communication(void){
 	if(Is_Reset_Module_Sim()){

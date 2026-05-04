@@ -10,6 +10,7 @@
 
 
 void Server_Communication(void);
-void UpdatePublishMessage(uint8_t outletID, int32_t displayData);
+
+uint8_t Is_Publishing_Message(void);
 
 #endif /* APP_FSM_H_ */

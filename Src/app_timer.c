@@ -23,17 +23,17 @@ typedef struct {
 #define DEFAULT_TIMER_OFFSET		800
 
 const BoxPeriodConfig_t boxConfig[] = {
-	{CITIHOME_39,  		 			920}, //previous 650
+	{CITIHOME_39,  		 			850}, //previous 920
 	{B3_HOAKHANH_116,	 			950}, //previous 550
 	{NETHOME_117,  		 			850}, //previous 650
-	{NETHOME_118,  		 			940}, //previous 1000
+	{NETHOME_118,  		 			920}, //previous 1000
 	{TOPAZ_119,  		 			900}, //previous 800
-	{TOPAZ_120,  		 			550}, //390
-	{KINGDOM_121,  		 			950}, //previous 850
-	{N1_HOAKHANH_124,  	 			750}, //previous 600
-	{HDMON_1_126,  		 			900},
-	{HDMON_2_127,  		 			900}, //previous 750
-	{PHU_DONG_PREMIER_132, 			900}, //previous 450
+	{TOPAZ_120,  		 			600}, //390
+	{KINGDOM_121,  		 			920}, //previous 950
+	{N1_HOAKHANH_124,  	 			760}, //previous 600
+	{HDMON_1_126,  		 			500},
+	{HDMON_2_127,  		 			500}, //previous 750
+	{PHU_DONG_PREMIER_132, 			700}, //previous 900
 	{THUYLOI_134, 					550}, //previous 350
 	{LINHTAY_139,		 			900}, //previous 750
 	{HAUSINCO_142,	 				750}, //prevous 650
@@ -47,14 +47,14 @@ const BoxPeriodConfig_t boxConfig[] = {
 	{PARKVIEW_179,		  			700}, //previous 600
 	{THE_ASCENT_184,				650}, //previous 600
 	{DOCKLAND_189,					750}, //previous 650
-	{WESTERN_CAPITAL_193,			940}, //previous 850
+	{WESTERN_CAPITAL_193,			850}, //previous 850
 	{VAN_DO_196,					940}, //previous 850
-	{CHUONG_DUONG_HOME_197,			940}, //previous 850
+	{CHUONG_DUONG_HOME_197,			900}, //previous 850
 	{HUNG_VUONG_1_198,				940}, //previous 850
 	{N4_HOA_KHANH_204,				900}, //previous 780
 	{HIM_LAM_RIVER_SIDE_207, 		940}, //previous 650 , tháng sau nên giảm xuống còn 940
 	{CHARM_PLAZA_208,				700},
-	{MY_PHUC_1_209, 				950},
+	{MY_PHUC_1_209, 				900},
 	{RIVIERA_POINT_213,				750},
 	{THU_THIEM_GREEN_HOUSE_221,		930}, //tháng sau nên giảm xuống còn930
 	{THU_THIEM_DRAGON_232,			930}, //tháng sau nên giảm xuống còn 930
@@ -67,8 +67,9 @@ const BoxPeriodConfig_t boxConfig[] = {
 	{SON_AN_1_241,					650},
 	{PHU_MY_BLOCK_B_244,			650},
 	{MY_PHUC_2_255,      			850}, //previous 450
-	{N1_HOAKHANH_2_260,				930}, // tháng sau nên giảm xuống còn 930
-	{NGOC_DONG_DUONG_2_276,         650},
+	{N1_HOAKHANH_2_260,				900}, // tháng sau nên giảm xuống còn 930
+	{NGOC_DONG_DUONG_1_275,         450}, // ok đã update
+	{NGOC_DONG_DUONG_2_276,         590}, //ok đã update
 	{LUXCITY_277,					950},
 	{PHU_DONG_SKY_GARDEN_282,		950}, // tháng sau nên giảm xuống còn 930
 	{DIAMOND_LOTUS_RIVERSIDE_285,	850},
@@ -78,23 +79,24 @@ const BoxPeriodConfig_t boxConfig[] = {
 	{THOI_AN_2_300,      			400},
     {VINAPHARM_311,      			800}, //680
 	{GIA_PHUC_313,					650},
-	{VISION_1_315,					650},
+	{VISION_1_315,					500},
+	{VISION_2_316,					500},
     {MY_PHUC_3_319,      			600},
     {MY_PHUC_4_320,      			500},
-    {EHOME_3_TAY_SAI_GON_322,		930}, // tháng sau nên giảm xuống còn 930
+    {EHOME_3_TAY_SAI_GON_322,		900}, // tháng sau nên giảm xuống còn 930
 	{PRECIA_325,					750},
-    {TARA_327,           			930}, // 930
-    {TARA_328,           			930}, // 950 ok
-    {THE_LIGHT_1_333,      			950},
+    {TARA_327,           			890}, // 930
+    {TARA_328,           			890}, // 950 ok
+    {THE_LIGHT_1_333,      			900},
 	{HOANG_ANH_1_336,				850}, //previous 75
 	{HOANG_ANH_2_337,				850}, //previous 750
-	{VO_DINH_338,					500}, //previous 400
-    {PHU_MY_THUAN_341,   			930}, //ok, nen giam xuong con 930
+	{VO_DINH_338,					350}, //previous 400
+    {PHU_MY_THUAN_341,   			785}, //800
     {HOANG_ANH_THANH_BINH_345, 		750}, //previous 550
     {HOANG_ANH_THANH_BINH_346, 		750}, //previous 550
 	{PHUC_YEN_347,					600},
     {HIM_LAM_PHU_DONG_348,   		850},
-    {BINH_KHANH_349, 		  		950}, //previous 500
+    {BINH_KHANH_349, 		  		900}, //previous 500
     {TRUONG_DINH_HOI_353, 		  	800}, //previous 500
 	{THU_THIEM_GREEN_HOUSE_354,		800},
 	{PHU_GIA_1_356,					700},

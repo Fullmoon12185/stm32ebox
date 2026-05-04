@@ -137,6 +137,7 @@ void Error_Handler(void);
 
 
 #define		N1_HOAKHANH_2_260				260
+#define		NGOC_DONG_DUONG_1_275			275
 #define		NGOC_DONG_DUONG_2_276			276
 #define		LUXCITY_277						277
 
@@ -154,6 +155,8 @@ void Error_Handler(void);
 #define		VINAPHARM_311					311
 #define		GIA_PHUC_313					313
 #define		VISION_1_315					315
+
+#define		VISION_2_316					316
 #define		MY_PHUC_3_319 			        319
 #define		MY_PHUC_4_320 			        320
 #define		EHOME_3_TAY_SAI_GON_322			322

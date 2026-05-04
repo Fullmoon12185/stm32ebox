@@ -229,6 +229,7 @@ void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy, uint8_t upda
 	if(updateEnergy[outletID] == 0 || (updateNow == 1)){
 		if(block[outletID].block_element.energy != energy || (updateNow == 1)){
 			block[outletID].block_element.energy = energy;
+
 			uint8_t tempBuffer[5];
 			tempBuffer[0] = (uint8_t)(energy & 0xff);
 			tempBuffer[1] = (uint8_t)(energy>>8 & 0xff);
