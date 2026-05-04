@@ -32,8 +32,8 @@
 #define	OUTLET_UNPLUG_STATE						5
 #define OUTLET_CHARGE_FULL_STATE 				6
 #define OUTLET_AFTER_CHARGE_FULL_STATE			7
+#define OUTLET_CHARGE_FULL_HD_MON_STATE			8
 #define OUTLET_PREPARE_TO_AVAILABLE_STATE 		2
-
 
 #define OVERCURRENT_THRESHOLD_COUNT  			5
 
@@ -905,9 +905,9 @@ void Detect_Un_Plug(uint8_t outletID, uint32_t threshold){
 				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_CHARGE_FULL);
 				outletState[outletID] = OUTLET_CHARGE_FULL_STATE;
 			} else {
-//				Main.nodes[outletID].nodeStatus = UNPLUG;
-//				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
-				outletState[outletID] = OUTLET_UNPLUG_STATE;
+				Main.nodes[outletID].nodeStatus = UNPLUG;
+				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
+				outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
 			}
 		}
 	}
@@ -1171,7 +1171,14 @@ void Process_Outlets(void){
 				Detect_Stop_From_App(tempOutletID);
 			}
 			break;
-
+		case OUTLET_CHARGE_FULL_HD_MON_STATE:
+			if(Is_Power_Timeout_Flag(tempOutletID)){
+				Main.nodes[tempOutletID].nodeStatus = NODE_READY;
+			}
+			if(Get_Relay_Status(tempOutletID) == RESET){
+				Detect_Stop_From_App(tempOutletID);
+			}
+			break;
 		case OUTLET_ERROR_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
 				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
