@@ -49,6 +49,13 @@ void MODBUS_init(void){
 
 }
 
+
+void MODBUS_Buffer_init(void){
+
+    utils_buffer_init(&modbus_rx_buffer, sizeof(MODBUS_t));
+
+}
+
 bool MODBUS_run(){
 	if(modbus_pdu_is_active){
 	    switch (modbus_pdu_tx.function_code) {

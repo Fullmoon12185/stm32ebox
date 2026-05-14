@@ -104,6 +104,7 @@ void Error_Handler(void);
 #define 	HAI_THANH_159					159
 
 #define		ANTRUNG_BUILDING_161			161
+#define		HOA_SEN_169						169
 #define		ECOXUAN_BLOCK_A_172				172
 #define		PHU_MY_175						175
 #define		HIMLAM_PHU_DONG_176				176

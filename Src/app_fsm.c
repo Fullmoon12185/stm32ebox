@@ -62,6 +62,7 @@ static uint8_t update_Firmware_TimeoutFlag = 0;
 static  uint8_t isSendingMQTTMessage = 0;
 static  uint8_t isSendingWhenNoCharging = 0;
 
+static uint32_t timeToGetUpdateOTACommand = 0;
 
 typedef enum {
 	SIM3G_OPEN_CONNECTION = 0,
@@ -600,28 +601,30 @@ void Server_Communication(void){
 			Clear_Update_Firmware_Timeout_Flag();
 			SCH_Add_Task(Set_Update_Firmware_Timeout_Flag, 3000, 0);
 			serverCommunicationFsmState = SIM3G_UPDATE_FIRMWARE;
+			timeToGetUpdateOTACommand = HAL_GetTick();
 		} else {
 			if(is_Set_Relay_Timeout()){
 				if(Get_Is_Update_Relay_Status() == SET){
 					publishTopicIndex = 0;
 				}
-				else if((publishTopicIndex > 2) && (Get_Is_Node_Status_Changed() == SET)){
+				else if((publishTopicIndex > 1) && (Get_Is_Node_Status_Changed() == SET)){
 						publishTopicIndex = 0;
 						isSendingWhenNoCharging = 0;
 				} else if (is_Publish_Message_Timeout()){
 					if (publishTopicIndex == 0) {
 						if (isSendingWhenNoCharging < 255) isSendingWhenNoCharging++;
 						publishTopicIndex = 1;
+						Update_Publish_Status_Message();
+						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
+						isSendingMQTTMessage = 1;
+
+					} else if (publishTopicIndex == 1) {
+						publishTopicIndex = 2;
 						if(isChargingInProgress() || isSendingWhenNoCharging > 5){
 							Update_Publish_Power_Message_All_Outlets();
 							Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_POWER,	publish_message, publish_message_length);
 							isSendingMQTTMessage = 1;
 						}
-					} else if (publishTopicIndex == 1) {
-						publishTopicIndex = 2;
-						Update_Publish_Status_Message();
-						Setup_Mqtt_Publish_Message(PUBLISH_TOPIC_STATUS, publish_message, publish_message_length);
-						isSendingMQTTMessage = 1;
 
 					} else if (publishTopicIndex == 2) {
 						publishTopicIndex = 3;
@@ -696,9 +699,13 @@ void Server_Communication(void){
 		}
 		break;
 	case SIM3G_UPDATE_FIRMWARE:
+
 		if(is_Update_Firmware_Timeout()){
-			UART3_SendToHost((uint8_t*)"Jump_To_Fota_Firmware");
-			Jump_To_Fota_Firmware();
+			if(Is_Done_Reading_PowerMeter() || (HAL_GetTick() - timeToGetUpdateOTACommand > 5000))
+			{
+				UART3_SendToHost((uint8_t*)"Jump_To_Fota_Firmware");
+				Jump_To_Fota_Firmware();
+			}
 		}
 		break;
 	default:

@@ -80,7 +80,7 @@ static POWER_field_t power_mapping_table[] = {
 };
 
 #elif defined(MODBUS_MODEL) && (MODBUS_MODEL == SDM120)
-static POWER_field_t power_mapping_table[] = {
+static const POWER_field_t power_mapping_table[] = {
 		[READ_VOLTAGE] = {
 			.idx = READ_VOLTAGE,
 			.address = 0x0000,
@@ -129,27 +129,29 @@ static bool address_found = false;
 
 // Power Field
 static uint8_t powermeter485_state = POWERMETER485_SEND_REQUEST;
-static uint8_t power_mapping_table_size = sizeof(power_mapping_table) / sizeof(POWER_field_t);
+static const uint8_t power_mapping_table_size = sizeof(power_mapping_table) / sizeof(POWER_field_t);
 static uint8_t power_index = 0;
-// Singleton Power
-static POWER_t power;
+
 // Modbus Response
 static MODBUS_t response;
 // Internal variable
 static bool powermeter485_process_done = true;
 
+// Singleton Power
+static POWER_t power;
+
 // Internal functions
 static float POWERMETER485_calculate_float(uint8_t * data_p, uint8_t data_size);
 static void POWERMETER_assign_data_by_index(POWER_t * power, POWER_idx_t index , float data);
 
-
+static uint8_t strtmpPowerMeter[50];
 uint16_t PowerVoltage(void){
 #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 	uint16_t tempVoltage = (uint16_t)power.voltage;
 	if(tempVoltage > 250){
 		tempVoltage = 230;
-	} else if(tempVoltage < 200){
-		tempVoltage = 200;
+	} else if(tempVoltage < 100){
+		tempVoltage = 220;
 	}
 	return tempVoltage;
 #else
@@ -164,7 +166,9 @@ uint16_t PowerCurrent(void){
 #endif
 }
 
-
+uint8_t Is_Done_Reading_PowerMeter(void){
+	return (power_index == power_mapping_table_size) && (powermeter485_state == POWERMETER485_SEND_REQUEST);
+}
 
 void POWERMETER485_fsm(void){
 	static uint32_t start_tx_time = 0;
@@ -188,6 +192,7 @@ void POWERMETER485_fsm(void){
 				}
 				// Mark process done
 				powermeter485_process_done = true;
+				MODBUS_Buffer_init();
 				// Reset Index
 				power_index = 0;
 				break;
@@ -207,13 +212,14 @@ void POWERMETER485_fsm(void){
 				
 //				DEBUG_485(sprintf((char*) strtmpPowerMeter, "%s: %f\r\n", power_mapping_table[power_index].name, data););
 //				DEBUG_485(UART3_SendToHost((uint8_t*)strtmpPowerMeter));
-				// Increase Power Index
+//				// Increase Power Index
 				power_index++;
 				powermeter485_state = POWERMETER485_SEND_REQUEST;
 			}
 			if (HAL_GetTick() - start_tx_time > POWERMETER485_APP_TIMEOUT){
 //				utils_log_error("Modbus timeout for receive -> Try to other address\r\n");
 				DEBUG_485(UART3_SendToHost((uint8_t*)"Modbus timeout for receive -> Try to other address\r\n"));
+				MODBUS_init();
 				address_found = false;
 				powermeter485_state = POWERMETER485_INIT;
 			}

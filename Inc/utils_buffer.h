@@ -6,6 +6,7 @@
 #include "stdint.h"
 
 #define BUFFER_MAX_SIZE     2048
+//#define BUFFER_MAX_SIZE     512
 
 typedef struct {
     size_t tail;

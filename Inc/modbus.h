@@ -66,6 +66,7 @@ typedef struct {
 
 
 void MODBUS_init(void);
+void MODBUS_Buffer_init(void);
 bool MODBUS_run();
 bool MODBUS_transmit(MODBUS_t* tx_message);
 bool MODBUS_receive(MODBUS_t* rx_message);

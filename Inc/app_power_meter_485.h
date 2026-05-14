@@ -10,6 +10,9 @@
 uint16_t PowerVoltage(void);
 uint16_t PowerCurrent(void);
 
+uint8_t Is_Done_Reading_PowerMeter(void);
+
+
 typedef struct {
 	float voltage;
 	float current;

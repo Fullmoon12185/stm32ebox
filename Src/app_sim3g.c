@@ -18,6 +18,7 @@
 #include "app_led_display.h"
 #include "app_eeprom.h"
 
+#include "app_power_meter_485.h"
 
 #define DEBUG_SIM3G(X)    						X
 
@@ -670,8 +671,14 @@ FlagStatus isReceivedDataFromServer(uint8_t message_type, uint8_t len_of_message
 }
 
 void Reset_MCU(uint8_t lentopic){
+	uint32_t timeToGetResetCommand = HAL_GetTick();
 	if(Sim3gDataProcessingBuffer[2 + lentopic] == RESET_MCU){
 		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RESET MCU"););
+		while(!Is_Done_Reading_PowerMeter()){
+			if(HAL_GetTick() - timeToGetResetCommand > 5000){
+				break;
+			}
+		}
 		NVIC_SystemReset();
 	}
 }
