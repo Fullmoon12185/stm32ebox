@@ -18,6 +18,7 @@
 
 enum {
 	POWERMETER485_INIT,
+	POWERMETER485_WAIT_FOR_SEND_REQUEST,
 	POWERMETER485_SEND_REQUEST,
 	POWERMETER485_WAIT_FOR_GET_RESPONSE,
 };
@@ -170,8 +171,11 @@ uint8_t Is_Done_Reading_PowerMeter(void){
 	return (power_index == power_mapping_table_size) && (powermeter485_state == POWERMETER485_SEND_REQUEST);
 }
 
+
+
 void POWERMETER485_fsm(void){
 	static uint32_t start_tx_time = 0;
+	static uint32_t wait_for_send_request_time = 0;
 	MODBUS_run();
 	switch (powermeter485_state) {
 		case POWERMETER485_INIT:
@@ -182,7 +186,15 @@ void POWERMETER485_fsm(void){
 //				DEBUG_485(UART3_SendToHost((uint8_t*)strtmpPowerMeter));
 //			}
 			read_req.address = 1;
+			power_index = power_mapping_table_size;
+			start_tx_time = HAL_GetTick();
 			powermeter485_state = POWERMETER485_SEND_REQUEST;
+
+			break;
+		case POWERMETER485_WAIT_FOR_SEND_REQUEST:
+			if(HAL_GetTick() - wait_for_send_request_time > 10){
+				powermeter485_state = POWERMETER485_SEND_REQUEST;
+			}
 			break;
 		case POWERMETER485_SEND_REQUEST:
 			// Check if got all field of power
@@ -190,9 +202,9 @@ void POWERMETER485_fsm(void){
 				if(HAL_GetTick() - start_tx_time < POWERMETER485_REQUEST_INTERVAL){
 					break;
 				}
+
 				// Mark process done
 				powermeter485_process_done = true;
-				MODBUS_Buffer_init();
 				// Reset Index
 				power_index = 0;
 				break;
@@ -214,7 +226,8 @@ void POWERMETER485_fsm(void){
 //				DEBUG_485(UART3_SendToHost((uint8_t*)strtmpPowerMeter));
 //				// Increase Power Index
 				power_index++;
-				powermeter485_state = POWERMETER485_SEND_REQUEST;
+				powermeter485_state = POWERMETER485_WAIT_FOR_SEND_REQUEST;
+				wait_for_send_request_time = HAL_GetTick();
 			}
 			if (HAL_GetTick() - start_tx_time > POWERMETER485_APP_TIMEOUT){
 //				utils_log_error("Modbus timeout for receive -> Try to other address\r\n");

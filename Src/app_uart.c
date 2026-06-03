@@ -145,9 +145,19 @@ void UART5_Init(void)
 	if (HAL_UART_Init(&Uart5Handle) != HAL_OK) {
 		Error_Handler();
 	}
+	__HAL_UART_CLEAR_OREFLAG(&Uart5Handle);
+	__HAL_UART_CLEAR_FEFLAG(&Uart5Handle);
+	__HAL_UART_CLEAR_NEFLAG(&Uart5Handle);
+	__HAL_UART_CLEAR_PEFLAG(&Uart5Handle);
+
+	UART5_receiveBufferIndexHead = 0;
+	UART5_receiveBufferIndexTail = 0;
+
 	__HAL_UART_ENABLE_IT(&Uart5Handle, UART_IT_ERR); // Enable PE, FE, NE, ORE
 
 	HAL_UART_Receive_IT(&Uart5Handle, (uint8_t *)UART5_buffer, RXBUFFERSIZE);
+
+	UART3_SendToHost((uint8_t*)"UART5_Init\r\n");
 }
 
 void UART5_DeInit(void)
@@ -184,7 +194,8 @@ HAL_StatusTypeDef Sim3g_Receive_Setup(void){
 }
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle){
   /* Set transmission flag: transfer complete */
-  UartTransmitReady = SET;
+	if(UartHandle->Instance == USART1)
+		UartTransmitReady = SET;
 }
 
 
@@ -274,14 +285,15 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 		}
 
 		if (huart->ErrorCode & HAL_UART_ERROR_FE)
-			__HAL_UART_CLEAR_FEFLAG(huart);
-
+		__HAL_UART_CLEAR_FEFLAG(huart);
 		if (huart->ErrorCode & HAL_UART_ERROR_NE)
-			__HAL_UART_CLEAR_NEFLAG(huart);
+		__HAL_UART_CLEAR_NEFLAG(huart);
 
 		if (huart->ErrorCode & HAL_UART_ERROR_PE)
-			__HAL_UART_CLEAR_PEFLAG(huart);
+		__HAL_UART_CLEAR_PEFLAG(huart);
 
+//		UART5_Init();
+//		UART3_SendToHost((uint8_t*)"HAL_UART_ErrorCallback\r\n");
 	}
 #endif
 }

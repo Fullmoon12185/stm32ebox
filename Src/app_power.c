@@ -28,6 +28,8 @@
 #define	OUTLET_CHARGING_STATE 					1
 #define	OUTLET_ERROR_STATE						3
 
+#define	OUTLET_ERROR_OVER_CURRENT_STATE 		8
+#define OUTLET_RELAY_ERROR_STATE				9
 
 #define	OUTLET_UNPLUG_STATE						5
 #define OUTLET_CHARGE_FULL_STATE 				6
@@ -35,7 +37,7 @@
 #define OUTLET_PREPARE_TO_AVAILABLE_STATE 		2
 
 
-#define OVERCURRENT_THRESHOLD_COUNT  			5
+#define OVERCURRENT_THRESHOLD_COUNT  			10
 
 
 
@@ -126,7 +128,7 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define		TIME_OUT_AFTER_DETECT_TOTAL_OVER_CURRRENT					(20000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_UNPLUG										(30000/INTERRUPT_TIMER_PERIOD)
 #define		TIME_OUT_AFTER_DETECTING_NO_FUSE							(20000/INTERRUPT_TIMER_PERIOD)
-#define		TIME_OUT_AFTER_DETECTING_NO_RELAY							(20000/INTERRUPT_TIMER_PERIOD)
+#define		TIME_OUT_AFTER_DETECTING_NO_RELAY							(30000/INTERRUPT_TIMER_PERIOD)
 
 #if(ESTOP_BUTTON == 1)
 	#define		TIME_OUT_AFTER_DETECTING_ESTOP_PRESSED					(2000/INTERRUPT_TIMER_PERIOD)
@@ -142,7 +144,7 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define		COUNT_FOR_DETECT_MAX_CURRENT								10
 
 #define		COUNT_FOR_DECIDE_UNPLUG										200
-#define		COUNT_FOR_DECIDE_CHARGE_FULL								5
+#define		COUNT_FOR_DECIDE_CHARGE_FULL								210
 
 
 typedef struct PowerNodes {
@@ -880,7 +882,7 @@ void Node_Over_Current_Detected(uint8_t outletID){
 	Main.nodes[outletID].nodeStatus = NODE_OVER_CURRENT;
 	Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
 	Reset_Relay(outletID);
-	outletState[outletID] = OUTLET_ERROR_STATE;
+	outletState[outletID] = OUTLET_ERROR_OVER_CURRENT_STATE;
 }
 void Detect_Stop_From_App(uint8_t outletID){
 	Main.nodes[outletID].nodeStatus = CHARGEFULL;
@@ -889,21 +891,39 @@ void Detect_Stop_From_App(uint8_t outletID){
 	outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
 }
 
-void Detect_Charge_Full(uint8_t outletID, uint32_t threshold){
+void Detect_Charge_Full(uint8_t outletID, uint32_t threshold)
+{
 
-	uint32_t tempRealCurrent = Get_Current(outletID)* Get_Power_Factor(outletID);
+	if(outletID >= NUMBER_OF_RELAYS)
+		return;
 
-	if (tempRealCurrent < threshold){
+	uint32_t current = Get_Current(outletID);
+
+	uint8_t pf = Get_Power_Factor(outletID);
+
+	// sanity check
+	if(current > MAX_CURRENT || pf > 100)
+		return;
+
+	uint32_t realCurrent = current * pf;
+
+
+	if (realCurrent < threshold)
+	{
 		outletCounter[outletID]++;
-		if(outletCounter[outletID] >= COUNT_FOR_DECIDE_CHARGE_FULL){
+		if(outletCounter[outletID] >= COUNT_FOR_DECIDE_CHARGE_FULL)
+		{
 			outletCounter[outletID] = 0;
 			Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_CHARGE_FULL);
 			Main.nodes[outletID].nodeStatus = CHARGEFULL;
 			Set_Charging_Full_Status(outletID);
 			outletState[outletID] = OUTLET_CHARGE_FULL_STATE;
 		}
-	} else {
-		outletCounter[outletID] = 0;
+	} else if (realCurrent > threshold ) {
+		if(outletCounter[outletID] > 0)
+			outletCounter[outletID]--;
+		else
+			outletCounter[outletID] = 0;
 	}
 }
 
@@ -912,15 +932,12 @@ void Detect_Spike(uint8_t outletID, uint32_t threshold){
 	if(Main.nodes[outletID].current < MIN_CURRENT_DETECTING_UNPLUG){
 		int32_t tempDefference = (int32_t)(Main.nodes[outletID].previousCurrent - Main.nodes[outletID].current);
 		if ((int32_t)tempDefference > (int32_t)threshold)	{
-			DEBUG_POWER(sprintf((char*) strtmpPower, "previousCurrent=%d \t current = %d \t tempDefference = %d \t threshold = %d\r\n", Main.nodes[outletID].previousCurrent, Main.nodes[outletID].current, tempDefference, threshold ););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 			outletCounter[outletID] = 0;
 			if(Is_Charging_Full_Status(outletID)){
 				Main.nodes[outletID].nodeStatus = CHARGEFULL;
 				Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_CHARGE_FULL);
 				outletState[outletID] = OUTLET_CHARGE_FULL_STATE;
 			} else {
-				UART3_SendToHost("Detect_Spike\r\n");
 				outletCounterForUnplug[outletID] = 0;
 				outletState[outletID] = OUTLET_UNPLUG_STATE;
 			}
@@ -934,12 +951,6 @@ void Detect_Un_Plug(uint8_t outletID){
 			&& Main.nodes[outletID].current < MIN_CURRENT_DETECTING_UNPLUG){
 		outletCounterForUnplug[outletID]++;
 		if(outletCounterForUnplug[outletID] > 5){
-
-			UART3_SendToHost("Detect_Unplug\r\n");
-			DEBUG_POWER(sprintf((char*) strtmpPower, "previousCurrent=%d \t current = %d \r\n", Main.nodes[outletID].previousCurrent_1, Main.nodes[outletID].current););
-			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-
-
 			Main.nodes[outletID].nodeStatus = UNPLUG;
 			Set_Power_Timeout_Flags(outletID, TIME_OUT_AFTER_UNPLUG);
 			outletState[outletID] = OUTLET_PREPARE_TO_AVAILABLE_STATE;
@@ -948,11 +959,6 @@ void Detect_Un_Plug(uint8_t outletID){
 	else if (Main.nodes[outletID].previousCurrent >= MIN_CURRENT_DETECTING_UNPLUG
 			&&  Main.nodes[outletID].current >= MIN_CURRENT_DETECTING_UNPLUG)
 	{
-		UART3_SendToHost("Detect_back Charging\r\n");
-		DEBUG_POWER(sprintf((char*) strtmpPower, "previousCurrent=%d \t current = %d \r\n", Main.nodes[outletID].previousCurrent, Main.nodes[outletID].current););
-		DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-
-
 		Main.nodes[outletID].nodeStatus = CHARGING;
 		outletState[outletID] = OUTLET_CHARGING_STATE;
 	}
@@ -963,21 +969,12 @@ uint8_t isNewCurrents(uint8_t outletID){
 	if(outletID >= NUMBER_OF_RELAYS)
 		return 0;
 
-//	static uint32_t previousWorkingTime[NUMBER_OF_RELAYS];
-//	if(previousWorkingTime[outletID] != Main.workingTime){
-//		previousWorkingTime[outletID] = Main.workingTime;
-//		return 1;
-//	}
-//	return 0;
-	static uint32_t last_recover_tick[NUMBER_OF_RELAYS];
-
-	uint32_t now = HAL_GetTick();
-	if (now - last_recover_tick[outletID] < 1000){
-		return 0;
-	}else {
-		last_recover_tick[outletID] = now;
+	static uint32_t previousWorkingTime[NUMBER_OF_RELAYS];
+	if(previousWorkingTime[outletID] != Main.workingTime){
+		previousWorkingTime[outletID] = Main.workingTime;
 		return 1;
 	}
+	return 0;
 
 }
 
@@ -1050,12 +1047,11 @@ void Process_Outlets(void){
 	else if (isRelayOff(tempOutletID)
 			&& (Get_Relay_Status(tempOutletID) == SET)
 			&& is_Set_Relay_Timeout()
-			&& Main.nodes[tempOutletID].current < MIN_CURRENT
-			) {	//relay not working MUST and is Working
-		if(outletState[tempOutletID] != OUTLET_ERROR_STATE){
-				Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
-				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
-				outletState[tempOutletID] = OUTLET_ERROR_STATE;
+			&& Main.nodes[tempOutletID].current < MIN_CURRENT) {	//relay not working MUST and is Working
+		if(outletState[tempOutletID] != OUTLET_RELAY_ERROR_STATE && outletState[tempOutletID] != OUTLET_ERROR_STATE){
+//				Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
+				Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY*10);
+				outletState[tempOutletID] = OUTLET_RELAY_ERROR_STATE;
 		}
 	}
 
@@ -1124,8 +1120,15 @@ void Process_Outlets(void){
 		if(isNewCurrents(tempOutletID) == 1){
 			if (Main.nodes[tempOutletID].current > MAX_CURRENT_1) {
 				outletCounterMaxCurrent[tempOutletID] ++;
+				ADC_Recover();
 				if(outletCounterMaxCurrent[tempOutletID] > COUNT_FOR_DETECT_MAX_CURRENT) {
-					Node_Over_Current_Detected(tempOutletID);
+					if(PowerCurrent() < MAX_CURRENT_1){ // if power meter measure lower than sensor, it means sensor reading has an issue, need to reset.
+						DEBUG_POWER(sprintf((char*) strtmpPower, "over current = %d\r\n", (int) tempOutletID););
+						DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+						NVIC_SystemReset();//reset
+					} else {
+						Node_Over_Current_Detected(tempOutletID);
+					}
 				}
 			}
 		}
@@ -1224,6 +1227,30 @@ void Process_Outlets(void){
 		case OUTLET_ERROR_STATE:
 			if(Is_Power_Timeout_Flag(tempOutletID)){
 				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
+			}
+			break;
+		case OUTLET_ERROR_OVER_CURRENT_STATE:
+			if(Is_Power_Timeout_Flag(tempOutletID)){
+				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
+
+			}
+			break;
+		case OUTLET_RELAY_ERROR_STATE:
+			if (Main.nodes[tempOutletID].current > MIN_CURRENT){
+				outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
+			}
+			if(Is_Power_Timeout_Flag(tempOutletID)){
+				if (isRelayOff(tempOutletID)
+					&& (Get_Relay_Status(tempOutletID) == SET)
+					&& Main.nodes[tempOutletID].current < MIN_CURRENT){
+
+					Main.nodes[tempOutletID].nodeStatus = NO_RELAY;
+					Set_Power_Timeout_Flags(tempOutletID, TIME_OUT_AFTER_DETECTING_NO_RELAY);
+					outletState[tempOutletID] = OUTLET_ERROR_STATE;
+				} else {
+					outletState[tempOutletID] = OUTLET_AVAILABLE_STATE;
+				}
+
 			}
 			break;
 		case OUTLET_PREPARE_TO_AVAILABLE_STATE:

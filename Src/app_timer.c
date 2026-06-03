@@ -23,85 +23,95 @@ typedef struct {
 #define DEFAULT_TIMER_OFFSET		800
 
 static const BoxPeriodConfig_t boxConfig[] = {
-	{CITIHOME_39,  		 			900}, //previous 920
-	{B3_HOAKHANH_116,	 			950}, //previous 550
-	{NETHOME_117,  		 			850}, //previous 650
-	{NETHOME_118,  		 			915}, //previous 920
-	{TOPAZ_119,  		 			800}, //previous 530
-	{TOPAZ_120,  		 			640}, //390
-//	{KINGDOM_121,  		 			910}, //previous 950
-//	{N1_HOAKHANH_124,  	 			850}, //previous 600
-//	{HDMON_1_126,  		 			500},
-//	{HDMON_2_127,  		 			550}, //previous 750
-//	{PHU_DONG_PREMIER_132, 			720}, //previous 900
-//	{THUYLOI_134, 					550}, //previous 350
-//	{LINHTAY_139,		 			880}, //previous 750
-//	{HAUSINCO_142,	 				760}, //prevous 650
-//	{BRIDGEVIEW_143, 				900}, //previous 700
-//	{PETRO_LANDMARK_154, 			630},
-//	{HAI_THANH_159,					940}, //previous 650 , tháng sau nên giảm xuống còn 940
-//	{HOA_SEN_169,					560},
-//	{ECOXUAN_BLOCK_A_172, 			750}, //650
-//	{PHU_MY_175,					920}, //previous 950 , tháng sau nên giảm xuống còn 940
-//	{HIMLAM_PHU_DONG_176,			680}, //previous 700
-// 	{EBOOST_OFFICE_177,  			530},
-//	{PARKVIEW_179,		  			730}, //previous 700
-//	{THE_ASCENT_184,				650}, //previous 600
-//	{DOCKLAND_189,					720}, //previous 750
-//	{WESTERN_CAPITAL_193,			830}, //previous 850
-//	{VAN_DO_196,					940}, //previous 850
-//	{CHUONG_DUONG_HOME_197,			880}, //previous 900
-//	{HUNG_VUONG_1_198,				920}, //previous 850
-//	{N4_HOA_KHANH_204,				850}, //previous 900
-//	{HIM_LAM_RIVER_SIDE_207, 		920}, //previous 940
-//	{CHARM_PLAZA_208,				700},
-//	{MY_PHUC_1_209, 				880},
-//	{RIVIERA_POINT_213,				750},
-//	{THU_THIEM_GREEN_HOUSE_221,		900}, //tháng sau nên giảm xuống còn930
-//	{THU_THIEM_DRAGON_232,			910}, //930
-//	{DAO_DUY_TU_233,				880}, //previous 850
-//	{DAO_DUY_TU_234,				750},
-//	{SATRA_VO_VAN_KIET_235,			860}, //900
-//	{RICHMOND_236,					670},//previous 650
-//	{RICHMOND_237,					655},//previous 670
-//	{CITISOHO_240,					840}, //previous 850, tháng sau nên giảm xuống còn 820
-//	{SON_AN_1_241,					650},
-//	{PHU_MY_BLOCK_B_244,			650},
-//	{MY_PHUC_2_255,      			800}, //previous 450
-//	{N1_HOAKHANH_2_260,				850}, // tháng sau nên giảm xuống còn 930
-//	{NGOC_DONG_DUONG_1_275,         450}, // ok đã update
-//	{NGOC_DONG_DUONG_2_276,         590}, //ok đã update
-//	{LUXCITY_277,					920},
-//	{PHU_DONG_SKY_GARDEN_282,		920}, // tháng sau nên giảm xuống còn 930
-//	{DIAMOND_LOTUS_RIVERSIDE_285,	800}, //850
-//	{CC_8X_PLUS_287,				550},
-//	{LOVERA_VISTA_293,				530},
-//	{THOI_AN_1_299,      			820},
-//	{THOI_AN_2_300,      			390},
-//    {VINAPHARM_311,      			800}, //680
-//	{GIA_PHUC_313,					650},
-//	{VISION_1_315,					550},
-//	{VISION_2_316,					550},
-//    {MY_PHUC_3_319,      			600},
-//    {MY_PHUC_4_320,      			530},
-//    {EHOME_3_TAY_SAI_GON_322,		900}, // tháng sau nên giảm xuống còn 930
-//	{PRECIA_325,					750},
-//    {TARA_327,           			890}, // 930
-//    {TARA_328,           			900}, // 950 ok
-//    {THE_LIGHT_1_333,      			920},
-//	{HOANG_ANH_1_336,				880}, //previous 75
-//	{HOANG_ANH_2_337,				880}, //previous 750
-//	{VO_DINH_338,					350}, //previous 400
-//    {PHU_MY_THUAN_341,   			785}, //800
-//    {HOANG_ANH_THANH_BINH_345, 		750}, //previous 550
-//    {HOANG_ANH_THANH_BINH_346, 		750}, //previous 550
-//	{PHUC_YEN_347,					650},
-//    {HIM_LAM_PHU_DONG_348,   		850},
-//    {BINH_KHANH_349, 		  		920}, //previous 500
-//    {TRUONG_DINH_HOI_353, 		  	830}, //previous 500
-//	{THU_THIEM_GREEN_HOUSE_354,		830},
-//	{PHU_GIA_1_356,					730},
-//	{PHU_GIA_2_357,					760},
+	{CITIHOME_39,  		 			910}, //previous 920 900
+	{B3_HOAKHANH_116,	 			930}, //previous 950
+	{NETHOME_117,  		 			820}, //previous 650
+	{NETHOME_118,  		 			905}, //previous 920
+	{TOPAZ_119,  		 			830}, //previous 850
+	{TOPAZ_120,  		 			720}, //640
+	{KINGDOM_121,  		 			900}, //previous 910
+	{N1_HOAKHANH_124,  	 			850}, //previous 600
+	{HDMON_1_126,  		 			550}, //500
+	{HDMON_2_127,  		 			550}, //previous 750
+	{PHU_DONG_PREMIER_132, 			740}, //previous 710
+	{THUYLOI_134, 					620}, //previous 580
+	{LINHTAY_139,		 			850}, //previous 880
+	{HAUSINCO_142,	 				760}, //prevous 650
+	{BRIDGEVIEW_143, 				860}, //previous 880
+	{PETRO_LANDMARK_154, 			630},
+	{HAI_THANH_159,					940}, //previous 650 , tháng sau nên giảm xuống còn 940
+	{HOA_SEN_169,					560},
+	{ECOXUAN_BLOCK_A_172, 			800}, //750
+	{PHU_MY_175,					860}, //previous 850 , tháng sau nên giảm xuống còn 940
+	{HIMLAM_PHU_DONG_176,			750}, //previous 690 700 730
+ 	{EBOOST_OFFICE_177,  			530},
+	{PARKVIEW_179,		  			730}, //previous 700
+	{THE_ASCENT_184,				650}, //previous 600
+	{DOCKLAND_189,					720}, //previous 750
+	{WESTERN_CAPITAL_193,			810}, //previous 750 830
+	{VAN_DO_196,					940}, //previous 850
+	{CHUONG_DUONG_HOME_197,			750}, //previous 750 720
+	{HUNG_VUONG_1_198,				920}, //previous 850
+	{N4_HOA_KHANH_204,				830}, //previous 850
+	{HIM_LAM_RIVER_SIDE_207, 		920}, //previous 940
+	{CHARM_PLAZA_208,				720}, //700
+	{MY_PHUC_1_209, 				850},//880
+	{RIVIERA_POINT_213,				780}, //750
+	{THU_THIEM_GREEN_HOUSE_221,		810}, //tháng sau nên giảm xuống còn930
+	{THU_THIEM_DRAGON_232,			905}, //910
+	{DAO_DUY_TU_233,				860}, //previous 850 880
+	{DAO_DUY_TU_234,				800},
+	{SATRA_VO_VAN_KIET_235,			840}, //860 900
+	{RICHMOND_236,					670},//previous 650
+	{RICHMOND_237,					655},//previous 670
+	{CITISOHO_240,					860}, //previous 850, tháng sau nên giảm xuống còn 820
+	{SON_AN_1_241,					700},
+	{PHU_MY_BLOCK_B_244,			650},
+	{MY_PHUC_2_255,      			800}, //previous 450
+	{S_RIVERSIDE_256,      			700}, //previous 650
+	{N1_HOAKHANH_2_260,				820}, // tháng sau nên giảm xuống còn 850
+	{NGOC_DONG_DUONG_1_275,         450}, // ok đã update
+	{NGOC_DONG_DUONG_2_276,         590}, //ok đã update
+	{LUXCITY_277,					920},
+	{PHU_DONG_SKY_GARDEN_282,		890}, //900
+	{DIAMOND_LOTUS_RIVERSIDE_285,	800}, //850
+	{GOLDEN_WESTLAKE_286, 			500},
+	{CC_8X_PLUS_287,				560}, //550 //580
+	{LOVERA_VISTA_293,				550}, //530
+	{MYVIEN_295,					570}, //550
+	{THOI_AN_1_299,      			820},
+	{THOI_AN_2_300,      			390},
+    {VINAPHARM_311,      			800}, //680
+	{GIA_PHUC_313,					650},
+	{VISION_1_315,					550},
+	{VISION_2_316,					550},
+    {MY_PHUC_3_319,      			605},
+    {MY_PHUC_4_320,      			530},
+    {EHOME_3_TAY_SAI_GON_322,		880}, // 900
+	{PRECIA_325,					770}, //750
+    {TARA_327,           			820}, // 850
+    {TARA_328,           			870}, // 900 ok
+    {THE_LIGHT_1_333,      			910}, //920
+    {THE_LIGHT_1_334,      			930}, //920
+	{HOANG_ANH_1_336,				850}, //previous 880
+	{HOANG_ANH_2_337,				810}, //previous 850
+	{VO_DINH_338,					350}, //previous 400
+    {PHU_MY_THUAN_341,   			795}, //785
+    {HOANG_ANH_THANH_BINH_345, 		750}, //previous 550
+    {HOANG_ANH_THANH_BINH_346, 		760}, //previous 550
+	{PHUC_YEN_347,					670}, //650
+    {HIM_LAM_PHU_DONG_348,   		850},
+    {BINH_KHANH_349, 		  		920}, //previous 500
+    {TRUONG_DINH_HOI_353, 		  	805}, //previous 830
+	{THU_THIEM_GREEN_HOUSE_354,		835},
+	{PHU_GIA_1_356,					730},
+	{PHU_GIA_2_357,					780},
+	{LA_ASTORIA_360,				785}, //800 770
+	{B2_HOAKHANH_365,				560}, //530
+	{B2_HOAKHANH_366,				530},
+	{LANPHUONG_368,					530},
+	{PHU_MY_THUAN_369,				830},
+	{LOVERA_VISTA_372,				830}, //530
 };
 
 uint16_t GetPeriodOffset(uint16_t boxID);

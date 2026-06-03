@@ -146,8 +146,11 @@ void Error_Handler(void);
 #define		DIAMOND_LOTUS_RIVERSIDE_285		285
 
 #define		MY_PHUC_2_255					255
+#define		S_RIVERSIDE_256					256
+#define		GOLDEN_WESTLAKE_286				286
 #define		CC_8X_PLUS_287					287
 #define	    LOVERA_VISTA_293				293
+#define		MYVIEN_295						295
 
 
 #define		PHU_MY_BLOCK_B_244				244
@@ -166,6 +169,7 @@ void Error_Handler(void);
 #define 	TARA_328						328
 
 #define		THE_LIGHT_1_333					333
+#define		THE_LIGHT_1_334					334
 #define		HOANG_ANH_1_336					336
 #define		HOANG_ANH_2_337					337
 
@@ -183,6 +187,15 @@ void Error_Handler(void);
 #define		THU_THIEM_GREEN_HOUSE_354		354
 #define		PHU_GIA_1_356					356
 #define		PHU_GIA_2_357					357
+
+#define		LA_ASTORIA_360					360
+
+#define		B2_HOAKHANH_365					365
+#define		B2_HOAKHANH_366					366
+#define		LANPHUONG_368					368
+
+#define 	PHU_MY_THUAN_369				369
+#define		LOVERA_VISTA_372				372
 
 
 #define 	BEEP_ON							1

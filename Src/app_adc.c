@@ -267,23 +267,26 @@
 ADC_HandleTypeDef ADC1Handle;
 DMA_HandleTypeDef Hdma_adc1Handle;
 
-int32_t AdcDmaBuffer[NUMBER_OF_ADC_CHANNELS];
+static int32_t AdcDmaBuffer[NUMBER_OF_ADC_CHANNELS];
 
-uint32_t PowerFactor[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
+static uint32_t guardStart = 0x12345678;
+static uint32_t guardEnd   = 0x87654321;
 
-int32_t AdcBuffer[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_PER_SECOND];
-int32_t AdcBufferPeakPeak[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_FOR_SMA];
-int32_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION],
+static uint32_t PowerFactor[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
+
+static int32_t AdcBuffer[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_PER_SECOND];
+static int32_t AdcBufferPeakPeak[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_FOR_SMA];
+static int32_t AdcBufferPeakMax[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION],
 		AdcBufferPeakMin[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION],
 		AdcBufferAveragePeakPeak[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
-int32_t AdcDmaBufferIndex = 0, AdcDmaBufferIndexFilter = 0;
+static int32_t AdcDmaBufferIndexFilter = 0;
 
 uint8_t strtmp[] = "Begin read ADcs \r\n";
-uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
-uint32_t array_Of_Average_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
+static uint32_t array_Of_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
+static uint32_t array_Of_Average_Vrms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
 //
-uint32_t array_Of_Average_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
-uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_FOR_SMA];
+static uint32_t array_Of_Average_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION];
+static uint32_t array_Of_Irms_ADC_Values[NUMBER_OF_ADC_CHANNELS_FOR_POWER_CALCULATION][NUMBER_OF_SAMPLES_FOR_SMA];
 
 volatile uint8_t adc_error_flag = 0;
 volatile uint8_t adc_error_count = 0;
@@ -316,7 +319,7 @@ ADC_STATE pre_adcState = MAX_NUMBER_OF_ADC_STATES;
 uint8_t zeroPointCounter = 0;
 
 
-
+void Checking_Memory_Corruption(void);
 void Adc_State_Display(void);
 void Adc_Buffers_Init(void);
 void WatchDogAnalogInit(void);
@@ -345,6 +348,8 @@ void Adc_Buffers_Init(void){
 			AdcBufferPeakPeak[channelIndex][sampleIndex] = 0;
 		array_Of_Irms_ADC_Values[channelIndex][sampleIndex] = 0;
 	}
+
+	adc_error_count = 0;
 }
 
 
@@ -840,6 +845,8 @@ void WatchDogAnalogInit(void){
 void ADC_DMA_Init(void)
 {
 
+	/* DMA controller clock disable */
+	__HAL_RCC_DMA1_CLK_DISABLE();
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
 
@@ -878,10 +885,32 @@ FlagStatus Is_Done_Getting_ADC(void){
 	return RESET;
 }
 
+void Checking_Memory_Corruption(void){
+	static uint8_t counterForCheckingMemoryCorruption = 0;
+	if(guardStart != 0x12345678 || guardEnd != 0x87654321)
+	{
+		__disable_irq();
+
+		counterForCheckingMemoryCorruption ++;
+
+		// Reinitialize guards
+		guardStart = 0x12345678;
+		guardEnd   = 0x87654321;
+
+		ADC_Recover();
+		 __enable_irq();
+
+		 if(counterForCheckingMemoryCorruption >= 5){
+			counterForCheckingMemoryCorruption = 0;
+			NVIC_SystemReset();
+		}
+
+	} else {
+		counterForCheckingMemoryCorruption = 0;
+	}
+}
 
 
-
-uint8_t filterNoiseState = 0;
 uint16_t coefficientForPF = 0;
 void PowerConsumption_FSM(void){
 	static uint8_t externalInterruptCounter = 0;
@@ -899,6 +928,7 @@ void PowerConsumption_FSM(void){
 		zeroPointCounter = 0;
 		AdcDmaBufferIndexFilter = 0;
 		cycleCounter = 0;
+		Checking_Memory_Corruption();
 		adcState = ADC_FIND_ZERO_VOLTAGE_POINT;
 		break;
 	case ADC_FIND_ZERO_VOLTAGE_POINT:
@@ -1403,6 +1433,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 void ADC_Recover(void)
 {
 	ADC_Stop_Getting_Values();
+//	HAL_DMA_Abort(ADC1Handle.DMA_Handle);
+//
+//	__HAL_RCC_ADC1_FORCE_RESET();
+//	__HAL_RCC_ADC1_RELEASE_RESET();
+
 	HAL_ADC_DeInit(&ADC1Handle);
 	ADC_DMA_Init();
     ADC1_Init();
@@ -1427,15 +1462,15 @@ void Handle_ADC_Error(void)
 
 
     // 🟡 Retry with spacing (avoid hammering ADC)
-    if ((adc_error_count > 5) && adc_error_count < 10)
+    if ((adc_error_count > 5) && adc_error_count < 100)
     {
         ADC_Recover();   // ✅ safe here
         UART3_SendToHost((uint8_t *)"ADC recover\r\n");
     }
-    else if(adc_error_count >= 10)
+    else if(adc_error_count >= 100)
     {
         adc_error_count = 0;
-        UART3_SendToHost((uint8_t *)"ADC reset\r\n");
+        UART3_SendToHost((uint8_t *)"ADC reset 123\r\n");
 
         HAL_Delay(10);  // ensure UART flush (optional)
         NVIC_SystemReset();
