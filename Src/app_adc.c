@@ -237,10 +237,10 @@
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2645
+#define		CT_20A_COEFF_1								2642
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2645
+#define		CT_20A_COEFF_2								2642
 
 #define		CT_20A_THRESHOLD_3							200
 #define		CT_20A_COEFF_3								2645

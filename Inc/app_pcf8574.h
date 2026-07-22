@@ -16,6 +16,7 @@ uint8_t PCF_Scan();
 
 void PCF_read(void);
 
+void display_fuse(void);
 
 uint8_t isNoFuseAvailable(uint8_t outletId);
 uint8_t isRelayOn(uint8_t outletId);

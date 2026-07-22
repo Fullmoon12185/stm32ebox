@@ -154,7 +154,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.6.6-";
+	const uint8_t firmwareVersion[] =  "6.7.2-";
 
 #endif
 

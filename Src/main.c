@@ -79,6 +79,8 @@ int main(void)
 	Setup_Eeprom();
 
 	SCH_Add_Task(PCF_read, 13, 23);
+
+
 	SCH_Add_Task(Start_Sending_Sms_Message, 6000*5, 6000*60*24*30);
 #if(ESTOP_BUTTON == 1)
 	SCH_Add_Task(Estop_Processing, 1, 10);
@@ -88,6 +90,7 @@ int main(void)
 
 	if(Get_Box_ID() >= 4000){
 		SCH_Add_Task(Set_All, 9, 107);
+		SCH_Add_Task(display_fuse, 13, 30);
 	} else {
 		HAL_Delay(2000);
 	}

@@ -14,7 +14,7 @@
 #define POWERMETER485_REQUEST_INTERVAL		5000
 #define POWERMETER485_APP_TIMEOUT			5000
 
-
+#define METER_TIMEOUT_COUNT    				720
 
 enum {
 	POWERMETER485_INIT,
@@ -144,6 +144,7 @@ static POWER_t power;
 // Internal functions
 static float POWERMETER485_calculate_float(uint8_t * data_p, uint8_t data_size);
 static void POWERMETER_assign_data_by_index(POWER_t * power, POWER_idx_t index , float data);
+static void Check_Reading_Meter_Via_RS485(void);
 
 static uint8_t strtmpPowerMeter[50];
 uint16_t PowerVoltage(void){
@@ -171,6 +172,27 @@ uint8_t Is_Done_Reading_PowerMeter(void){
 	return (power_index == power_mapping_table_size) && (powermeter485_state == POWERMETER485_SEND_REQUEST);
 }
 
+static void Check_Reading_Meter_Via_RS485(void)
+{
+#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+    static uint16_t checking_counter = 0;
+
+    if((uint16_t)power.voltage == 0)
+    {
+        if(checking_counter < METER_TIMEOUT_COUNT)
+            checking_counter++;
+
+        if(checking_counter >= METER_TIMEOUT_COUNT)
+        {
+            NVIC_SystemReset();
+        }
+    }
+    else
+    {
+        checking_counter = 0;
+    }
+#endif
+}
 
 
 void POWERMETER485_fsm(void){
@@ -207,6 +229,7 @@ void POWERMETER485_fsm(void){
 				powermeter485_process_done = true;
 				// Reset Index
 				power_index = 0;
+				Check_Reading_Meter_Via_RS485();
 				break;
 			}
 			powermeter485_process_done = false;

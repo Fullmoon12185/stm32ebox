@@ -77,7 +77,8 @@ static uint32_t MAX_POWER_1  = 16 * 230 * 100; //16A, 230V và PF = 100%
 
 
 #define 		MAX_CURRENT_FOR_CABLE_25				16000
-#define 		MAX_CURRENT_FOR_CABLE_40				25000
+#define 		MAX_CURRENT_FOR_CB20					20000
+#define 		MAX_CURRENT_FOR_CABLE_40				20000
 #define 		MAX_CURRENT_FOR_CABLE_60				31000
 
 
@@ -209,6 +210,20 @@ static uint8_t chargingFullStatus[NUMBER_OF_RELAYS];
 
 static uint8_t isStartCalculating[NUMBER_OF_RELAYS] = {0,0,0,0,0,0,0,0};
 
+typedef struct
+{
+    uint16_t boxID;
+    uint32_t maxCurrent;
+} BoxCurrentConfig_t;
+
+static const BoxCurrentConfig_t boxCurrentTable[] =
+{
+    { PEGASUS_BIENHOA_222,    MAX_CURRENT_FOR_CABLE_25 },
+    { TARA_327,               MAX_CURRENT_FOR_CABLE_40 },
+    { TARA_328,               MAX_CURRENT_FOR_CABLE_40 },
+    { EHOME_3_BLOCK_A0_375,   MAX_CURRENT_FOR_CB20 },
+};
+
 
 
 void DelayReadingCurrent(uint8_t outletID);
@@ -286,19 +301,41 @@ uint8_t Is_Charging_Full_Status(uint8_t outletID){
 }
 
 
-void Set_MAX_TOTAL_CURRENT(void){
-	uint16_t boxID = Get_Box_ID();
-	if(boxID == PEGASUS_BIENHOA_222){
-		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_25; //in miliampere
-	}
-	else if (boxID == TARA_327 || boxID == TARA_328)
-	{
-		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_40; //in miliampere
-	}
-	else {
-		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60; //in miliampere
-	}
+void Set_MAX_TOTAL_CURRENT(void)
+{
+    uint16_t boxID = Get_Box_ID();
+
+    MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;    // Default
+
+    for (uint32_t i = 0; i < sizeof(boxCurrentTable)/sizeof(boxCurrentTable[0]); i++)
+    {
+        if (boxCurrentTable[i].boxID == boxID)
+        {
+            MAX_TOTAL_CURRENT = boxCurrentTable[i].maxCurrent;
+            break;
+        }
+    }
 }
+
+
+//void Set_MAX_TOTAL_CURRENT(void){
+//	uint16_t boxID = Get_Box_ID();
+//	if(boxID == PEGASUS_BIENHOA_222){
+//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_25; //in miliampere
+//	}
+//	else if (boxID == TARA_327 || boxID == TARA_328)
+//	{
+//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_40; //in miliampere
+//	}
+//	else if (boxID == EHOME_3_BLOCK_A0_375){
+//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CB20;
+//	}
+//	else {
+//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60; //in miliampere
+//	}
+//}
+
+
 void Process_System_Power(void){
 	if(Process_Input_Source() == SYSTEM_NORMAL){
 		Process_Outlets();
@@ -607,8 +644,6 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 			tempPower = 0.0;
 		}
 
-
-
 		if (isStartCalculating[tempOutletID] == 1){
 
 			counter_to_reset_energy_outlet[tempOutletID] = 0;
@@ -653,7 +688,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 					Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + tempEnergy;
 
 					Main.nodes[tempOutletID].workingTime++;
-					Eeprom_Update_Outlet_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
+//					Eeprom_Update_Outlet_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
 				}
 
 			}
@@ -676,7 +711,7 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 					Main.nodes[tempOutletID].energy = Main.nodes[tempOutletID].energy + tempEnergy;
 
 					Main.nodes[tempOutletID].workingTime++;
-					Eeprom_Update_Outlet_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
+//					Eeprom_Update_Outlet_Energy(tempOutletID, Main.nodes[tempOutletID].energy);
 				}
 
 			} else {
@@ -687,29 +722,29 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 
 #endif
 		Update_Max_Node_Current(tempOutletID, Main.nodes[tempOutletID].current);
-//		if(tempOutletID == 0){
+		if(tempOutletID == 0){
 //			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
 //			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
+////			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
+////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+////			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
+////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d:%d\t", (int) Main.workingTime/60, (int) Main.workingTime%60););
 //			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d\t", (int) Main.workingTime););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "v:%d\t", (int) Main.nodes[tempOutletID].voltage););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "rc:%d\t", (int) current););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+////			DEBUG_POWER(sprintf((char*) strtmpPower, "v:%d\t", (int) Main.nodes[tempOutletID].voltage););
+////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+////
+////			DEBUG_POWER(sprintf((char*) strtmpPower, "rc:%d\t", (int) current););
+////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+////			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
+////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+////			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
+////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+////
+////			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
+////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
 //			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
-//		}
+		}
 	}
 }
 

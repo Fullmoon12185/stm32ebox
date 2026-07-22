@@ -85,7 +85,7 @@ uint32_t Get_All_Relay_Fuse_Statuses(void){
 
 
 uint16_t Get_Box_ID(void){
-//	return 297;
+//	return 83;
 	return boxID;
 }
 
@@ -191,7 +191,16 @@ uint8_t isNoFuseAvailable(uint8_t outletId){
 	} else {
 		outletId = outletId - 1;
 	}
+
 	return ((tempRelayFuseStatuses >> (outletId*2) & 0x00000002) > 0);
+}
+
+void display_fuse(void){
+	static uint8_t id = 0;
+
+	sprintf((char*) strpcf, "id = %d \t fstatus = %d \t rstatus = %d\r\n", id, isNoFuseAvailable(id), isRelayOff(id));
+	UART3_SendToHost((uint8_t *)strpcf);
+	id = (id + 1)%8;
 }
 
 uint8_t isRelayOff(uint8_t outletId){
