@@ -12,5 +12,6 @@
 void Server_Communication(void);
 
 uint8_t Is_Publishing_Message(void);
+void Allow_To_Send_Specific_Topic(uint8_t topicIndex);
 
 #endif /* APP_FSM_H_ */

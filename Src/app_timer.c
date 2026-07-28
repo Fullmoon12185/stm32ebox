@@ -20,9 +20,9 @@ typedef struct {
     uint16_t offset;
 } BoxPeriodConfig_t;
 
-//#define DEFAULT_TIMER_OFFSET		900
+#define DEFAULT_TIMER_OFFSET		900
 
-#define DEFAULT_TIMER_OFFSET		500
+//#define DEFAULT_TIMER_OFFSET		500
 
 static const BoxPeriodConfig_t boxConfig[] = {
 	{CITIHOME_39,  		 			822}, //820 850
@@ -124,10 +124,14 @@ static const BoxPeriodConfig_t boxConfig[] = {
 	{PHODONG_370, 					520}, //500
 	{TECCO_GREEN_NEST_371, 			520}, //500
 	{LOVERA_VISTA_372,				822}, //820 825 830
-	{BRIDGEVIEW_373,				600}, //500
+	{BRIDGEVIEW_373,				650}, //600
 	{CC_8X_PLUS_374,				490}, //480 500
-	{EHOME_3_BLOCK_A0_375,			825}, //810
-	{FLORA_ANHDAO_383, 				490}, //500
+	{EHOME_3_BLOCK_A0_375,			810}, //810
+	{FLORA_ANHDAO_383, 				490}, //490 500
+	{Ebox_387,						900},
+	{Ebox_388,						900},
+	{Ebox_389,						900},
+	{Ebox_390,						900},
 	{4095,							500}, //710
 };
 

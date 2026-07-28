@@ -237,10 +237,10 @@
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //this is for 20A
 #define		CT_20A_THRESHOLD_1							400
-#define		CT_20A_COEFF_1								2642
+#define		CT_20A_COEFF_1								2643
 
 #define		CT_20A_THRESHOLD_2							300
-#define		CT_20A_COEFF_2								2642
+#define		CT_20A_COEFF_2								2643
 
 #define		CT_20A_THRESHOLD_3							200
 #define		CT_20A_COEFF_3								2645
@@ -248,8 +248,11 @@
 #define		CT_20A_THRESHOLD_4							100
 #define		CT_20A_COEFF_4								2650
 
-#define		CT_20A_THRESHOLD_5							0
+#define		CT_20A_THRESHOLD_5							50
 #define		CT_20A_COEFF_5								2655
+
+#define		CT_20A_THRESHOLD_6							0
+#define		CT_20A_COEFF_6								2630
 
 #else
 
@@ -1321,6 +1324,8 @@ void PowerConsumption_FSM(void){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_4)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				} else if(tempIrmsADCValue >= CT_20A_THRESHOLD_5){
 					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_5)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
+				} else if(tempIrmsADCValue >= CT_20A_THRESHOLD_6){
+					Node_Update(i, (array_Of_Average_Irms_ADC_Values[i]* CT_20A_COEFF_6)/NUMBER_OF_SAMPLES_FOR_SMA , voltage, PowerFactor[i], 1);
 				}
 #else
 				uint32_t tempIrmsADCValue = AdcBufferAveragePeakPeak[i];

@@ -547,6 +547,16 @@ uint8_t Is_Publishing_Message(void){
 	return (serverCommunicationFsmState == SIM3G_SETUP_PUBLISH_TOPICS);
 }
 
+static uint8_t isSendCurrent = 0;
+static uint8_t isSendPM = 0;
+void Allow_To_Send_Specific_Topic(uint8_t topicIndex){
+	if(topicIndex == 2){
+		isSendCurrent = 1;
+	} else if(topicIndex == 5){
+		isSendPM = 1;
+	}
+}
+
 void Server_Communication(void){
 	if(Is_Reset_Module_Sim()){
 		UART3_SendToHost((uint8_t*)"Is_Reset_Module_Sim\r\n");
@@ -611,6 +621,14 @@ void Server_Communication(void){
 						publishTopicIndex = 0;
 						isSendingWhenNoCharging = 0;
 				} else if (is_Publish_Message_Timeout()){
+					if(isSendCurrent){
+						publishTopicIndex = 2;
+						isSendCurrent = 0;
+					}
+					if(isSendPM){
+						isSendPM = 0;
+						publishTopicIndex = 5;
+					}
 					if (publishTopicIndex == 0) {
 						if (isSendingWhenNoCharging < 255) isSendingWhenNoCharging++;
 						publishTopicIndex = 1;

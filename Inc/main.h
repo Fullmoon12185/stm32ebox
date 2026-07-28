@@ -214,6 +214,11 @@ void Error_Handler(void);
 #define		EHOME_3_BLOCK_A0_375			375
 #define		FLORA_ANHDAO_383				383
 
+#define		Ebox_387						387
+#define		Ebox_388						388
+#define		Ebox_389						389
+#define		Ebox_390						390
+
 
 #define 	BEEP_ON							1
 

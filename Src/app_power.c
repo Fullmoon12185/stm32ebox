@@ -37,7 +37,7 @@
 #define OUTLET_PREPARE_TO_AVAILABLE_STATE 		2
 
 
-#define OVERCURRENT_THRESHOLD_COUNT  			10
+#define OVERCURRENT_THRESHOLD_COUNT  			15
 
 
 
@@ -142,7 +142,7 @@ static uint32_t 	MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;		//in miliampere
 #define	    TIME_OUT_AFTER_DETECTING_OVER_CURRENT   					(60000/INTERRUPT_TIMER_PERIOD)
 
 #define	    TIME_OUT_FOR_SYSTEM_OVER_CURRENT							(5000/INTERRUPT_TIMER_PERIOD)
-#define		COUNT_FOR_DETECT_MAX_CURRENT								10
+#define		COUNT_FOR_DETECT_MAX_CURRENT								15
 
 #define		COUNT_FOR_DECIDE_UNPLUG										200
 #define		COUNT_FOR_DECIDE_CHARGE_FULL								210
@@ -218,10 +218,11 @@ typedef struct
 
 static const BoxCurrentConfig_t boxCurrentTable[] =
 {
-    { PEGASUS_BIENHOA_222,    MAX_CURRENT_FOR_CABLE_25 },
-    { TARA_327,               MAX_CURRENT_FOR_CABLE_40 },
-    { TARA_328,               MAX_CURRENT_FOR_CABLE_40 },
-    { EHOME_3_BLOCK_A0_375,   MAX_CURRENT_FOR_CB20 },
+    { PEGASUS_BIENHOA_222 ,    	MAX_CURRENT_FOR_CABLE_25 },
+    { TARA_327			  ,     MAX_CURRENT_FOR_CABLE_40 },
+    { TARA_328            ,     MAX_CURRENT_FOR_CABLE_40 },
+    { EHOME_3_BLOCK_A0_375,   	MAX_CURRENT_FOR_CB20 },
+	{ 768				  , 	4000},
 };
 
 
@@ -307,7 +308,7 @@ void Set_MAX_TOTAL_CURRENT(void)
 
     MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60;    // Default
 
-    for (uint32_t i = 0; i < sizeof(boxCurrentTable)/sizeof(boxCurrentTable[0]); i++)
+    for (uint16_t i = 0; i < sizeof(boxCurrentTable)/sizeof(boxCurrentTable[0]); i++)
     {
         if (boxCurrentTable[i].boxID == boxID)
         {
@@ -315,25 +316,10 @@ void Set_MAX_TOTAL_CURRENT(void)
             break;
         }
     }
+    DEBUG_POWER(sprintf((char*) strtmpPower, "MAX_TOTAL_CURRENT = %d\r\n", (int) MAX_TOTAL_CURRENT););
+    DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+
 }
-
-
-//void Set_MAX_TOTAL_CURRENT(void){
-//	uint16_t boxID = Get_Box_ID();
-//	if(boxID == PEGASUS_BIENHOA_222){
-//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_25; //in miliampere
-//	}
-//	else if (boxID == TARA_327 || boxID == TARA_328)
-//	{
-//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_40; //in miliampere
-//	}
-//	else if (boxID == EHOME_3_BLOCK_A0_375){
-//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CB20;
-//	}
-//	else {
-//		MAX_TOTAL_CURRENT = MAX_CURRENT_FOR_CABLE_60; //in miliampere
-//	}
-//}
 
 
 void Process_System_Power(void){
@@ -546,10 +532,16 @@ uint8_t Is_Main_Current_Over_Max_Current(void)
 
     if (current > MAX_TOTAL_CURRENT)
     {
-
-        if (++over_count >= OVERCURRENT_THRESHOLD_COUNT)
+    	++over_count;
+    	sprintf((char*) strtmpPower, "over_count:%d \t current1 = %d \t current2 = %d\r\n", (int)over_count, (int)PowerCurrent(), (int)Get_Main_Current());
+    	UART3_SendToHost((uint8_t *)strtmpPower);
+    	if(over_count == 5){
+    		Allow_To_Send_Specific_Topic(5); //allow to send power meter
+    	}
+    	if (over_count >= OVERCURRENT_THRESHOLD_COUNT)
         {
             over_count = 0;
+
             return 1;
         }
     }
@@ -723,27 +715,27 @@ void Node_Update(uint8_t outletID, uint32_t current, uint8_t voltage, uint8_t po
 #endif
 		Update_Max_Node_Current(tempOutletID, Main.nodes[tempOutletID].current);
 		if(tempOutletID == 0){
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "%d\t", (int) tempOutletID););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
 //			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-////			DEBUG_POWER(sprintf((char*) strtmpPower, "pf:%d\t", (int) Main.nodes[tempOutletID].powerFactor););
-////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-////			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
-////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d:%d\t", (int) Main.workingTime/60, (int) Main.workingTime%60););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "mNC:%d\t", (int) Main.nodes[tempOutletID].maxNodeCurrent););
 //			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-////			DEBUG_POWER(sprintf((char*) strtmpPower, "v:%d\t", (int) Main.nodes[tempOutletID].voltage););
-////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-////
-////			DEBUG_POWER(sprintf((char*) strtmpPower, "rc:%d\t", (int) current););
-////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-////			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
-////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-////			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
-////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-////
-////			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
-////			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-//			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "t1:%d:%d\t", (int) Main.workingTime/60, (int) Main.workingTime%60););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "v:%d\t", (int) Main.nodes[tempOutletID].voltage););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//
+			DEBUG_POWER(sprintf((char*) strtmpPower, "rc:%d\t", (int) current););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(sprintf((char*) strtmpPower, "c:%d\t", (int) Main.nodes[tempOutletID].current););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "p:%d\t", (int) Main.nodes[tempOutletID].power););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+//
+//			DEBUG_POWER(sprintf((char*) strtmpPower, "ne:%d\r\n", (int) Main.nodes[tempOutletID].energy););
+//			DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
+			DEBUG_POWER(UART3_SendToHost((uint8_t *)"\r\n"););
 		}
 	}
 }
@@ -1155,15 +1147,13 @@ void Process_Outlets(void){
 		if(isNewCurrents(tempOutletID) == 1){
 			if (Main.nodes[tempOutletID].current > MAX_CURRENT_1) {
 				outletCounterMaxCurrent[tempOutletID] ++;
-				ADC_Recover();
-				if(outletCounterMaxCurrent[tempOutletID] > COUNT_FOR_DETECT_MAX_CURRENT) {
-					if(PowerCurrent() < MAX_CURRENT_1){ // if power meter measure lower than sensor, it means sensor reading has an issue, need to reset.
+				if(outletCounterMaxCurrent[tempOutletID] == 5){
+					Allow_To_Send_Specific_Topic(2); //allow to send current
+				}
+				else if(outletCounterMaxCurrent[tempOutletID] > COUNT_FOR_DETECT_MAX_CURRENT) {
 						DEBUG_POWER(sprintf((char*) strtmpPower, "over current = %d\r\n", (int) tempOutletID););
 						DEBUG_POWER(UART3_SendToHost((uint8_t *)strtmpPower););
-						NVIC_SystemReset();//reset
-					} else {
 						Node_Over_Current_Detected(tempOutletID);
-					}
 				}
 			}
 		}
@@ -1315,6 +1305,7 @@ void Process_Main_Current_Over_Max_Current(void){
 		Set_Power_Timeout_Flags(relayIndex, TIME_OUT_AFTER_DETECTING_OVER_CURRENT);
 		outletState[relayIndex] = OUTLET_ERROR_STATE;
 		Clear_Counter_For_Checking_Total_Current();
+
 
 	} else if(Is_Timeout_For_Checking_Total_Current() == 0){
 		Increase_Counter_For_Checking_Total_Current();
