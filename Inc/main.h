@@ -220,6 +220,9 @@ void Error_Handler(void);
 #define		Ebox_390						390
 
 
+#define		Ebox_392						392
+
+
 #define 	BEEP_ON							1
 
 /*

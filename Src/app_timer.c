@@ -132,6 +132,7 @@ static const BoxPeriodConfig_t boxConfig[] = {
 	{Ebox_388,						900},
 	{Ebox_389,						900},
 	{Ebox_390,						900},
+	{Ebox_392,						1400},
 	{4095,							500}, //710
 };
 
