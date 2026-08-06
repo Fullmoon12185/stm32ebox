@@ -114,7 +114,7 @@ static const BoxPeriodConfig_t boxConfig[] = {
 	{LA_ASTORIA_359,				495}, //500
 	{LA_ASTORIA_360,				810}, //800 785
 	{SAKURA_TOWER_362,				650}, //550
-	{ERATOWN_363, 					840}, //845
+	{ERATOWN_363, 					830}, //845
 	{ERATOWN_364, 					730}, //710
 	{B2_HOAKHANH_365,				745}, //740
 	{B2_HOAKHANH_366,				616}, //610 620

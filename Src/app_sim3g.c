@@ -83,6 +83,9 @@ extern uint8_t SUBSCRIBE_TOPIC_3[MAX_TOPIC_LENGTH]; //REbox_xxxx
 __IO ITStatus isGreaterThanSymbolReceived = RESET;
 
 const uint8_t SMS_DONE[] = "SMS DONE";
+const uint8_t READY[] = "RDY\r";
+
+
 const uint8_t PB_DONE[] = "PB DONE\r";
 const uint8_t STIN25[] = "+STIN: 25\r";
 
@@ -100,6 +103,7 @@ const uint8_t ISCIPSEND[]= "+CIPSEND";
 const uint8_t SIM_NOT_INSERT[] = "+CME ERROR: SIM not inserted\r";
 const uint8_t CIOPEN[] = "+CIPOPEN";
 
+FlagStatus isReadyFlag = RESET;
 
 FlagStatus isPBDoneFlag = RESET;
 FlagStatus isStin25 = RESET;
@@ -235,19 +239,20 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT+CREG=1\r",  							(uint8_t*)"OK\r"		},
 
 		{(uint8_t*)"AT+CGATT?\r",  							(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+CGATT=1\r",  							(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CGATT=1\r",  							(uint8_t*)"OK\r"		},
 
 		{(uint8_t*)"AT+CGDATA=?\r",  							(uint8_t*)"OK\r"		},
 //		{(uint8_t*)"AT+CGDATA=\"PPP\",1\r",  					(uint8_t*)"CONNECTION 115200\r"	},
 		{(uint8_t*)"AT+CGPADDR=?\r",  							(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGPADDR=1\r",  							(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+CGCLASS=?\r",  							(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CGCLASS=?\r",  							(uint8_t*)"OK\r"		},
 
 
-		{(uint8_t*)"AT+CGDCONT=1,\"IP\",\"v-internet\"\r", 		(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+CIPMODE=0\r",  							(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CGDCONT=1,\"IP\",\"v-internet\"\r", 		(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+QICSGP=1,1,\"v-internet\",\"\",\"\",1\r",    (uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CGSOCKCONT=1,\"IP\",\"cmet\"\r",  		(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CSOCKSETPN=1\r",  						(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CIPMODE=0\r",  							(uint8_t*)"OK\r"		},
 
 #if(VERSION_EBOX == 1)
 		{(uint8_t*)"AT+NETOPEN=,,1\r",  						(uint8_t*)"OK\r"		},
@@ -258,7 +263,14 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 #elif (VERSION_EBOX == 3 || VERSION_EBOX == VERSION_4_WITH_8CT_5A_2CT_10A || VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
 #elif (VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+QMTCFG=\"recv/mode\",0,0,1\r",  						(uint8_t*)"OK\r"		},
+
+		{(uint8_t*)"AT+QMTOPEN=0,\"mqtt.eboost.com\",8883\r",  						(uint8_t*)"OK\r"		},
+
+		{(uint8_t*)"AT+QMTCONN=?\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+QMTCONN=0,\"nguyen121\",\"eboost-k2\",\"ZbHzPb5W\"\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+QMTCONN=?\r",  						(uint8_t*)"OK\r"		},
 #endif
 		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
 };
@@ -269,7 +281,7 @@ SIM3G_STATE pre_sim3gState = MAX_SIM3G_NUMBER_STATES;
 
 void TestSendATcommand(void){
 	uint8_t i;
-	for (i = 0; i < NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G; i++){
+	for (i = 0; i < sizeof(atCommandArrayForSetupSim3g)/sizeof(atCommandArrayForSetupSim3g[0]); i++){
 		UART3_SendToHost(atCommandArrayForSetupSim3g[i].ATCommand);
 		UART3_SendToHost(atCommandArrayForSetupSim3g[i].expectedReturn);
 	}
@@ -499,6 +511,7 @@ uint8_t is_Sim3g_Setting_Timeout(void){
 void Clear_All_Uart_Receive_Flags(void){
 	isOKFlag = RESET;
 	isStin25 = RESET;
+	isReadyFlag = RESET;
 	isPBDoneFlag = RESET;
 	isErrorFlag = RESET;
 	isIPCloseFlag = RESET;
@@ -574,7 +587,8 @@ void SM_Sim3g_Startup(void){
 }
 
 void SM_Wait_For_Sim3g_Startup_Response(void){
-	if(isPBDoneFlag == SET){
+	if(isPBDoneFlag == SET || isReadyFlag == SET){
+		isReadyFlag = RESET;
 		isPBDoneFlag = RESET;
 		isStin25 = RESET;
 
@@ -624,7 +638,7 @@ void SM_Wait_For_Sim3g_Setting_Response(void){
 		Sim3g_Setting_Clear_Timeout_Flag();
 		sim3g_Setting_Timeout_Task_Index = SCH_Add_Task(Sim3g_Setting_Timeout, SETTING_TIME_OUT,0);
 		atCommandArrayIndex++;
-		if(atCommandArrayIndex >= NUMBER_OF_COMMANDS_FOR_SETUP_SIM3G){
+		if(atCommandArrayIndex >= sizeof(atCommandArrayForSetupSim3g)/sizeof(atCommandArrayForSetupSim3g[0])){
 			sim3gState = MAX_SIM3G_NUMBER_STATES;
 		}
 	} else if(isErrorFlag){
@@ -853,7 +867,10 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 	case PREPARE_PROCESSING_RECEIVED_DATA:
 //		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"a"););
 //		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer););
-		if(isReceivedData((uint8_t *)PB_DONE)){
+		if(isReceivedData((uint8_t*)READY)){
+			isReadyFlag = SET;
+		}
+		else if(isReceivedData((uint8_t *)PB_DONE)){
 			isPBDoneFlag = SET;
 		} else if(isReceivedData((uint8_t *)STIN25)){
 			isStin25 = SET;
@@ -989,6 +1006,10 @@ void Set_Is_Receive_Data_From_Server(FlagStatus status){
 }
 FlagStatus Get_Is_Receive_Data_From_Server(void){
 	return isReceiveDataFromServer;
+}
+
+FlagStatus isReady(void){
+	return isReadyFlag;
 }
 
 
