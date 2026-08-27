@@ -1223,10 +1223,10 @@ void Process_Outlets(void){
 			if(Get_Relay_Status(tempOutletID) == SET){
 				uint32_t tempThreshold = 0;
 
-				if(Is_Charging_More_Than_An_Hour(tempOutletID, 6*60*60)){
+				if(Is_Charging_More_Than_An_Hour(tempOutletID, 8*60*60)){
 					tempThreshold = MIN_CURRENT*3;
 				}
-				else if(Is_Charging_More_Than_An_Hour(tempOutletID, 3*60*60)){
+				else if(Is_Charging_More_Than_An_Hour(tempOutletID, 4*60*60)){
 					tempThreshold = MIN_CURRENT*2;
 				}else {
 					tempThreshold = MIN_CURRENT;

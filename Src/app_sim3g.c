@@ -84,7 +84,7 @@ __IO ITStatus isGreaterThanSymbolReceived = RESET;
 
 const uint8_t SMS_DONE[] = "SMS DONE";
 const uint8_t READY[] = "RDY\r";
-
+const uint8_t POWERDOWN[]="POWERED DOWN\r";
 
 const uint8_t PB_DONE[] = "PB DONE\r";
 const uint8_t STIN25[] = "+STIN: 25\r";
@@ -98,13 +98,16 @@ const uint8_t GREATER_THAN_SYMBOL[] = ">";
 const uint8_t NETWORK_OPENED[] = "Network opened";
 const uint8_t Send_ok[] = "Send ok\r";
 const uint8_t RECV_FROM[] = "RECV FROM";
+const uint8_t RECV_QUECTEL[]="+QIURC: \"recv\",0";
 const uint8_t IP_CLOSE[] = "+IPCLOSE";
 const uint8_t ISCIPSEND[]= "+CIPSEND";
+
 const uint8_t SIM_NOT_INSERT[] = "+CME ERROR: SIM not inserted\r";
 const uint8_t CIOPEN[] = "+CIPOPEN";
+const uint8_t QIOPEN[] ="+QIOPEN: 0,0\r";
 
 FlagStatus isReadyFlag = RESET;
-
+FlagStatus isPowerDown = RESET;
 FlagStatus isPBDoneFlag = RESET;
 FlagStatus isStin25 = RESET;
 FlagStatus isOKFlag = RESET;
@@ -236,7 +239,13 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"ATE1\r",  									(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CSQ\r",  							(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+CREG=1\r",  							(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CREG=1\r",  							(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+CREG?\r",  							(uint8_t*)"OK\r"		},
+
+		{(uint8_t*)"AT+CGREG=1\r",  						(uint8_t*)"OK\r"		},
+
+		{(uint8_t*)"AT+CGREG?\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CEREG?\r",  						(uint8_t*)"OK\r"		},
 
 		{(uint8_t*)"AT+CGATT?\r",  							(uint8_t*)"OK\r"		},
 //		{(uint8_t*)"AT+CGATT=1\r",  							(uint8_t*)"OK\r"		},
@@ -245,7 +254,9 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 //		{(uint8_t*)"AT+CGDATA=\"PPP\",1\r",  					(uint8_t*)"CONNECTION 115200\r"	},
 		{(uint8_t*)"AT+CGPADDR=?\r",  							(uint8_t*)"OK\r"		},
 		{(uint8_t*)"AT+CGPADDR=1\r",  							(uint8_t*)"OK\r"		},
-//		{(uint8_t*)"AT+CGCLASS=?\r",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CFUN=0\r",  							(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+CFUN=1\r",  							(uint8_t*)"OK\r"		},
+
 
 
 //		{(uint8_t*)"AT+CGDCONT=1,\"IP\",\"v-internet\"\r", 		(uint8_t*)"OK\r"		},
@@ -264,15 +275,14 @@ const AT_COMMAND_ARRAY atCommandArrayForSetupSim3g[] = {
 		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
 #elif (VERSION_EBOX == VERSION_6_WITH_8CT_20A)
 //		{(uint8_t*)"AT+NETOPEN\r",  						(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+QMTCFG=\"recv/mode\",0,0,1\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+QIACT=1\r",  						(uint8_t*)"OK\r"		},
 
-		{(uint8_t*)"AT+QMTOPEN=0,\"mqtt.eboost.com\",8883\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"AT+QIACT?\r",  						(uint8_t*)"OK\r"		},
 
-		{(uint8_t*)"AT+QMTCONN=?\r",  						(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+QMTCONN=0,\"nguyen121\",\"eboost-k2\",\"ZbHzPb5W\"\r",  						(uint8_t*)"OK\r"		},
-		{(uint8_t*)"AT+QMTCONN=?\r",  						(uint8_t*)"OK\r"		},
+		{(uint8_t*)"ATI\r",  						(uint8_t*)"OK\r"		},
+
 #endif
-		{(uint8_t*)"AT+IPADDR\r",  								(uint8_t*)"OK\r"		},
+//		{(uint8_t*)"AT+IPADDR?\r",  								(uint8_t*)"OK\r"		},
 };
 uint8_t atCommandArrayIndex = 0;
 
@@ -512,6 +522,7 @@ void Clear_All_Uart_Receive_Flags(void){
 	isOKFlag = RESET;
 	isStin25 = RESET;
 	isReadyFlag = RESET;
+	isPowerDown = RESET;
 	isPBDoneFlag = RESET;
 	isErrorFlag = RESET;
 	isIPCloseFlag = RESET;
@@ -596,7 +607,12 @@ void SM_Wait_For_Sim3g_Startup_Response(void){
 		Sim3g_Clear_Command_Timeout_Flag();
 		sim3g_Timeout_Task_Index = SCH_Add_Task(Sim3g_Command_Timeout, WAIT_FOR_NETWORK_ESTABLISMENT_TIME_OUT,0);
 		sim3gState = WAIT_FOR_NETWORK_ESTABLISHMENT;
-	} else if(isErrorFlag){
+	} else if(isPowerDown == SET){
+		isPowerDown = RESET;
+		SCH_Add_Task(Sim3g_Command_Timeout, TIMER_TO_POWER_OFF_SIM3G_TIMEOUT,0);
+		sim3gState = WAIT_FOR_SIM3G_POWER_OFF;
+	}
+	else if(isErrorFlag){
 		isErrorFlag = RESET;
 		sim3gState = POWER_OFF_SIM3G;
 	}
@@ -869,6 +885,8 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 //		DEBUG_SIM3G(UART3_SendToHost((uint8_t*)Sim3gDataProcessingBuffer););
 		if(isReceivedData((uint8_t*)READY)){
 			isReadyFlag = SET;
+		}else if(isReceivedData((uint8_t*)POWERDOWN)){
+			isPowerDown = SET;
 		}
 		else if(isReceivedData((uint8_t *)PB_DONE)){
 			isPBDoneFlag = SET;
@@ -902,14 +920,24 @@ void FSM_Process_Data_Received_From_Sim3g(void){
 			isSendOKFlag = RESET;
 			isRecvFromFlag = SET;
 //			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RECV_FROM\r\n"););
-		} else if(isReceivedData((uint8_t *)Send_ok)){
+		} else if(isReceivedData((uint8_t *)RECV_QUECTEL)){
+			isSendOKFlag = RESET;
+			isRecvFromFlag = SET;
+			isMqttConnected = SET;
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"RECV_FROM\r\n"););
+		}
+		else if(isReceivedData((uint8_t *)Send_ok)){
 			isSendOKFlag = SET;
 		} else if(isReceivedData((uint8_t *)ISCIPSEND)){
 			isCipsend = SET;
 		} else if(isReceivedData((uint8_t *)CIOPEN)){
 			isCIOPEN = SET;
 			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"MQTT CONNECTED!\r\n"););
+		} else if(isReceivedData((uint8_t *)QIOPEN)){
+			isCIOPEN = SET;
+			DEBUG_SIM3G(UART3_SendToHost((uint8_t*)"MQTT CONNECTED!\r\n"););
 		}
+
 		processDataState = CHECK_DATA_AVAILABLE_STATE;
 		break;
 	case PROCESSING_RECEIVED_DATA_TOPIC_1:

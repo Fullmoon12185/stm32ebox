@@ -16,7 +16,7 @@
 #define		MOSQUITTO		0
 
 
-#define		DEBUG_MQTT(X)	//X
+#define		DEBUG_MQTT(X)	X
 #define 	MQTT_COMMAND_TIME_OUT		(50000/INTERRUPT_TIMER_PERIOD)
 
 #define 	MQTT_SUBSCRIBE_TIME_OUT		(3000/INTERRUPT_TIMER_PERIOD)
@@ -84,7 +84,8 @@ const uint8_t PASSWORD[] 			= "1kiNIcfT5";
 //const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.158.2\",8883\r";
 //const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"35.240.238.121\",8883\r";
 
-const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt.eboost.vn\",8883\r";
+//const uint8_t MQTTOPEN_COMMAND[] 	= "AT+CIPOPEN=0,\"TCP\",\"mqtt.eboost.vn\",8883\r";
+const uint8_t MQTTOPEN_COMMAND[] 	= "AT+QIOPEN=1,0,\"TCP\",\"mqtt.eboost.vn\",8883\r";
 
 const uint8_t USERNAME[] 			= "eboost-k2";
 const uint8_t PASSWORD[] 			= "ZbHzPb5W";
@@ -472,9 +473,9 @@ void SM_Send_Data(uint8_t messageLength){
 	commandBuffer[commandBufferIndex++] = 'A';
 	commandBuffer[commandBufferIndex++] = 'T';
 	commandBuffer[commandBufferIndex++] = '+';
-	commandBuffer[commandBufferIndex++] = 'C';
+	commandBuffer[commandBufferIndex++] = 'Q';
 	commandBuffer[commandBufferIndex++] = 'I';
-	commandBuffer[commandBufferIndex++] = 'P';
+//	commandBuffer[commandBufferIndex++] = 'P';
 	commandBuffer[commandBufferIndex++] = 'S';
 	commandBuffer[commandBufferIndex++] = 'E';
 	commandBuffer[commandBufferIndex++] = 'N';
