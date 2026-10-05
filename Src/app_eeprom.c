@@ -106,7 +106,7 @@ void Test_Eeprom(void){
 
 	for(uint8_t i = 0; i < NUMBER_OF_RELAYS; i ++){
 
-		sprintf((char*) strtmpeeprom, "read %d = %d\r\n", (int)i, Eeprom_Get_Outlet_Energy(i));
+		sprintf((char*) strtmpeeprom, "read %d = %ld\r\n", (int)i, Eeprom_Get_Outlet_Energy(i));
 		UART3_SendToHost((uint8_t *)strtmpeeprom);
 		HAL_Delay(100);
 	}
@@ -177,83 +177,83 @@ uint32_t Eeprom_Get_Outlet_LimitEnergy(uint8_t outletID){
 	return tempLE;
 }
 void Eeprom_Update_Outlet_LimitEnergy(uint8_t outletID, uint32_t limitEnergy){
-	if(block[outletID].block_element.limitEnergy != limitEnergy){
-		block[outletID].block_element.limitEnergy = limitEnergy;
-		uint8_t tempBuffer[5];
-		tempBuffer[0] = (uint8_t)(limitEnergy & 0xff);
-		tempBuffer[1] = (uint8_t)(limitEnergy>>8 & 0xff);
-		tempBuffer[2] = (uint8_t)(limitEnergy>>16 & 0xff);
-		tempBuffer[3] = (uint8_t)(limitEnergy>>24 & 0xff);
-		tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
-		MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_LIMIT_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_LIMIT_ENERGY_SIZE);
-	}
+	 if(block[outletID].block_element.limitEnergy != limitEnergy){
+	 	block[outletID].block_element.limitEnergy = limitEnergy;
+	 	uint8_t tempBuffer[5];
+	 	tempBuffer[0] = (uint8_t)(limitEnergy & 0xff);
+	 	tempBuffer[1] = (uint8_t)(limitEnergy>>8 & 0xff);
+	 	tempBuffer[2] = (uint8_t)(limitEnergy>>16 & 0xff);
+	 	tempBuffer[3] = (uint8_t)(limitEnergy>>24 & 0xff);
+	 	tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+	 	MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_LIMIT_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_LIMIT_ENERGY_SIZE);
+	 }
 }
 
 uint32_t Eeprom_Get_Outlet_Energy(uint8_t outletID){
 
-		uint8_t tempBuffer[5];
+		 uint8_t tempBuffer[5];
 		uint32_t tempE = 0;
-		uint8_t checkSum = 0;
+		 uint8_t checkSum = 0;
 
-		if(outletID >= NUMBER_OF_RELAYS) return 0;
+		 if(outletID >= NUMBER_OF_RELAYS) return 0;
 
-		MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_ENERGY_SIZE);
-		for(uint8_t idx = 0; idx < EEPROM_OUTLET_ENERGY_SIZE - 1; idx ++){
-			checkSum ^= tempBuffer[idx];
-		}
-		if(tempBuffer[EEPROM_OUTLET_ENERGY_SIZE - 1] == checkSum){
-			tempE = (uint32_t)tempBuffer[0];
-			tempE |= (uint32_t)(tempBuffer[1] << 8);
-			tempE |= (uint32_t)(tempBuffer[2] << 16);
-			tempE |= (uint32_t)(tempBuffer[3] << 24);
+		 MC25LC512_Read_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_ENERGY_SIZE);
+		 for(uint8_t idx = 0; idx < EEPROM_OUTLET_ENERGY_SIZE - 1; idx ++){
+		 	checkSum ^= tempBuffer[idx];
+		 }
+		 if(tempBuffer[EEPROM_OUTLET_ENERGY_SIZE - 1] == checkSum){
+		 	tempE = (uint32_t)tempBuffer[0];
+		 	tempE |= (uint32_t)(tempBuffer[1] << 8);
+		 	tempE |= (uint32_t)(tempBuffer[2] << 16);
+		 	tempE |= (uint32_t)(tempBuffer[3] << 24);
 
-			if(tempE > tenkWh) return 0;
-		}
-		return tempE;
+		 	if(tempE > tenkWh) return 0;
+		 }
+		 return tempE;
 }
 
 
 void Eeprom_Update_Outlet_Energy(uint8_t outletID, uint32_t energy, uint8_t updateNow){
 
-#if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
-			0, 0, 0, 0, 0, 0, 0, 0
-		};
-#else
-	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-		};
-#endif
-	if(outletID >= NUMBER_OF_RELAYS) return;
-	updateEnergy[outletID] = (updateEnergy[outletID] + 1) % 60;
-	if(updateEnergy[outletID] == 0 || (updateNow == 1)){
-		if(block[outletID].block_element.energy != energy || (updateNow == 1)){
-			block[outletID].block_element.energy = energy;
+ #if(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
+ 	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
+ 			0, 0, 0, 0, 0, 0, 0, 0
+ 		};
+ #else
+ 	static uint8_t updateEnergy[NUMBER_OF_RELAYS] = {
+ 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+ 		};
+ #endif
+ 	if(outletID >= NUMBER_OF_RELAYS) return;
+ 	updateEnergy[outletID] = (updateEnergy[outletID] + 1) % 60;
+ 	if(updateEnergy[outletID] == 0 || (updateNow == 1)){
+ 		if(block[outletID].block_element.energy != energy || (updateNow == 1)){
+ 			block[outletID].block_element.energy = energy;
 
-			uint8_t tempBuffer[5];
-			tempBuffer[0] = (uint8_t)(energy & 0xff);
-			tempBuffer[1] = (uint8_t)(energy>>8 & 0xff);
-			tempBuffer[2] = (uint8_t)(energy>>16 & 0xff);
-			tempBuffer[3] = (uint8_t)(energy>>24 & 0xff);
-			tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
-			MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_ENERGY_SIZE);
-		}
-	}
+ 			uint8_t tempBuffer[5];
+ 			tempBuffer[0] = (uint8_t)(energy & 0xff);
+ 			tempBuffer[1] = (uint8_t)(energy>>8 & 0xff);
+ 			tempBuffer[2] = (uint8_t)(energy>>16 & 0xff);
+ 			tempBuffer[3] = (uint8_t)(energy>>24 & 0xff);
+ 			tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+ 			MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_ENERGY_ADDRESS, tempBuffer, EEPROM_OUTLET_ENERGY_SIZE);
+ 		}
+ 	}
 }
 
 
 void Eeprom_Update_Outlet_WorkingTime(uint8_t outletID, uint32_t workingTime){
 
-	if(block[outletID].block_element.workingTime != workingTime){
-		block[outletID].block_element.workingTime = workingTime;
-		uint8_t tempBuffer[5];
-		tempBuffer[0] = (uint8_t)(workingTime & 0xff);
-		tempBuffer[1] = (uint8_t)(workingTime>>8 & 0xff);
-		tempBuffer[2] = (uint8_t)(workingTime>>16 & 0xff);
-		tempBuffer[3] = (uint8_t)(workingTime>>24 & 0xff);
-		tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
-		MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_WORKING_TIME_ADDRESS, tempBuffer, EEPROM_OUTLET_WORKING_TIME_SIZE);
-	}
+	 if(block[outletID].block_element.workingTime != workingTime){
+	 	block[outletID].block_element.workingTime = workingTime;
+	 	uint8_t tempBuffer[5];
+	 	tempBuffer[0] = (uint8_t)(workingTime & 0xff);
+	 	tempBuffer[1] = (uint8_t)(workingTime>>8 & 0xff);
+	 	tempBuffer[2] = (uint8_t)(workingTime>>16 & 0xff);
+	 	tempBuffer[3] = (uint8_t)(workingTime>>24 & 0xff);
+	 	tempBuffer[4] = tempBuffer[0] ^ tempBuffer[1] ^ tempBuffer[2] ^ tempBuffer[3];
+	 	MC25LC512_Write_Bytes((outletID* PAGE_LENGTH) + EEPROM_OUTLET_WORKING_TIME_ADDRESS, tempBuffer, EEPROM_OUTLET_WORKING_TIME_SIZE);
+	 }
 
 }
 
