@@ -140,6 +140,10 @@ Content:
 6.6
 - update relay fail detection
 - update timer
+
+7.2
+7.3
+- increase adc reading cycles from 41.5 to 71.5
 */
 
 
@@ -154,7 +158,7 @@ Content:
 #elif(VERSION_EBOX == VERSION_5_WITH_8CT_10A_2CT_20A)
 	const uint8_t firmwareVersion[] =  "5.3.3-";
 #elif(VERSION_EBOX == VERSION_6_WITH_8CT_20A)
-	const uint8_t firmwareVersion[] =  "6.7.2-";
+	const uint8_t firmwareVersion[] =  "6.7.3-";
 
 #endif
 

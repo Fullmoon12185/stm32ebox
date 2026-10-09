@@ -464,7 +464,7 @@ void Lcd_Goto_XY (int row, int col)
 void Show_Box_ID(uint16_t bID){
 
 	char strBoxID[16];
-	sprintf(strBoxID, "ID: %d      6.9", bID);
+	sprintf(strBoxID, "ID: %d      7.3", bID);
 
 	Lcd_Goto_XY(0, 0);
 	Lcd_Send_String((char*)strBoxID);

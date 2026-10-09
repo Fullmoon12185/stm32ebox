@@ -513,6 +513,7 @@ uint8_t Is_Main_Current_Over_Max_Current(void)
 {
     static uint32_t last_check_tick = 0;
     static uint8_t over_count = 0;
+    static uint8_t overcurrentcount = 0;
 
     uint32_t now = HAL_GetTick();
 
@@ -523,13 +524,13 @@ uint8_t Is_Main_Current_Over_Max_Current(void)
 
     last_check_tick = now;
 
-    uint16_t current = PowerCurrent();
+    uint32_t current = PowerCurrent();
+    uint32_t ctCurrent = Get_Main_Current();
 
     if (current <= 0)
     {
-        current = Get_Main_Current();
+        current = ctCurrent;
     }
-
     if (current > MAX_TOTAL_CURRENT)
     {
     	++over_count;
